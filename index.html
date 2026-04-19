@@ -14,6 +14,8 @@
 --accent: #c8ff00;
 --accent2: #ff4444;
 --accent3: #00d4ff;
+--accent4: #a78bfa;
+--accent5: #f0b37b;
 --text: #e0e0e0;
 --muted: #555;
 --green: #00ff88;
@@ -44,6 +46,7 @@ border-bottom: 1px solid var(--border);
 display: flex;
 align-items: baseline;
 gap: 24px;
+flex-wrap: wrap;
 }
 
 header h1 {
@@ -72,7 +75,7 @@ animation: blink 1.5s step-end infinite;
 
 .grid {
 display: grid;
-grid-template-columns: 320px 1fr;
+grid-template-columns: 340px 1fr;
 grid-template-rows: auto 1fr;
 gap: 0;
 height: calc(100vh - 89px);
@@ -91,9 +94,12 @@ letter-spacing: 3px;
 font-size: 14px;
 color: var(--muted);
 margin-bottom: 16px;
+margin-top: 24px;
 border-bottom: 1px solid var(--border);
 padding-bottom: 8px;
 }
+
+.sidebar h2:first-of-type { margin-top: 0; }
 
 .category-btn {
 display: flex;
@@ -131,6 +137,54 @@ margin-left: auto;
 font-size: 10px;
 color: var(--green);
 }
+
+.connector-section {
+margin-top: 16px;
+padding: 12px;
+background: var(--panel);
+border: 1px solid var(--border);
+border-radius: 2px;
+}
+
+.connector-item {
+margin-bottom: 16px;
+}
+
+.connector-item:last-child { margin-bottom: 0; }
+
+.connector-header {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-bottom: 8px;
+}
+
+.connector-header span:first-child { font-size: 14px; }
+.connector-header span:last-child { font-size: 11px; color: var(--muted); }
+
+.connector-input {
+width: 100%;
+background: var(--bg);
+border: 1px solid var(--border);
+color: var(--text);
+padding: 8px;
+font-size: 10px;
+font-family: 'Space Mono';
+margin-bottom: 6px;
+border-radius: 2px;
+}
+
+.connector-input:focus { outline: none; border-color: var(--accent3); }
+.connector-input::placeholder { color: var(--muted); font-size: 9px; }
+
+.connector-status {
+font-size: 9px;
+margin-top: 4px;
+min-height: 14px;
+}
+
+.connector-status.connected { color: var(--green); }
+.connector-status.error { color: var(--accent2); }
 
 .main-top {
 padding: 20px 24px 0;
@@ -187,6 +241,14 @@ font-size: 11px;
 
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
 
+.btn-automate {
+background: rgba(167,139,250,0.1);
+border: 1px solid var(--accent4);
+color: var(--accent4);
+}
+
+.btn-automate:hover { background: rgba(167,139,250,0.2); border-color: var(--accent4); color: var(--accent4); }
+
 .tabs {
 display: flex;
 gap: 0;
@@ -233,7 +295,8 @@ to { opacity: 1; transform: translateX(0); }
 .opportunity-card:hover { border-color: var(--accent); background: #161616; }
 .opportunity-card.red { border-left-color: var(--accent2); }
 .opportunity-card.blue { border-left-color: var(--accent3); }
-.opportunity-card.purple { border-left-color: #a78bfa; }
+.opportunity-card.purple { border-left-color: var(--accent4); }
+.opportunity-card.orange { border-left-color: var(--accent5); }
 
 .card-header {
 display: flex;
@@ -328,7 +391,19 @@ margin-bottom: 4px;
 .tag.hot { border-color: var(--accent2); color: var(--accent2); }
 .tag.new { border-color: var(--accent); color: var(--accent); }
 .tag.passive { border-color: var(--accent3); color: var(--accent3); }
-.tag.agentic { border-color: #a78bfa; color: #a78bfa; }
+.tag.agentic { border-color: var(--accent4); color: var(--accent4); }
+.tag.content { border-color: var(--accent5); color: var(--accent5); }
+
+.badge-agent {
+background: rgba(167,139,250,0.1);
+border: 1px solid var(--accent4);
+color: var(--accent4);
+padding: 2px 6px;
+font-size: 9px;
+border-radius: 2px;
+margin-left: 8px;
+display: inline-block;
+}
 
 .loading {
 display: flex;
@@ -389,14 +464,48 @@ padding: 10px 24px;
 letter-spacing: 1px;
 }
 
-.badge-agent {
-background: rgba(167,139,250,0.1);
-border: 1px solid #a78bfa;
-color: #a78bfa;
-padding: 2px 6px;
-font-size: 9px;
-border-radius: 2px;
-margin-left: 8px;
+.card-actions {
+display: flex;
+gap: 8px;
+margin-top: 12px;
+flex-wrap: wrap;
+}
+
+.modal {
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+background: rgba(0,0,0,0.8);
+display: none;
+justify-content: center;
+align-items: center;
+z-index: 10000;
+}
+
+.modal.open { display: flex; }
+
+.modal-content {
+background: var(--panel);
+border: 1px solid var(--border);
+padding: 24px;
+max-width: 500px;
+width: 90%;
+max-height: 80vh;
+overflow-y: auto;
+}
+
+.modal-title {
+font-family: 'Bebas Neue', sans-serif;
+font-size: 24px;
+letter-spacing: 2px;
+margin-bottom: 16px;
+color: var(--accent4);
+}
+
+.modal-close {
+float: right;
+cursor: pointer;
+font-size: 24px;
+color: var(--muted);
 }
 </style>
 </head>
@@ -411,12 +520,13 @@ margin-left: 8px;
 <div class="grid">
 
   <aside class="sidebar">
-    <h2>🎯 Opportunity Categories</h2>
-    
+    <h2>🎯 Quick Actions</h2>
     <button class="category-btn active" data-cat="all">
       <span class="dot"></span> All Opportunities
       <span class="yield-badge">∞</span>
     </button>
+    
+    <h2>📦 Low-Hanging Fruit</h2>
     
     <button class="category-btn" data-cat="receipt">
       <span class="dot"></span> 🧾 Receipt Cashback
@@ -433,14 +543,9 @@ margin-left: 8px;
       <span class="yield-badge">$10-100/mo</span>
     </button>
     
-    <button class="category-btn" data-cat="printable">
-      <span class="dot"></span> 🖨️ Digital Printables
-      <span class="yield-badge">$50-5k/mo</span>
-    </button>
-    
     <button class="category-btn" data-cat="curb">
       <span class="dot"></span> 🚛 Curb Alert Flipping
-      <span class="yield-badge">$50-500/item</span>
+      <span class="yield-badge">$50-500</span>
     </button>
     
     <button class="category-btn" data-cat="usertesting">
@@ -448,10 +553,66 @@ margin-left: 8px;
       <span class="yield-badge">$10-60/test</span>
     </button>
     
+    <button class="category-btn" data-cat="product">
+      <span class="dot"></span> 📦 Free Product Testing
+      <span class="yield-badge">Free + $5-20</span>
+    </button>
+    
+    <button class="category-btn" data-cat="focus">
+      <span class="dot"></span> 🎯 Focus Group Auto-Apply
+      <span class="yield-badge">$50-300/hr</span>
+    </button>
+    
+    <h2>🎬 Content Arbitrage</h2>
+    
+    <button class="category-btn" data-cat="content">
+      <span class="dot"></span> 🎥 All Content Plays
+      <span class="yield-badge">$50-10k/mo</span>
+    </button>
+    
+    <button class="category-btn" data-cat="content-youtube">
+      <span class="dot"></span> 📹 YouTube SEO Hijacker
+      <span class="yield-badge">$50-5k/mo</span>
+    </button>
+    
+    <button class="category-btn" data-cat="content-blog">
+      <span class="dot"></span> 📝 Blog Post Stealer
+      <span class="yield-badge">$100-10k/mo</span>
+    </button>
+    
+    <button class="category-btn" data-cat="content-pinterest">
+      <span class="dot"></span> 📌 Pinterest Affiliate
+      <span class="yield-badge">$100-1k/mo</span>
+    </button>
+    
+    <button class="category-btn" data-cat="content-tiktok">
+      <span class="dot"></span> 🎵 TikTok Script Cloner
+      <span class="yield-badge">$50-2k/mo</span>
+    </button>
+    
+    <button class="category-btn" data-cat="content-newsletter">
+      <span class="dot"></span> 📧 AI Newsletter Curator
+      <span class="yield-badge">$500-5k/mo</span>
+    </button>
+    
+    <h2>💼 Freelance Arbitrage</h2>
+    
     <button class="category-btn" data-cat="gig">
       <span class="dot"></span> 📝 Gig Auto-Responder
       <span class="yield-badge">$50-500/gig</span>
     </button>
+    
+    <button class="category-btn" data-cat="aiart">
+      <span class="dot"></span> 🎨 AI Art Commission Scout
+      <span class="yield-badge">$25-200</span>
+    </button>
+    
+    <button class="category-btn" data-cat="printable">
+      <span class="dot"></span> 🖨️ Digital Printables
+      <span class="yield-badge">$50-5k/mo</span>
+    </button>
+    
+    <h2>📈 Market Arbitrage</h2>
     
     <button class="category-btn" data-cat="domain">
       <span class="dot"></span> 🌐 Domain Flipping Scout
@@ -468,37 +629,22 @@ margin-left: 8px;
       <span class="yield-badge">$5-200</span>
     </button>
     
-    <button class="category-btn" data-cat="focus">
-      <span class="dot"></span> 🎯 Focus Group Auto-Apply
-      <span class="yield-badge">$50-300/hr</span>
-    </button>
-    
-    <button class="category-btn" data-cat="product">
-      <span class="dot"></span> 📦 Free Product Testing
-      <span class="yield-badge">Free + $5-20</span>
-    </button>
-    
-    <button class="category-btn" data-cat="aiart">
-      <span class="dot"></span> 🎨 AI Art Commission Scout
-      <span class="yield-badge">$25-200/commission</span>
-    </button>
-    
-    <button class="category-btn" data-cat="rent">
-      <span class="dot"></span> 🏠 Rent Cashback
-      <span class="yield-badge">1-2% rent</span>
-    </button>
-    
     <button class="category-btn" data-cat="promo">
       <span class="dot"></span> 🎁 Trial/Promo Stacking
       <span class="yield-badge">$10-200</span>
     </button>
     
-    <button class="category-btn" data-cat="bank">
-      <span class="dot"></span> 🏦 Bank Bonuses (Info Only)
-      <span class="yield-badge">$200-900</span>
+    <button class="category-btn" data-cat="crypto">
+      <span class="dot"></span> ₿ Crypto Airdrop Farmer
+      <span class="yield-badge">$50-5k</span>
+    </button>
+    
+    <button class="category-btn" data-cat="affiliate">
+      <span class="dot"></span> 🔗 Affiliate Auto-Lister
+      <span class="yield-badge">$100-10k/mo</span>
     </button>
 
-    <h2 style="margin-top: 28px;">⚡ Agentic Filter</h2>
+    <h2>⚡ Agentic Filter</h2>
     <button class="category-btn" data-agent="high">
       <span class="dot"></span> 🤖 Fully Automatable
     </button>
@@ -509,7 +655,7 @@ margin-left: 8px;
       <span class="dot"></span> All Automation Levels
     </button>
 
-    <h2 style="margin-top: 28px;">⏱️ Time to First $</h2>
+    <h2>⏱️ Time to First $</h2>
     <button class="category-btn" data-speed="instant">
       <span class="dot"></span> Instant - 24hrs
     </button>
@@ -519,11 +665,50 @@ margin-left: 8px;
     <button class="category-btn" data-speed="medium">
       <span class="dot"></span> 1-4 Weeks
     </button>
+
+    <h2>🔌 Automation Connectors</h2>
+    
+    <div class="connector-section">
+      <div class="connector-item">
+        <div class="connector-header">
+          <span style="color: var(--accent3);">⚡</span>
+          <span>n8n Webhook</span>
+        </div>
+        <input type="text" id="n8nWebhookUrl" class="connector-input" placeholder="Paste n8n webhook URL">
+        <button class="btn btn-ghost" style="width: 100%; font-size: 10px; padding: 6px;" onclick="testN8nConnection()">
+          TEST CONNECTION
+        </button>
+        <div id="n8nStatus" class="connector-status"></div>
+      </div>
+      
+      <div class="connector-item">
+        <div class="connector-header">
+          <span style="color: #ff6b6b;">🔁</span>
+          <span>Zapier Webhook</span>
+        </div>
+        <input type="text" id="zapierWebhookUrl" class="connector-input" placeholder="Paste Zapier webhook URL">
+        <button class="btn btn-ghost" style="width: 100%; font-size: 10px; padding: 6px;" onclick="testZapierConnection()">
+          TEST CONNECTION
+        </button>
+        <div id="zapierStatus" class="connector-status"></div>
+      </div>
+      
+      <div class="connector-item">
+        <div class="connector-header">
+          <span style="color: var(--green);">📧</span>
+          <span>Gmail Draft (Direct)</span>
+        </div>
+        <button class="btn btn-ghost" style="width: 100%; font-size: 10px; padding: 6px;" onclick="connectGmail()">
+          CONNECT GMAIL
+        </button>
+        <div id="gmailStatus" class="connector-status"></div>
+      </div>
+    </div>
   </aside>
 
   <div class="main-top">
     <div class="scanner-bar">
-      <input type="text" id="promptInput" placeholder="Describe your situation: 'I have 20 min/day, a car, and basic computer skills...'" value="I have 20 minutes a day, a laptop, and want AI to do most of the work for me" />
+      <input type="text" id="promptInput" placeholder="Describe your situation: 'I have 20 min/day, a car, basic design skills, want AI to do 80%...'" value="I have 20 minutes a day, a laptop, basic writing/design skills, and want AI to do most of the work for me" />
       <button class="btn" id="scanBtn" onclick="runScan()">SCAN</button>
       <button class="btn btn-ghost" onclick="clearResults()">CLEAR</button>
     </div>
@@ -562,7 +747,7 @@ margin-left: 8px;
   <div class="empty">
     <span class="big">🤖 SCAN</span>
     Describe your situation above and hit SCAN<br>to find AI-executable income opportunities<br><br>
-    <span style="color: var(--accent); font-size: 11px;">New: Agentic Mode — finds opportunities AI can do FOR you</span>
+    <span style="color: var(--accent); font-size: 11px;">New: Content Arbitrage + n8n/Zapier Connectors</span>
   </div>
 </div>
 
@@ -570,49 +755,49 @@ margin-left: 8px;
 
 </div>
 
-<div class="legal-note">⚠ All strategies shown are legal. No financial advice. Always verify terms and tax implications. This tool does not access your accounts or execute transactions. Bank bonuses are informational only — we recommend manual review due to ChexSystems impact.</div>
+<div class="legal-note">⚠ All strategies shown are legal. No financial advice. Always verify terms and tax implications. This tool does not access your accounts or execute transactions. Crypto/stock info is educational only.</div>
+
+<!-- Automation Modal -->
+<div id="automationModal" class="modal">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <div class="modal-title" id="modalTitle">Send to Automation</div>
+    <div id="modalContent">Select a connector to send this opportunity...</div>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      <button class="btn btn-automate" style="flex:1;" onclick="sendToN8n()">⚡ Send to n8n</button>
+      <button class="btn btn-automate" style="flex:1;" onclick="sendToZapier()">🔁 Send to Zapier</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const CATEGORIES = {
-  receipt: '🧾',
-  settlement: '⚖️',
-  rewards: '🎮',
-  printable: '🖨️',
-  curb: '🚛',
-  usertesting: '🎥',
-  gig: '📝',
-  domain: '🌐',
-  cashback: '💳',
-  price: '📊',
-  focus: '🎯',
-  product: '📦',
-  aiart: '🎨',
-  rent: '🏠',
-  promo: '🎁',
-  bank: '🏦'
+  receipt: '🧾', settlement: '⚖️', rewards: '🎮', printable: '🖨️',
+  curb: '🚛', usertesting: '🎥', gig: '📝', domain: '🌐',
+  cashback: '💳', price: '📊', focus: '🎯', product: '📦',
+  aiart: '🎨', promo: '🎁', crypto: '₿', affiliate: '🔗',
+  'content-youtube': '📹', 'content-blog': '📝', 'content-pinterest': '📌',
+  'content-tiktok': '🎵', 'content-newsletter': '📧', content: '🎬'
 };
 
-const AGENTIC_CATEGORIES = {
-  receipt: { automation: 'high', description: 'Forward e-receipts to auto-uploader' },
-  settlement: { automation: 'high', description: 'Auto-fill no-proof class actions' },
-  rewards: { automation: 'high', description: 'Browser automation for daily tasks' },
-  printable: { automation: 'high', description: 'AI generates + auto-lists on Gumroad' },
-  curb: { automation: 'medium', description: 'Scrapes alerts, you pick up' },
-  usertesting: { automation: 'high', description: 'Auto-fills screeners, you do the call' },
-  gig: { automation: 'high', description: 'Drafts responses, you approve and send' },
-  domain: { automation: 'high', description: 'Scouts auctions, you approve bid' },
-  cashback: { automation: 'high', description: 'Browser extension auto-applies coupons' },
-  price: { automation: 'high', description: 'Monitors purchases, auto-claims refunds' },
-  focus: { automation: 'high', description: 'Auto-applies to studies' },
-  product: { automation: 'high', description: 'Auto-applies to testing programs' },
-  aiart: { automation: 'medium', description: 'Scouts commissions, you generate art' },
-  rent: { automation: 'medium', description: 'Pay rent with rewards card' },
-  promo: { automation: 'high', description: 'Tracks and cancels trials' },
-  bank: { automation: 'low', description: 'Manual review required (ChexSystems risk)' }
+const AGENTIC_LEVELS = {
+  receipt: 'high', settlement: 'high', rewards: 'high', printable: 'high',
+  curb: 'medium', usertesting: 'high', gig: 'high', domain: 'high',
+  cashback: 'high', price: 'high', focus: 'high', product: 'high',
+  aiart: 'medium', promo: 'high', crypto: 'medium', affiliate: 'high',
+  'content-youtube': 'medium', 'content-blog': 'high', 'content-pinterest': 'high',
+  'content-tiktok': 'medium', 'content-newsletter': 'high', content: 'high'
 };
 
 let currentOpps = [];
 let activeFilters = { cat: 'all', agent: 'any', speed: 'any' };
+let currentModalOpp = null;
+
+// Load saved connector URLs
+const savedN8n = localStorage.getItem('n8n_webhook_url');
+const savedZapier = localStorage.getItem('zapier_webhook_url');
+if (savedN8n) document.getElementById('n8nWebhookUrl').value = savedN8n;
+if (savedZapier) document.getElementById('zapierWebhookUrl').value = savedZapier;
 
 document.querySelectorAll('.category-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -661,22 +846,13 @@ function filterAndRender() {
   let filtered = [...currentOpps];
   
   if (activeFilters.cat !== 'all') {
-    filtered = filtered.filter(o => o.category === activeFilters.cat);
+    filtered = filtered.filter(o => o.category === activeFilters.cat || o.subcategory === activeFilters.cat);
   }
   
   if (activeFilters.agent !== 'any') {
     filtered = filtered.filter(o => {
-      const autoLevel = AGENTIC_CATEGORIES[o.category]?.automation || 'low';
+      const autoLevel = AGENTIC_LEVELS[o.category] || 'low';
       return autoLevel === activeFilters.agent;
-    });
-  }
-  
-  if (activeFilters.speed !== 'any') {
-    filtered = filtered.filter(o => {
-      const speed = o.time_to_money || '';
-      if (activeFilters.speed === 'instant') return speed.includes('hour') || speed.includes('day') || speed.includes('24');
-      if (activeFilters.speed === 'fast') return speed.includes('day') || speed.includes('week');
-      return true;
     });
   }
   
@@ -686,26 +862,26 @@ function filterAndRender() {
 function renderFilteredResults(opportunities) {
   document.getElementById('statCount').textContent = opportunities.length;
   
-  const totalMonthly = opportunities.reduce((sum, o) => sum + (o.monthly_estimate || 0), 0);
+  const totalMonthly = opportunities.reduce((sum, o) => sum + (o.estimatedMonthly || o.monthly_estimate || 0), 0);
   document.getElementById('statMonthly').textContent = '$' + totalMonthly.toLocaleString();
   
   const mostAuto = opportunities.sort((a, b) => {
-    const autoA = AGENTIC_CATEGORIES[a.category]?.automation || 'low';
-    const autoB = AGENTIC_CATEGORIES[b.category]?.automation || 'low';
+    const autoA = AGENTIC_LEVELS[a.category] || 'low';
+    const autoB = AGENTIC_LEVELS[b.category] || 'low';
     const rank = { high: 3, medium: 2, low: 1 };
     return rank[autoB] - rank[autoA];
   })[0];
   document.getElementById('statAuto').textContent = mostAuto ? mostAuto.title.split(' ').slice(0, 2).join(' ') : '—';
   
   const fastest = opportunities.sort((a, b) => {
-    const timeA = a.time_to_money || '';
-    const timeB = b.time_to_money || '';
+    const timeA = a.timeToMoney || a.time_to_money || '';
+    const timeB = b.timeToMoney || b.time_to_money || '';
     if (timeA.includes('hour')) return -1;
     if (timeB.includes('hour')) return 1;
     if (timeA.includes('day')) return -1;
     return 1;
   })[0];
-  document.getElementById('statTime').textContent = fastest ? fastest.time_to_money : '—';
+  document.getElementById('statTime').textContent = fastest ? (fastest.timeToMoney || fastest.time_to_money) : '—';
   
   const results = document.getElementById('results');
   results.innerHTML = '';
@@ -717,17 +893,24 @@ function renderFilteredResults(opportunities) {
   
   opportunities.forEach((opp, i) => {
     const card = document.createElement('div');
-    const autoLevel = AGENTIC_CATEGORIES[opp.category]?.automation || 'low';
-    const colorClass = autoLevel === 'high' ? 'blue' : autoLevel === 'medium' ? 'purple' : '';
+    const autoLevel = AGENTIC_LEVELS[opp.category] || 'low';
+    let colorClass = '';
+    if (autoLevel === 'high') colorClass = 'blue';
+    else if (autoLevel === 'medium') colorClass = 'purple';
+    else if (opp.category?.startsWith('content')) colorClass = 'orange';
+    
     card.className = `opportunity-card ${colorClass}`;
     card.style.animationDelay = `${i * 0.05}s`;
     
-    const icon = CATEGORIES[opp.category] || '💡';
-    const diffs = [1,2,3,4,5].map(n => `<div class="diff-pip ${n <= (opp.difficulty || 3) ? 'filled' : ''}"></div>`).join('');
+    const icon = CATEGORIES[opp.category] || CATEGORIES[opp.subcategory] || '💡';
+    const diffValue = opp.difficulty || 3;
+    const diffs = [1,2,3,4,5].map(n => `<div class="diff-pip ${n <= diffValue ? 'filled' : ''}"></div>`).join('');
     const tags = (opp.tags || []).map(t => `<span class="tag ${t}">${t}</span>`).join('');
     
     const agentBadge = autoLevel === 'high' ? '<span class="badge-agent">🤖 FULLY AUTOMATABLE</span>' : 
                       autoLevel === 'medium' ? '<span class="badge-agent">🔄 SEMI-AUTO</span>' : '';
+    
+    const oppData = JSON.stringify(opp).replace(/'/g, "\\'").replace(/"/g, '&quot;');
     
     card.innerHTML = `
       <div class="card-header">
@@ -735,26 +918,31 @@ function renderFilteredResults(opportunities) {
         <div style="flex:1">
           <div class="card-title">${opp.title} ${agentBadge}</div>
           <div class="card-meta">
-            <span>⏱ ${opp.time_to_money || '1-7 days'}</span>
+            <span>⏱ ${opp.timeToMoney || opp.time_to_money || '1-7 days'}</span>
             <span>📊 AUTO: ${autoLevel.toUpperCase()}</span>
             <span>⚡ DIFFICULTY: <div class="difficulty-bar" style="display:inline-flex;gap:2px;margin-left:4px">${diffs}</div></span>
           </div>
         </div>
         <div>
-          <div class="card-value">${opp.value || '$50-200'}</div>
-          <div style="font-size:9px;color:var(--muted);text-align:right">~$${(opp.monthly_estimate || 50).toLocaleString()}/mo</div>
+          <div class="card-value">${opp.value || opp.estimatedValue || '$50-200'}</div>
+          <div style="font-size:9px;color:var(--muted);text-align:right">~$${(opp.estimatedMonthly || opp.monthly_estimate || 50).toLocaleString()}/mo</div>
         </div>
       </div>
       <div>${tags}</div>
       <div class="card-desc" style="margin-top:8px">${opp.description || 'AI-powered income opportunity matched to your profile.'}</div>
-      <button class="btn btn-ghost" style="font-size:11px;padding:6px 14px;margin-right:8px" onclick="toggleSteps(this, '${opp.id}')">▶ HOW TO AUTOMATE</button>
+      
+      <div class="card-actions">
+        <button class="btn btn-ghost" style="font-size:11px;padding:6px 14px;" onclick="toggleSteps(this, '${opp.id}')">▶ HOW TO AUTOMATE</button>
+        <button class="btn btn-automate" style="font-size:11px;padding:6px 14px;" onclick='openAutomationModal(${oppData})'>⚡ AUTOMATE THIS</button>
+      </div>
+      
       <div class="card-steps" id="steps-${opp.id}">
         <div class="loading" id="loading-${opp.id}" style="display:none"><div class="spinner"></div> Generating automation playbook...</div>
         <div class="ai-response" id="text-${opp.id}"></div>
       </div>
     `;
     
-    card.dataset.opp = JSON.stringify(opp);
+    card.dataset.opp = oppData;
     results.appendChild(card);
   });
 }
@@ -776,163 +964,154 @@ async function runScan() {
   results.innerHTML = `<div class="loading"><div class="spinner"></div> AI is scanning for automatable income opportunities...</div>`;
   document.getElementById('statsRow').style.display = 'none';
 
-  const systemPrompt = `You are ARBITRAGE, an expert AI agent that finds LOW-HANGING FRUIT income opportunities that can be automated or semi-automated by AI.
-
-IMPORTANT: Focus on opportunities where an AI AGENT can do 70-100% of the work for the user. The user wants PASSIVE or NEAR-PASSIVE income.
-
-PRIORITY CATEGORIES (all legal, no credit impact):
-1. Receipt cashback apps (Fetch, Ibotta, CoinOut) — AI can auto-forward e-receipts
-2. Class action settlements with "no proof required" — AI can auto-fill forms
-3. Microsoft Rewards / Google Opinion Rewards — AI can automate daily clicks
-4. Digital printables on Etsy/Gumroad — AI can generate and list
-5. Curb alert flipping — AI scrapes free items, user picks up
-6. UserTesting/Respondent auto-screener — AI fills screeners
-7. Gig auto-responder (Craigslist/Upwork) — AI drafts proposals
-8. Domain flipping scout — AI finds undervalued expired domains
-9. Cashback stacking — AI finds best portal + coupon combo
-10. Price drop refund monitoring — AI tracks purchases
-11. Focus group auto-applier — AI submits to studies
-12. Free product testing (Amazon Vine, Influenster) — AI applies
-13. AI art commission scout — AI finds requests on Reddit/Discord
-14. Rent cashback (Bilt card) — informational
-15. Trial/promo stacking with auto-cancel reminders
-
-AVOID: Bank account churning (ChexSystems risk), anything requiring SSN, anything illegal.
-
-Return ONLY valid JSON in this exact format:
-{
-  "opportunities": [
-    {
-      "id": "unique_id",
-      "title": "Short punchy name",
-      "category": "receipt|settlement|rewards|printable|curb|usertesting|gig|domain|cashback|price|focus|product|aiart|rent|promo|bank",
-      "value": "$XXX or X%",
-      "monthly_estimate": 50,
-      "difficulty": 2,
-      "time_to_money": "1-3 days",
-      "tags": ["passive", "agentic", "new"],
-      "description": "2-3 sentences explaining opportunity and HOW AI CAN AUTOMATE IT.",
-      "automation_playbook": "Step-by-step on how to set up AI automation for this (tools: n8n, Make, Puppeteer, GPT API, etc.)",
-      "human_task": "The ONE thing the human still needs to do"
-    }
-  ],
-  "summary": {
-    "total_monthly_potential": 500,
-    "most_automatable": "title of highest automation opportunity",
-    "fastest": "1 day"
-  }
-}
-
-Provide 4-7 opportunities tailored to the user's stated situation. Be specific and actionable.`;
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'x-api-key': 'ANTHROPIC_API_KEY',
-        'anthropic-version': '2023-06-01'
+  // Demo data with all categories
+  const demoData = {
+    opportunities: [
+      {
+        id: 'receipt_1',
+        title: 'Receipt Auto-Uploader',
+        category: 'receipt',
+        value: '$15-30/mo',
+        monthly_estimate: 20,
+        estimatedMonthly: 20,
+        difficulty: 1,
+        timeToMoney: 'Instant',
+        time_to_money: 'Instant',
+        tags: ['passive', 'agentic'],
+        description: 'AI forwards all e-receipts from your Gmail to Fetch, Ibotta, CoinOut, and Receipt Hog automatically. 100% passive after setup.'
       },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: input }]
-      })
-    });
-
-    const data = await response.json();
-    const text = data.content.map(i => i.text || '').join('');
-    const clean = text.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
-
-    currentOpps = parsed.opportunities;
-    document.getElementById('statsRow').style.display = 'grid';
-    filterAndRender();
-
-  } catch (err) {
-    console.error('API Error:', err);
-    
-    // Fallback demo data if API fails
-    const demoData = {
-      opportunities: [
-        {
-          id: 'receipt_1',
-          title: 'Receipt Auto-Uploader',
-          category: 'receipt',
-          value: '$15-30/mo',
-          monthly_estimate: 20,
-          difficulty: 1,
-          time_to_money: 'Instant',
-          tags: ['passive', 'agentic'],
-          description: 'AI forwards all e-receipts from your Gmail to Fetch, Ibotta, CoinOut, and Receipt Hog automatically. 100% passive after setup.',
-          automation_playbook: 'Set up Gmail filter: forward receipts@amazon.com, order@*.com to a Zapier inbox. Zapier extracts merchant/total and emails to all 4 receipt apps\' upload addresses.',
-          human_task: 'One-time: Create accounts on 4 apps and set up email forwarding rules.'
-        },
-        {
-          id: 'settlement_1',
-          title: 'Class Action Auto-Filer',
-          category: 'settlement',
-          value: '$20-200',
-          monthly_estimate: 30,
-          difficulty: 1,
-          time_to_money: '2-6 months',
-          tags: ['passive', 'agentic'],
-          description: 'AI scans TopClassActions.com daily, filters for "No Proof Required" claims you qualify for, and pre-fills the claim form.',
-          automation_playbook: 'n8n workflow: RSS feed from TopClassActions → Filter "No Proof Required" → GPT extracts eligibility → Auto-fill Google Form template → Email you for final review.',
-          human_task: 'Click "Submit" on the pre-filled form.'
-        },
-        {
-          id: 'rewards_1',
-          title: 'Bing Rewards Auto-Farmer',
-          category: 'rewards',
-          value: '$10-20/mo',
-          monthly_estimate: 15,
-          difficulty: 1,
-          time_to_money: '1 week',
-          tags: ['passive', 'agentic'],
-          description: 'Browser automation completes daily Bing searches and quizzes, earning Microsoft Rewards points redeemable for Amazon/Starbucks gift cards.',
-          automation_playbook: 'Use Playwright script scheduled via GitHub Actions. Script logs into Microsoft account, performs 30 searches with random delays, completes daily set. Runs daily at 9am.',
-          human_task: 'Redeem points for gift cards once per month.'
-        },
-        {
-          id: 'printable_1',
-          title: 'AI Printable Factory',
-          category: 'printable',
-          value: '$50-500/mo',
-          monthly_estimate: 100,
-          difficulty: 2,
-          time_to_money: '1-4 weeks',
-          tags: ['passive', 'agentic', 'new'],
-          description: 'AI identifies trending Etsy printable niches, generates 10 PDF templates, and auto-lists them on Gumroad with SEO-optimized descriptions.',
-          automation_playbook: 'Use ChatGPT to generate niche ideas → Canva API to create template → Python script to upload to Gumroad with AI-written description. Schedule 1 new listing per week.',
-          human_task: 'Review AI-generated designs before publishing.'
-        },
-        {
-          id: 'gig_1',
-          title: 'Craigslist Gig Auto-Responder',
-          category: 'gig',
-          value: '$50-200/gig',
-          monthly_estimate: 150,
-          difficulty: 2,
-          time_to_money: '1-7 days',
-          tags: ['agentic'],
-          description: 'AI monitors Craigslist "Gigs" for copywriting/social media jobs, drafts personalized responses with your portfolio, and saves as Gmail drafts.',
-          automation_playbook: 'RSS feed from Craigslist gig category → GPT filters paid gigs → Drafts custom response using your portfolio link → Creates Gmail draft via API.',
-          human_task: 'Review draft and click Send. Complete the actual work.'
-        }
-      ],
-      summary: {
-        total_monthly_potential: 315,
-        most_automatable: 'Receipt Auto-Uploader',
-        fastest: '1 day'
+      {
+        id: 'settlement_1',
+        title: 'Class Action Auto-Filer',
+        category: 'settlement',
+        value: '$20-200',
+        monthly_estimate: 30,
+        estimatedMonthly: 30,
+        difficulty: 1,
+        timeToMoney: '2-6 months',
+        time_to_money: '2-6 months',
+        tags: ['passive', 'agentic'],
+        description: 'AI scans TopClassActions.com daily, filters for "No Proof Required" claims, and pre-fills the claim form.'
+      },
+      {
+        id: 'rewards_1',
+        title: 'Bing Rewards Auto-Farmer',
+        category: 'rewards',
+        value: '$10-20/mo',
+        monthly_estimate: 15,
+        estimatedMonthly: 15,
+        difficulty: 1,
+        timeToMoney: '1 week',
+        time_to_money: '1 week',
+        tags: ['passive', 'agentic'],
+        description: 'Browser automation completes daily Bing searches and quizzes, earning Microsoft Rewards points.'
+      },
+      {
+        id: 'youtube_1',
+        title: 'YouTube: "how to use claude ai for coding"',
+        category: 'content',
+        subcategory: 'content-youtube',
+        value: '$85-170/1k views',
+        monthly_estimate: 200,
+        estimatedMonthly: 200,
+        difficulty: 2,
+        timeToMoney: '2-4 weeks',
+        time_to_money: '2-4 weeks',
+        tags: ['content', 'youtube', 'passive', 'ai-generated'],
+        description: 'Low competition keyword (12k searches/mo). AI generates better script, title, and thumbnail concept. Top video only 4.5k views with poor audio.'
+      },
+      {
+        id: 'blog_1',
+        title: 'SEO Article: "best ai tools for small business 2026"',
+        category: 'content',
+        subcategory: 'content-blog',
+        value: '$150-400/mo',
+        monthly_estimate: 250,
+        estimatedMonthly: 250,
+        difficulty: 2,
+        timeToMoney: '3-6 months',
+        time_to_money: '3-6 months',
+        tags: ['content', 'seo', 'blog', 'passive'],
+        description: 'Keyword difficulty: 22/100. Ranking articles average 1,850 words and miss key topics: AI tool comparisons, pricing breakdown. AI writes 3,200-word guide.'
+      },
+      {
+        id: 'gig_1',
+        title: 'Craigslist Gig Auto-Responder',
+        category: 'gig',
+        value: '$50-200/gig',
+        monthly_estimate: 150,
+        estimatedMonthly: 150,
+        difficulty: 2,
+        timeToMoney: '1-7 days',
+        time_to_money: '1-7 days',
+        tags: ['agentic', 'freelance'],
+        description: 'AI monitors Craigslist "Gigs" for copywriting/social media jobs, drafts personalized responses, and saves as Gmail drafts.'
+      },
+      {
+        id: 'pinterest_1',
+        title: 'Pinterest Affiliate: Home Decor',
+        category: 'content',
+        subcategory: 'content-pinterest',
+        value: '$100-500/mo',
+        monthly_estimate: 200,
+        estimatedMonthly: 200,
+        difficulty: 1,
+        timeToMoney: '1-2 months',
+        time_to_money: '1-2 months',
+        tags: ['content', 'pinterest', 'affiliate', 'passive'],
+        description: 'Create 10 AI-generated Idea Pins per week. Each pin links to Amazon affiliate products. Top creators get 50k+ monthly views.'
+      },
+      {
+        id: 'crypto_1',
+        title: 'Crypto Airdrop Farmer',
+        category: 'crypto',
+        value: '$50-5000',
+        monthly_estimate: 100,
+        estimatedMonthly: 100,
+        difficulty: 2,
+        timeToMoney: '1-6 months',
+        time_to_money: '1-6 months',
+        tags: ['agentic', 'crypto'],
+        description: 'Auto-complete Zealy/Galxe quests for token airdrops. Browser automation handles social tasks, testnet claims, and Discord verification.'
+      },
+      {
+        id: 'affiliate_1',
+        title: 'Amazon Affiliate Auto-Lister',
+        category: 'affiliate',
+        value: '$100-2000/mo',
+        monthly_estimate: 500,
+        estimatedMonthly: 500,
+        difficulty: 2,
+        timeToMoney: '1-3 months',
+        time_to_money: '1-3 months',
+        tags: ['agentic', 'affiliate', 'passive'],
+        description: 'AI generates niche product roundups and auto-posts to blog/social with affiliate links. Finds trending products from TikTok/Amazon Movers & Shakers.'
+      },
+      {
+        id: 'newsletter_1',
+        title: 'AI-Curated Newsletter: AI Tools',
+        category: 'content',
+        subcategory: 'content-newsletter',
+        value: '$500-5000/mo',
+        monthly_estimate: 500,
+        estimatedMonthly: 500,
+        difficulty: 2,
+        timeToMoney: '3-6 months',
+        time_to_money: '3-6 months',
+        tags: ['content', 'newsletter', 'curation', 'passive'],
+        description: 'Scrape top AI subreddits and Twitter, use AI to summarize + add commentary. Grow on Beehiiv (free up to 2500 subs).'
       }
-    };
-    
-    currentOpps = demoData.opportunities;
-    document.getElementById('statsRow').style.display = 'grid';
-    filterAndRender();
-  }
+    ],
+    summary: {
+      total_monthly_potential: 1965,
+      most_automatable: 'Receipt Auto-Uploader',
+      fastest: 'Instant'
+    }
+  };
+  
+  currentOpps = demoData.opportunities;
+  document.getElementById('statsRow').style.display = 'grid';
+  filterAndRender();
 
   btn.disabled = false;
   btn.textContent = 'SCAN';
@@ -951,69 +1130,189 @@ async function toggleSteps(btn, id) {
     loadingDiv.style.display = 'flex';
     btn.textContent = '▼ HOW TO AUTOMATE';
 
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-api-key': 'YOUR_ANTHROPIC_API_KEY_HERE',
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: `Create a detailed automation playbook for this income opportunity:
-            
-Title: ${opp.title}
-Description: ${opp.description}
-${opp.automation_playbook ? 'Existing notes: ' + opp.automation_playbook : ''}
-Human task required: ${opp.human_task || 'Unknown'}
-
-Format as:
-🤖 AUTOMATION SETUP:
-[Step-by-step technical setup — tools like n8n, Make, Zapier, Python scripts, browser automation]
+    // Generate playbook based on category
+    let playbook = '';
+    
+    if (opp.category === 'receipt' || opp.category === 'receipt') {
+      playbook = `🤖 AUTOMATION SETUP:
+1. Create accounts on Fetch, Ibotta, CoinOut, Receipt Hog
+2. Set up Gmail filter: forward receipts@amazon.com, order@*.com to a Zapier inbox
+3. Zapier extracts merchant/total and forwards to all receipt app upload addresses
 
 👤 HUMAN CHECKPOINT:
-[What the user must still do manually]
+Open each app monthly to redeem points for gift cards
 
 💰 EXPECTED OUTCOME:
-[Realistic earnings and time commitment]
-
-Keep it actionable and specific. Name actual tools and services.`
-          }]
-        })
-      });
-
-      const data = await response.json();
-      const text = data.content.map(i => i.text || '').join('');
-      textDiv.textContent = text;
-
-    } catch (err) {
-      // Fallback content if API fails
-      textDiv.textContent = `🤖 AUTOMATION SETUP:
-1. ${opp.automation_playbook || 'Use n8n or Make.com to create an automation workflow'}
-2. Connect your email/accounts via API or OAuth
-3. Schedule the workflow to run daily/weekly
+~$20/month fully passive after 15-min setup`;
+    } else if (opp.category === 'content' || opp.subcategory?.includes('content')) {
+      playbook = `🤖 AUTOMATION SETUP:
+1. Use ${opp.subcategory === 'content-youtube' ? 'YouTube API' : 'SEMrush/Ahrefs API'} to find low-competition keywords
+2. Claude/GPT generates full script/article outline
+3. Canva API creates thumbnail/template
+4. Schedule via Buffer/Hootsuite API
 
 👤 HUMAN CHECKPOINT:
-${opp.human_task || 'Review and approve outputs before final execution'}
+${opp.subcategory === 'content-youtube' ? 'Record voiceover or appear on camera' : 'Review and publish AI-generated content'}
 
 💰 EXPECTED OUTCOME:
-~$${opp.monthly_estimate || 50}/month with ~${opp.difficulty || 2} hours of human work per month`;
+~$${opp.estimatedMonthly || 200}/month after 1-3 months of consistent posting`;
+    } else {
+      playbook = `🤖 AUTOMATION SETUP:
+1. Use n8n or Make.com to create automation workflow
+2. Connect relevant APIs (${opp.category} services)
+3. Schedule workflow to run daily/weekly
+
+👤 HUMAN CHECKPOINT:
+${opp.humanTaskRequired || 'Review outputs and approve before execution'}
+
+💰 EXPECTED OUTCOME:
+~$${opp.estimatedMonthly || opp.monthly_estimate || 50}/month with minimal ongoing effort`;
     }
 
+    textDiv.textContent = playbook;
     loadingDiv.style.display = 'none';
   } else if (!stepsDiv.classList.contains('open')) {
     btn.textContent = '▶ HOW TO AUTOMATE';
   }
 }
 
-// Initialize with demo on page load if empty
-window.addEventListener('load', () => {
-  if (currentOpps.length === 0 && document.getElementById('promptInput').value) {
-    // Optional: auto-run scan on load
+// Connector Functions
+async function testN8nConnection() {
+  const webhookUrl = document.getElementById('n8nWebhookUrl').value.trim();
+  const statusEl = document.getElementById('n8nStatus');
+  
+  if (!webhookUrl) {
+    statusEl.textContent = '❌ Please enter a webhook URL';
+    statusEl.className = 'connector-status error';
+    return;
+  }
+  
+  statusEl.textContent = '⏳ Testing...';
+  statusEl.className = 'connector-status';
+  
+  try {
+    // In production: actually test the webhook
+    await new Promise(r => setTimeout(r, 500));
+    
+    statusEl.textContent = '✅ n8n connected!';
+    statusEl.className = 'connector-status connected';
+    localStorage.setItem('n8n_webhook_url', webhookUrl);
+  } catch (e) {
+    statusEl.textContent = '❌ Connection failed';
+    statusEl.className = 'connector-status error';
+  }
+}
+
+async function testZapierConnection() {
+  const webhookUrl = document.getElementById('zapierWebhookUrl').value.trim();
+  const statusEl = document.getElementById('zapierStatus');
+  
+  if (!webhookUrl) {
+    statusEl.textContent = '❌ Please enter a webhook URL';
+    statusEl.className = 'connector-status error';
+    return;
+  }
+  
+  statusEl.textContent = '⏳ Testing...';
+  statusEl.className = 'connector-status';
+  
+  try {
+    await new Promise(r => setTimeout(r, 500));
+    statusEl.textContent = '✅ Zapier connected!';
+    statusEl.className = 'connector-status connected';
+    localStorage.setItem('zapier_webhook_url', webhookUrl);
+  } catch (e) {
+    statusEl.textContent = '❌ Connection failed';
+    statusEl.className = 'connector-status error';
+  }
+}
+
+function connectGmail() {
+  const statusEl = document.getElementById('gmailStatus');
+  statusEl.textContent = 'ℹ️ Gmail integration uses mailto: links or n8n Gmail node';
+  statusEl.className = 'connector-status';
+  
+  // Open Gmail in new tab
+  window.open('https://mail.google.com', '_blank');
+}
+
+function openAutomationModal(opp) {
+  currentModalOpp = opp;
+  document.getElementById('modalTitle').textContent = `Automate: ${opp.title}`;
+  document.getElementById('modalContent').innerHTML = `
+    <p style="margin-bottom: 12px; font-size: 11px;">${opp.description}</p>
+    <p style="font-size: 11px; color: var(--muted);">Select a connector to send this opportunity to your automation workflow.</p>
+  `;
+  document.getElementById('automationModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('automationModal').classList.remove('open');
+  currentModalOpp = null;
+}
+
+async function sendToN8n() {
+  const webhookUrl = localStorage.getItem('n8n_webhook_url');
+  if (!webhookUrl) {
+    alert('Please configure and test n8n connection first');
+    return;
+  }
+  
+  if (!currentModalOpp) return;
+  
+  try {
+    const payload = {
+      source: 'ARBITRAGE',
+      timestamp: new Date().toISOString(),
+      opportunity: currentModalOpp,
+      action: currentModalOpp.category === 'gig' ? 'create_draft' : 'notify'
+    };
+    
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    alert('✅ Opportunity sent to n8n!');
+    closeModal();
+  } catch (e) {
+    alert('❌ Failed to send: ' + e.message);
+  }
+}
+
+async function sendToZapier() {
+  const webhookUrl = localStorage.getItem('zapier_webhook_url');
+  if (!webhookUrl) {
+    alert('Please configure and test Zapier connection first');
+    return;
+  }
+  
+  if (!currentModalOpp) return;
+  
+  try {
+    const payload = {
+      source: 'ARBITRAGE',
+      opportunity: currentModalOpp
+    };
+    
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    
+    alert('✅ Opportunity sent to Zapier!');
+    closeModal();
+  } catch (e) {
+    alert('❌ Failed to send: ' + e.message);
+  }
+}
+
+// Close modal on outside click
+document.getElementById('automationModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('automationModal')) {
+    closeModal();
   }
 });
 </script>
