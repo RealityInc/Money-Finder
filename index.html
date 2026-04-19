@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARBITRAGE — Passive Income Scanner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap');
+
+:root {
+–bg: #0a0a0a;
+–panel: #111;
+–border: #1e1e1e;
+–accent: #c8ff00;
+–accent2: #ff4444;
+–accent3: #00d4ff;
+–text: #e0e0e0;
+–muted: #555;
+–green: #00ff88;
+}
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Scanline effect */
+body::before {
+content: ‘’;
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+background: repeating-linear-gradient(
+0deg,
+transparent,
+transparent 2px,
+rgba(0,0,0,0.05) 2px,
+rgba(0,0,0,0.05) 4px
+);
+pointer-events: none;
+z-index: 9999;
+}
+
+header {
+padding: 24px 32px 16px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: baseline;
+gap: 24px;
+}
+
+header h1 {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 48px;
+letter-spacing: 6px;
+color: var(–accent);
+text-shadow: 0 0 30px rgba(200,255,0,0.3);
+}
+
+.tagline {
+color: var(–muted);
+font-size: 11px;
+letter-spacing: 2px;
+text-transform: uppercase;
+}
+
+.ticker {
+margin-left: auto;
+font-size: 11px;
+color: var(–green);
+animation: blink 1.5s step-end infinite;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.grid {
+display: grid;
+grid-template-columns: 280px 1fr;
+grid-template-rows: auto 1fr;
+gap: 0;
+height: calc(100vh - 89px);
+}
+
+.sidebar {
+grid-row: 1 / 3;
+border-right: 1px solid var(–border);
+padding: 20px;
+overflow-y: auto;
+}
+
+.sidebar h2 {
+font-family: ‘Bebas Neue’, sans-serif;
+letter-spacing: 3px;
+font-size: 14px;
+color: var(–muted);
+margin-bottom: 16px;
+border-bottom: 1px solid var(–border);
+padding-bottom: 8px;
+}
+
+.category-btn {
+display: flex;
+align-items: center;
+gap: 10px;
+width: 100%;
+padding: 10px 12px;
+background: transparent;
+border: 1px solid transparent;
+border-radius: 2px;
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 11px;
+cursor: pointer;
+text-align: left;
+margin-bottom: 4px;
+transition: all 0.15s;
+letter-spacing: 1px;
+}
+
+.category-btn:hover { border-color: var(–border); background: var(–panel); }
+.category-btn.active { border-color: var(–accent); color: var(–accent); background: rgba(200,255,0,0.05); }
+
+.category-btn .dot {
+width: 6px; height: 6px;
+border-radius: 50%;
+background: var(–muted);
+flex-shrink: 0;
+}
+
+.category-btn.active .dot { background: var(–accent); box-shadow: 0 0 6px var(–accent); }
+
+.yield-badge {
+margin-left: auto;
+font-size: 10px;
+color: var(–green);
+}
+
+.main-top {
+padding: 20px 24px 0;
+border-bottom: 1px solid var(–border);
+}
+
+.scanner-bar {
+display: flex;
+gap: 12px;
+align-items: center;
+margin-bottom: 16px;
+}
+
+.scanner-bar input {
+flex: 1;
+background: var(–panel);
+border: 1px solid var(–border);
+border-radius: 2px;
+padding: 10px 14px;
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 12px;
+outline: none;
+transition: border-color 0.2s;
+}
+
+.scanner-bar input:focus { border-color: var(–accent); }
+.scanner-bar input::placeholder { color: var(–muted); }
+
+.btn {
+padding: 10px 20px;
+background: var(–accent);
+color: #000;
+border: none;
+border-radius: 2px;
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 16px;
+letter-spacing: 2px;
+cursor: pointer;
+transition: all 0.15s;
+white-space: nowrap;
+}
+
+.btn:hover { background: #fff; }
+.btn:disabled { background: var(–muted); cursor: not-allowed; }
+
+.btn-ghost {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–text);
+font-family: ‘Space Mono’, monospace;
+font-size: 11px;
+}
+
+.btn-ghost:hover { border-color: var(–accent); color: var(–accent); background: transparent; }
+
+.tabs {
+display: flex;
+gap: 0;
+margin-top: 4px;
+}
+
+.tab {
+padding: 8px 16px;
+font-size: 11px;
+letter-spacing: 1px;
+cursor: pointer;
+color: var(–muted);
+border-bottom: 2px solid transparent;
+transition: all 0.15s;
+text-transform: uppercase;
+}
+
+.tab.active { color: var(–accent); border-bottom-color: var(–accent); }
+.tab:hover { color: var(–text); }
+
+.main-content {
+padding: 20px 24px;
+overflow-y: auto;
+}
+
+.opportunity-card {
+background: var(–panel);
+border: 1px solid var(–border);
+border-left: 3px solid var(–accent);
+border-radius: 2px;
+padding: 16px 18px;
+margin-bottom: 12px;
+cursor: pointer;
+transition: all 0.2s;
+position: relative;
+animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+from { opacity: 0; transform: translateX(-10px); }
+to { opacity: 1; transform: translateX(0); }
+}
+
+.opportunity-card:hover { border-color: var(–accent); background: #161616; }
+.opportunity-card.red { border-left-color: var(–accent2); }
+.opportunity-card.blue { border-left-color: var(–accent3); }
+
+.card-header {
+display: flex;
+align-items: flex-start;
+gap: 12px;
+margin-bottom: 8px;
+}
+
+.card-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+.card-title {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 18px;
+letter-spacing: 2px;
+color: var(–text);
+flex: 1;
+}
+
+.card-value {
+font-family: ‘Bebas Neue’, sans-serif;
+font-size: 22px;
+letter-spacing: 1px;
+color: var(–green);
+}
+
+.card-meta {
+display: flex;
+gap: 16px;
+font-size: 10px;
+color: var(–muted);
+letter-spacing: 1px;
+margin-bottom: 10px;
+}
+
+.card-meta span { display: flex; align-items: center; gap: 4px; }
+
+.card-desc {
+font-size: 11px;
+color: #999;
+line-height: 1.7;
+margin-bottom: 12px;
+}
+
+.card-steps {
+display: none;
+margin-top: 12px;
+border-top: 1px solid var(–border);
+padding-top: 12px;
+}
+
+.card-steps.open { display: block; }
+
+.ai-response {
+font-size: 11px;
+color: var(–accent3);
+line-height: 1.8;
+white-space: pre-wrap;
+}
+
+.difficulty-bar {
+display: flex;
+gap: 4px;
+align-items: center;
+}
+
+.diff-pip {
+width: 8px; height: 8px;
+border-radius: 1px;
+background: var(–border);
+}
+
+.diff-pip.filled { background: var(–accent); }
+
+.tag {
+display: inline-block;
+padding: 2px 8px;
+border: 1px solid var(–border);
+border-radius: 1px;
+font-size: 9px;
+letter-spacing: 1px;
+text-transform: uppercase;
+color: var(–muted);
+margin-right: 4px;
+}
+
+.tag.hot { border-color: var(–accent2); color: var(–accent2); }
+.tag.new { border-color: var(–accent); color: var(–accent); }
+.tag.passive { border-color: var(–accent3); color: var(–accent3); }
+
+.loading {
+display: flex;
+align-items: center;
+gap: 8px;
+font-size: 11px;
+color: var(–muted);
+padding: 12px 0;
+}
+
+.spinner {
+width: 12px; height: 12px;
+border: 1px solid var(–border);
+border-top-color: var(–accent);
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.stats-row {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.stat-box {
+background: var(–panel);
+border: 1px solid var(–border);
+padding: 14px;
+border-radius: 2px;
+}
+
+.stat-label { font-size: 9px; color: var(–muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+.stat-value { font-family: ‘Bebas Neue’, sans-serif; font-size: 28px; letter-spacing: 1px; color: var(–accent); }
+.stat-sub { font-size: 9px; color: var(–muted); margin-top: 2px; }
+
+.empty {
+text-align: center;
+padding: 60px 20px;
+color: var(–muted);
+font-size: 12px;
+letter-spacing: 1px;
+}
+
+.empty .big { font-family: ‘Bebas Neue’, sans-serif; font-size: 48px; color: var(–border); letter-spacing: 4px; display: block; margin-bottom: 12px; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(–bg); }
+::-webkit-scrollbar-thumb { background: var(–border); }
+
+.legal-note {
+font-size: 10px;
+color: var(–muted);
+border-top: 1px solid var(–border);
+padding: 10px 24px;
+letter-spacing: 1px;
+}
+</style>
+
+</head>
+<body>
+
+<header>
+  <h1>ARBITRAGE</h1>
+  <span class="tagline">Passive Income Intelligence Scanner</span>
+  <span class="ticker">● LIVE</span>
+</header>
+
+<div class="grid">
+
+  <aside class="sidebar">
+    <h2>Categories</h2>
+    <button class="category-btn active" data-cat="all">
+      <span class="dot"></span> All Opportunities
+      <span class="yield-badge">∞</span>
+    </button>
+    <button class="category-btn" data-cat="bank">
+      <span class="dot"></span> Bank Bonuses
+      <span class="yield-badge">$200-900</span>
+    </button>
+    <button class="category-btn" data-cat="credit">
+      <span class="dot"></span> Credit Card Churning
+      <span class="yield-badge">$500-2k</span>
+    </button>
+    <button class="category-btn" data-cat="cashback">
+      <span class="dot"></span> Cashback Stacking
+      <span class="yield-badge">5-30%</span>
+    </button>
+    <button class="category-btn" data-cat="price">
+      <span class="dot"></span> Price Arbitrage
+      <span class="yield-badge">varies</span>
+    </button>
+    <button class="category-btn" data-cat="promo">
+      <span class="dot"></span> Promo / Trial Abuse
+      <span class="yield-badge">$10-200</span>
+    </button>
+    <button class="category-btn" data-cat="rewards">
+      <span class="dot"></span> Rewards Optimization
+      <span class="yield-badge">2-5x pts</span>
+    </button>
+    <button class="category-btn" data-cat="retail">
+      <span class="dot"></span> Retail Arbitrage
+      <span class="yield-badge">10-40%</span>
+    </button>
+    <button class="category-btn" data-cat="digital">
+      <span class="dot"></span> Digital / AI Income
+      <span class="yield-badge">$50-5k/mo</span>
+    </button>
+    <button class="category-btn" data-cat="savings">
+      <span class="dot"></span> Savings Rate Arb
+      <span class="yield-badge">4.5-5.5%</span>
+    </button>
+
+```
+<h2 style="margin-top: 28px;">Risk Profile</h2>
+<button class="category-btn" data-risk="low">
+  <span class="dot"></span> Low Risk Only
+</button>
+<button class="category-btn" data-risk="medium">
+  <span class="dot"></span> Medium Risk
+</button>
+<button class="category-btn" data-risk="any">
+  <span class="dot"></span> All Risk Levels
+</button>
+```
+
+  </aside>
+
+  <div class="main-top">
+    <div class="scanner-bar">
+      <input type="text" id="promptInput" placeholder="Describe your situation: capital available, time, skills, risk tolerance..." />
+      <button class="btn" id="scanBtn" onclick="runScan()">SCAN</button>
+      <button class="btn btn-ghost" onclick="clearResults()">CLEAR</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="opportunities">Opportunities</div>
+      <div class="tab" data-tab="playbooks">Playbooks</div>
+      <div class="tab" data-tab="stacks">Stacking Combos</div>
+    </div>
+  </div>
+
+  <div class="main-content" id="mainContent">
+    <div class="stats-row" id="statsRow" style="display:none">
+      <div class="stat-box">
+        <div class="stat-label">Opportunities Found</div>
+        <div class="stat-value" id="statCount">0</div>
+        <div class="stat-sub">this scan</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Potential Monthly</div>
+        <div class="stat-value" id="statMonthly">$0</div>
+        <div class="stat-sub">conservative estimate</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Easiest Win</div>
+        <div class="stat-value" id="statEasy">—</div>
+        <div class="stat-sub">lowest effort</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Time to First $</div>
+        <div class="stat-value" id="statTime">—</div>
+        <div class="stat-sub">fastest opportunity</div>
+      </div>
+    </div>
+
+```
+<div id="results">
+  <div class="empty">
+    <span class="big">SCAN</span>
+    Describe your situation above and hit SCAN<br>to find your lowest-hanging fruit
+  </div>
+</div>
+```
+
+  </div>
+
+</div>
+
+<div class="legal-note">⚠ All strategies shown are legal. No financial advice. Always verify terms and tax implications. This tool does not access your accounts or execute transactions.</div>
+
+<script>
+const CATEGORIES = {
+  bank: '🏦',
+  credit: '💳',
+  cashback: '💵',
+  price: '📦',
+  promo: '🎁',
+  rewards: '⭐',
+  retail: '🛒',
+  digital: '🤖',
+  savings: '💰'
+};
+
+let currentOpps = [];
+
+document.querySelectorAll('.category-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+document.getElementById('promptInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runScan();
+});
+
+function clearResults() {
+  currentOpps = [];
+  document.getElementById('results').innerHTML = `<div class="empty"><span class="big">SCAN</span>Describe your situation above and hit SCAN<br>to find your lowest-hanging fruit</div>`;
+  document.getElementById('statsRow').style.display = 'none';
+}
+
+async function runScan() {
+  const input = document.getElementById('promptInput').value.trim();
+  const btn = document.getElementById('scanBtn');
+
+  if (!input) {
+    document.getElementById('promptInput').style.borderColor = 'var(--accent2)';
+    setTimeout(() => document.getElementById('promptInput').style.borderColor = '', 1000);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'SCANNING...';
+
+  const results = document.getElementById('results');
+  results.innerHTML = `<div class="loading"><div class="spinner"></div> Analyzing opportunities for your situation...</div>`;
+  document.getElementById('statsRow').style.display = 'none';
+
+  const systemPrompt = `You are an expert in legal passive income strategies, financial arbitrage, cashback stacking, credit card churning, bank account bonuses, retail arbitrage, and digital income streams. 
+
+The user will describe their situation. You must identify the BEST legal opportunities for them to make money passively or semi-passively. Think like Adam Sandler's character in Punch-Drunk Love finding a sweepstakes loophole, or a savvy rewards hacker — but everything must be 100% legal and ethical.
+
+Return ONLY valid JSON (no markdown, no preamble) in this exact format:
+{
+  "opportunities": [
+    {
+      "id": "unique_id",
+      "title": "Short punchy name",
+      "category": "bank|credit|cashback|price|promo|rewards|retail|digital|savings",
+      "value": "$XXX or X%",
+      "monthly_estimate": 150,
+      "difficulty": 2,
+      "time_to_money": "1-3 days",
+      "risk": "low|medium|high",
+      "tags": ["passive", "hot", "new"],
+      "description": "2-3 sentences explaining the opportunity and why it fits this person.",
+      "steps": "Step-by-step instructions to execute this opportunity. Be specific, actionable, and include any tools, websites, or services needed.",
+      "gotchas": "Key risks, terms to watch, or common mistakes.",
+      "automation_potential": "How automatable is this on a scale and what tools can automate it"
+    }
+  ],
+  "summary": {
+    "total_monthly_potential": 1200,
+    "easiest_win": "title of easiest opportunity",
+    "fastest": "1 week"
+  }
+}
+
+Provide 4-7 opportunities. Difficulty is 1-5 (1=trivial, 5=hard). Be realistic about values. Focus on HIGHEST ROI for lowest effort given their specific situation.`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: input }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content.map(i => i.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    currentOpps = parsed.opportunities;
+    renderResults(parsed);
+
+  } catch (err) {
+    results.innerHTML = `<div class="empty"><span class="big">ERR</span>API error — check console</div>`;
+    console.error(err);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'SCAN';
+}
+
+function renderResults(data) {
+  const { opportunities, summary } = data;
+
+  // Stats
+  document.getElementById('statsRow').style.display = 'grid';
+  document.getElementById('statCount').textContent = opportunities.length;
+  document.getElementById('statMonthly').textContent = '$' + (summary.total_monthly_potential || 0).toLocaleString();
+  document.getElementById('statEasy').textContent = (summary.easiest_win || '—').split(' ').slice(0, 2).join(' ');
+  document.getElementById('statTime').textContent = summary.fastest || '—';
+
+  const results = document.getElementById('results');
+  results.innerHTML = '';
+
+  opportunities.forEach((opp, i) => {
+    const card = document.createElement('div');
+    const colorClass = opp.risk === 'high' ? 'red' : opp.category === 'digital' ? 'blue' : '';
+    card.className = `opportunity-card ${colorClass}`;
+    card.style.animationDelay = `${i * 0.05}s`;
+
+    const icon = CATEGORIES[opp.category] || '💡';
+    const diffs = [1,2,3,4,5].map(n => `<div class="diff-pip ${n <= opp.difficulty ? 'filled' : ''}"></div>`).join('');
+    const tags = (opp.tags || []).map(t => `<span class="tag ${t}">${t}</span>`).join('');
+
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-icon">${icon}</span>
+        <div style="flex:1">
+          <div class="card-title">${opp.title}</div>
+          <div class="card-meta">
+            <span>⏱ ${opp.time_to_money}</span>
+            <span>📊 RISK: ${opp.risk.toUpperCase()}</span>
+            <span>DIFFICULTY: <div class="difficulty-bar" style="display:inline-flex;gap:2px;margin-left:4px">${diffs}</div></span>
+          </div>
+        </div>
+        <div>
+          <div class="card-value">${opp.value}</div>
+          <div style="font-size:9px;color:var(--muted);text-align:right">~$${(opp.monthly_estimate||0).toLocaleString()}/mo</div>
+        </div>
+      </div>
+      <div>${tags}</div>
+      <div class="card-desc" style="margin-top:8px">${opp.description}</div>
+      <button class="btn btn-ghost" style="font-size:11px;padding:6px 14px;margin-right:8px" onclick="toggleSteps(this, '${opp.id}')">▶ HOW TO EXECUTE</button>
+      <div class="card-steps" id="steps-${opp.id}">
+        <div class="loading" id="loading-${opp.id}" style="display:none"><div class="spinner"></div> Generating playbook...</div>
+        <div class="ai-response" id="text-${opp.id}"></div>
+      </div>
+    `;
+
+    // Store data
+    card.dataset.opp = JSON.stringify(opp);
+    results.appendChild(card);
+  });
+}
+
+async function toggleSteps(btn, id) {
+  const stepsDiv = document.getElementById(`steps-${id}`);
+  const textDiv = document.getElementById(`text-${id}`);
+  const loadingDiv = document.getElementById(`loading-${id}`);
+
+  stepsDiv.classList.toggle('open');
+
+  if (stepsDiv.classList.contains('open') && !textDiv.textContent.trim()) {
+    // Find the opportunity data
+    const card = btn.closest('.opportunity-card');
+    const opp = JSON.parse(card.dataset.opp);
+
+    loadingDiv.style.display = 'flex';
+    btn.textContent = '▼ HOW TO EXECUTE';
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `Give me a detailed step-by-step playbook to execute this opportunity: "${opp.title}".
+            
+Description: ${opp.description}
+Steps overview: ${opp.steps}
+Gotchas: ${opp.gotchas}
+Automation potential: ${opp.automation_potential}
+
+Format as:
+STEPS:
+1. [action]
+2. [action]
+...
+
+KEY TOOLS: [list specific websites, apps, browser extensions]
+
+GOTCHAS: [specific warnings]
+
+AUTOMATION: [how to put this on autopilot]
+
+Be specific, actionable, and name real services.`
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content.map(i => i.text || '').join('');
+      textDiv.textContent = text;
+
+    } catch (err) {
+      textDiv.textContent = `Error loading playbook: ${err.message}`;
+    }
+
+    loadingDiv.style.display = 'none';
+  } else if (!stepsDiv.classList.contains('open')) {
+    btn.textContent = '▶ HOW TO EXECUTE';
+  }
+}
+</script>
+
+</body>
+</html>
