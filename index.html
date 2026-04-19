@@ -507,6 +507,209 @@ cursor: pointer;
 font-size: 24px;
 color: var(--muted);
 }
+/* ========== MOBILE RESPONSIVE STYLES ========== */
+@media screen and (max-width: 768px) {
+  body { padding: 0; }
+  body::before { display: none; }
+  
+  header {
+    padding: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  header h1 { font-size: 32px; letter-spacing: 3px; }
+  .tagline { font-size: 9px; width: 100%; }
+  .ticker { margin-left: 0; font-size: 9px; }
+  
+  /* Stack grid vertically */
+  .grid {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  /* Sidebar becomes horizontal scroll on mobile */
+  .sidebar {
+    grid-row: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: visible;
+    white-space: nowrap;
+  }
+  
+  /* Hide sidebar sections by default, show only category pills */
+  .sidebar h2 {
+    display: none;
+  }
+  
+  .sidebar h2:first-of-type {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  
+  /* Category buttons as horizontal pills */
+  .category-btn {
+    display: inline-flex;
+    width: auto;
+    margin-right: 6px;
+    margin-bottom: 0;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+  
+  .yield-badge { margin-left: 8px; }
+  
+  /* Hide connector section on mobile sidebar */
+  .connector-section {
+    display: none;
+  }
+  
+  /* Main top area */
+  .main-top {
+    padding: 16px 12px 0;
+  }
+  
+  .scanner-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .scanner-bar input {
+    width: 100%;
+    font-size: 11px;
+    padding: 12px;
+  }
+  
+  .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  .btn-ghost { font-size: 10px; }
+  
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .tab {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+  
+  /* Main content */
+  .main-content {
+    padding: 16px 12px;
+  }
+  
+  /* Stats row becomes 2x2 grid */
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .stat-box { padding: 10px; }
+  .stat-value { font-size: 22px; }
+  .stat-label { font-size: 8px; }
+  .stat-sub { font-size: 8px; }
+  
+  /* Opportunity cards */
+  .opportunity-card {
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  
+  .card-header {
+    flex-wrap: wrap;
+  }
+  
+  .card-icon { font-size: 18px; }
+  
+  .card-title {
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  .badge-agent {
+    display: inline-block;
+    margin-left: 0;
+    margin-top: 4px;
+    font-size: 8px;
+  }
+  
+  .card-value {
+    font-size: 18px;
+    margin-top: 4px;
+  }
+  
+  .card-meta {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .card-meta span { font-size: 9px; }
+  
+  .card-desc {
+    font-size: 10px;
+  }
+  
+  .card-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .card-actions .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+  
+  .tag {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+  
+  /* Modal */
+  .modal-content {
+    padding: 20px;
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .modal-title { font-size: 20px; }
+  
+  /* Legal note */
+  .legal-note {
+    padding: 12px 16px;
+    font-size: 9px;
+    text-align: center;
+  }
+  
+  /* Empty state */
+  .empty { padding: 40px 16px; }
+  .empty .big { font-size: 36px; }
+}
+
+/* Small phones */
+@media screen and (max-width: 480px) {
+  header h1 { font-size: 28px; }
+  
+  .stats-row { gap: 6px; }
+  .stat-box { padding: 8px; }
+  .stat-value { font-size: 18px; }
+  
+  .card-title { font-size: 14px; }
+  .card-value { font-size: 16px; }
+  
+  .btn { padding: 8px 12px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
