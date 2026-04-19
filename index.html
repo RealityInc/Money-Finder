@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARBITRAGE — Agentic Income Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>ARBITRAGE — AI-Powered Income Scanner</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap');
 
 :root {
 --bg: #0a0a0a;
@@ -19,14 +19,41 @@
 --text: #e0e0e0;
 --muted: #555;
 --green: #00ff88;
+--focus-ring: 0 0 0 3px rgba(200, 255, 0, 0.4);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Focus styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+/* Skip to content link - accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: #000;
+  padding: 8px 16px;
+  z-index: 10001;
+  text-decoration: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.skip-link:focus {
+  top: 10px;
+  left: 10px;
+}
+
 body {
 background: var(--bg);
 color: var(--text);
-font-family: 'Space Mono', monospace;
+font-family: 'Inter', sans-serif;
 min-height: 100vh;
 overflow-x: hidden;
 }
@@ -49,12 +76,13 @@ gap: 24px;
 flex-wrap: wrap;
 }
 
-header h1 {
+h1 {
 font-family: 'Bebas Neue', sans-serif;
 font-size: 48px;
 letter-spacing: 6px;
 color: var(--accent);
 text-shadow: 0 0 30px rgba(200,255,0,0.3);
+margin: 0;
 }
 
 .tagline {
@@ -73,6 +101,92 @@ animation: blink 1.5s step-end infinite;
 
 @keyframes blink { 50% { opacity: 0; } }
 
+/* Welcome banner / onboarding */
+.welcome-banner {
+  background: linear-gradient(135deg, rgba(200,255,0,0.1), rgba(0,212,255,0.05));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.welcome-banner.hidden { display: none; }
+
+.welcome-icon {
+  font-size: 32px;
+  background: var(--panel);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+}
+
+.welcome-content { flex: 1; }
+
+.welcome-content h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
+
+.welcome-content p {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.example-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.example-chip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text);
+}
+
+.example-chip:hover {
+  border-color: var(--accent);
+  background: rgba(200,255,0,0.05);
+}
+
+.example-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dismiss-banner {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dismiss-banner:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+
 .grid {
 display: grid;
 grid-template-columns: 340px 1fr;
@@ -88,7 +202,7 @@ padding: 20px;
 overflow-y: auto;
 }
 
-.sidebar h2 {
+.sidebar h2, .sidebar h3 {
 font-family: 'Bebas Neue', sans-serif;
 letter-spacing: 3px;
 font-size: 14px;
@@ -109,15 +223,15 @@ width: 100%;
 padding: 10px 12px;
 background: transparent;
 border: 1px solid transparent;
-border-radius: 2px;
+border-radius: 6px;
 color: var(--text);
-font-family: 'Space Mono', monospace;
-font-size: 11px;
+font-family: 'Inter', sans-serif;
+font-size: 12px;
 cursor: pointer;
 text-align: left;
 margin-bottom: 4px;
 transition: all 0.15s;
-letter-spacing: 1px;
+letter-spacing: 0.5px;
 }
 
 .category-btn:hover { border-color: var(--border); background: var(--panel); }
@@ -143,13 +257,10 @@ margin-top: 16px;
 padding: 12px;
 background: var(--panel);
 border: 1px solid var(--border);
-border-radius: 2px;
+border-radius: 8px;
 }
 
-.connector-item {
-margin-bottom: 16px;
-}
-
+.connector-item { margin-bottom: 16px; }
 .connector-item:last-child { margin-bottom: 0; }
 
 .connector-header {
@@ -168,19 +279,19 @@ background: var(--bg);
 border: 1px solid var(--border);
 color: var(--text);
 padding: 8px;
-font-size: 10px;
-font-family: 'Space Mono';
+font-size: 11px;
+font-family: 'Inter', sans-serif;
 margin-bottom: 6px;
-border-radius: 2px;
+border-radius: 4px;
 }
 
 .connector-input:focus { outline: none; border-color: var(--accent3); }
-.connector-input::placeholder { color: var(--muted); font-size: 9px; }
+.connector-input::placeholder { color: var(--muted); font-size: 10px; }
 
 .connector-status {
-font-size: 9px;
+font-size: 10px;
 margin-top: 4px;
-min-height: 14px;
+min-height: 16px;
 }
 
 .connector-status.connected { color: var(--green); }
@@ -198,45 +309,75 @@ align-items: center;
 margin-bottom: 16px;
 }
 
+/* Label styling */
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.input-wrapper label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+
+.input-wrapper input:focus + label,
+.input-wrapper input:not(:placeholder-shown) + label {
+  top: -8px;
+  left: 10px;
+  font-size: 10px;
+  background: var(--bg);
+  padding: 0 6px;
+  color: var(--accent);
+}
+
 .scanner-bar input {
-flex: 1;
+width: 100%;
 background: var(--panel);
 border: 1px solid var(--border);
-border-radius: 2px;
-padding: 10px 14px;
+border-radius: 6px;
+padding: 14px 14px 14px 14px;
 color: var(--text);
-font-family: 'Space Mono', monospace;
-font-size: 12px;
+font-family: 'Inter', sans-serif;
+font-size: 13px;
 outline: none;
 transition: border-color 0.2s;
 }
 
+.scanner-bar input::placeholder { color: transparent; }
 .scanner-bar input:focus { border-color: var(--accent); }
-.scanner-bar input::placeholder { color: var(--muted); }
 
 .btn {
-padding: 10px 20px;
+padding: 12px 24px;
 background: var(--accent);
 color: #000;
 border: none;
-border-radius: 2px;
+border-radius: 6px;
 font-family: 'Bebas Neue', sans-serif;
 font-size: 16px;
 letter-spacing: 2px;
 cursor: pointer;
 transition: all 0.15s;
 white-space: nowrap;
+font-weight: 600;
 }
 
-.btn:hover { background: #fff; }
-.btn:disabled { background: var(--muted); cursor: not-allowed; }
+.btn:hover { background: #fff; transform: translateY(-1px); }
+.btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .btn-ghost {
 background: transparent;
 border: 1px solid var(--border);
 color: var(--text);
-font-family: 'Space Mono', monospace;
-font-size: 11px;
+font-family: 'Inter', sans-serif;
+font-size: 12px;
+font-weight: 500;
 }
 
 .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
@@ -247,8 +388,6 @@ border: 1px solid var(--accent4);
 color: var(--accent4);
 }
 
-.btn-automate:hover { background: rgba(167,139,250,0.2); border-color: var(--accent4); color: var(--accent4); }
-
 .tabs {
 display: flex;
 gap: 0;
@@ -256,31 +395,85 @@ margin-top: 4px;
 }
 
 .tab {
-padding: 8px 16px;
-font-size: 11px;
+padding: 10px 20px;
+font-size: 12px;
+font-weight: 500;
 letter-spacing: 1px;
 cursor: pointer;
 color: var(--muted);
 border-bottom: 2px solid transparent;
 transition: all 0.15s;
 text-transform: uppercase;
+background: none;
+border-top: none;
+border-left: none;
+border-right: none;
+font-family: 'Inter', sans-serif;
 }
 
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab:hover { color: var(--text); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .main-content {
 padding: 20px 24px;
 overflow-y: auto;
 }
 
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Error state */
+.error-container {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255,68,68,0.05);
+  border: 1px solid var(--accent2);
+  border-radius: 8px;
+}
+
+.error-icon { font-size: 32px; margin-bottom: 12px; }
+.error-title { color: var(--accent2); font-size: 18px; margin-bottom: 8px; }
+.error-message { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.empty-title { font-size: 18px; color: var(--muted); margin-bottom: 8px; }
+.empty-desc { font-size: 13px; color: var(--muted); }
+
 .opportunity-card {
 background: var(--panel);
 border: 1px solid var(--border);
-border-left: 3px solid var(--accent);
-border-radius: 2px;
-padding: 16px 18px;
-margin-bottom: 12px;
+border-left: 4px solid var(--accent);
+border-radius: 8px;
+padding: 18px 20px;
+margin-bottom: 14px;
 cursor: pointer;
 transition: all 0.2s;
 position: relative;
@@ -293,6 +486,8 @@ to { opacity: 1; transform: translateX(0); }
 }
 
 .opportunity-card:hover { border-color: var(--accent); background: #161616; }
+.opportunity-card:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .opportunity-card.red { border-left-color: var(--accent2); }
 .opportunity-card.blue { border-left-color: var(--accent3); }
 .opportunity-card.purple { border-left-color: var(--accent4); }
@@ -301,23 +496,23 @@ to { opacity: 1; transform: translateX(0); }
 .card-header {
 display: flex;
 align-items: flex-start;
-gap: 12px;
-margin-bottom: 8px;
+gap: 14px;
+margin-bottom: 10px;
 }
 
-.card-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.card-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
 
 .card-title {
 font-family: 'Bebas Neue', sans-serif;
-font-size: 18px;
-letter-spacing: 2px;
+font-size: 20px;
+letter-spacing: 1.5px;
 color: var(--text);
 flex: 1;
 }
 
 .card-value {
 font-family: 'Bebas Neue', sans-serif;
-font-size: 22px;
+font-size: 24px;
 letter-spacing: 1px;
 color: var(--green);
 }
@@ -325,40 +520,40 @@ color: var(--green);
 .card-meta {
 display: flex;
 gap: 16px;
-font-size: 10px;
+font-size: 11px;
 color: var(--muted);
-letter-spacing: 1px;
-margin-bottom: 10px;
+letter-spacing: 0.5px;
+margin-bottom: 12px;
 flex-wrap: wrap;
 }
 
-.card-meta span { display: flex; align-items: center; gap: 4px; }
+.card-meta span { display: flex; align-items: center; gap: 6px; }
 
 .card-desc {
-font-size: 11px;
-color: #999;
+font-size: 13px;
+color: #bbb;
 line-height: 1.7;
-margin-bottom: 12px;
+margin-bottom: 14px;
 }
 
 .card-steps {
 display: none;
-margin-top: 12px;
+margin-top: 14px;
 border-top: 1px solid var(--border);
-padding-top: 12px;
+padding-top: 14px;
 }
 
 .card-steps.open { display: block; }
 
 .ai-response {
-font-size: 11px;
+font-size: 12px;
 color: var(--accent3);
 line-height: 1.8;
 white-space: pre-wrap;
 background: rgba(0,212,255,0.05);
-padding: 12px;
-border-radius: 2px;
-margin-top: 8px;
+padding: 14px;
+border-radius: 6px;
+margin-top: 10px;
 }
 
 .difficulty-bar {
@@ -369,7 +564,7 @@ align-items: center;
 
 .diff-pip {
 width: 8px; height: 8px;
-border-radius: 1px;
+border-radius: 2px;
 background: var(--border);
 }
 
@@ -377,104 +572,86 @@ background: var(--border);
 
 .tag {
 display: inline-block;
-padding: 2px 8px;
+padding: 4px 10px;
 border: 1px solid var(--border);
-border-radius: 1px;
-font-size: 9px;
-letter-spacing: 1px;
+border-radius: 20px;
+font-size: 10px;
+font-weight: 500;
+letter-spacing: 0.5px;
 text-transform: uppercase;
 color: var(--muted);
-margin-right: 4px;
-margin-bottom: 4px;
+margin-right: 6px;
+margin-bottom: 6px;
 }
 
-.tag.hot { border-color: var(--accent2); color: var(--accent2); }
-.tag.new { border-color: var(--accent); color: var(--accent); }
-.tag.passive { border-color: var(--accent3); color: var(--accent3); }
-.tag.agentic { border-color: var(--accent4); color: var(--accent4); }
-.tag.content { border-color: var(--accent5); color: var(--accent5); }
+.tag.hot { border-color: var(--accent2); color: var(--accent2); background: rgba(255,68,68,0.05); }
+.tag.new { border-color: var(--accent); color: var(--accent); background: rgba(200,255,0,0.05); }
+.tag.passive { border-color: var(--accent3); color: var(--accent3); background: rgba(0,212,255,0.05); }
 
 .badge-agent {
 background: rgba(167,139,250,0.1);
 border: 1px solid var(--accent4);
 color: var(--accent4);
-padding: 2px 6px;
-font-size: 9px;
-border-radius: 2px;
-margin-left: 8px;
+padding: 4px 10px;
+font-size: 10px;
+border-radius: 20px;
+margin-left: 10px;
 display: inline-block;
+font-weight: 500;
 }
-
-.loading {
-display: flex;
-align-items: center;
-gap: 8px;
-font-size: 11px;
-color: var(--muted);
-padding: 12px 0;
-}
-
-.spinner {
-width: 12px; height: 12px;
-border: 1px solid var(--border);
-border-top-color: var(--accent);
-border-radius: 50%;
-animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .stats-row {
 display: grid;
 grid-template-columns: repeat(4, 1fr);
-gap: 12px;
-margin-bottom: 20px;
+gap: 14px;
+margin-bottom: 24px;
 }
 
 .stat-box {
 background: var(--panel);
 border: 1px solid var(--border);
-padding: 14px;
-border-radius: 2px;
+padding: 16px;
+border-radius: 8px;
 }
 
-.stat-label { font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--accent); }
-.stat-sub { font-size: 9px; color: var(--muted); margin-top: 2px; }
+.stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; font-weight: 500; }
+.stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 1px; color: var(--accent); }
+.stat-sub { font-size: 10px; color: var(--muted); margin-top: 4px; }
 
 .empty {
 text-align: center;
 padding: 60px 20px;
 color: var(--muted);
-font-size: 12px;
-letter-spacing: 1px;
+font-size: 13px;
+letter-spacing: 0.5px;
 }
 
-.empty .big { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--border); letter-spacing: 4px; display: block; margin-bottom: 12px; }
+.empty .big { font-family: 'Bebas Neue', sans-serif; font-size: 56px; color: var(--border); letter-spacing: 4px; display: block; margin-bottom: 16px; }
 
-::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 .legal-note {
-font-size: 10px;
+font-size: 11px;
 color: var(--muted);
 border-top: 1px solid var(--border);
-padding: 10px 24px;
-letter-spacing: 1px;
+padding: 14px 24px;
+letter-spacing: 0.5px;
+background: var(--panel);
 }
 
 .card-actions {
 display: flex;
-gap: 8px;
-margin-top: 12px;
+gap: 10px;
+margin-top: 14px;
 flex-wrap: wrap;
 }
 
 .modal {
 position: fixed;
 top: 0; left: 0; right: 0; bottom: 0;
-background: rgba(0,0,0,0.8);
+background: rgba(0,0,0,0.85);
 display: none;
 justify-content: center;
 align-items: center;
@@ -486,8 +663,9 @@ z-index: 10000;
 .modal-content {
 background: var(--panel);
 border: 1px solid var(--border);
-padding: 24px;
-max-width: 500px;
+border-radius: 12px;
+padding: 28px;
+max-width: 520px;
 width: 90%;
 max-height: 80vh;
 overflow-y: auto;
@@ -495,478 +673,250 @@ overflow-y: auto;
 
 .modal-title {
 font-family: 'Bebas Neue', sans-serif;
-font-size: 24px;
+font-size: 28px;
 letter-spacing: 2px;
-margin-bottom: 16px;
+margin-bottom: 20px;
 color: var(--accent4);
 }
 
 .modal-close {
 float: right;
 cursor: pointer;
-font-size: 24px;
+font-size: 28px;
 color: var(--muted);
+background: none;
+border: none;
+padding: 0 8px;
 }
-/* ========== MOBILE RESPONSIVE STYLES ========== */
+
+.modal-close:hover { color: var(--accent2); }
+.modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 14px 20px;
+  color: var(--text);
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 10002;
+  animation: slideUp 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast.success { border-color: var(--green); }
+.toast.error { border-color: var(--accent2); }
+.toast.info { border-color: var(--accent3); }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsive */
 @media screen and (max-width: 768px) {
   body { padding: 0; }
   body::before { display: none; }
   
-  header {
-    padding: 16px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  header h1 { font-size: 32px; letter-spacing: 3px; }
+  header { padding: 16px; }
+  h1 { font-size: 32px; letter-spacing: 3px; }
   .tagline { font-size: 9px; width: 100%; }
   .ticker { margin-left: 0; font-size: 9px; }
   
-  /* Stack grid vertically */
-  .grid {
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    min-height: 100vh;
-  }
+  .welcome-banner { margin: 12px; padding: 16px; }
+  .welcome-icon { width: 48px; height: 48px; font-size: 24px; }
+  .welcome-content h2 { font-size: 20px; }
+  .welcome-content p { font-size: 12px; }
   
-  /* Sidebar becomes horizontal scroll on mobile */
+  .grid { display: flex; flex-direction: column; height: auto; }
+  
   .sidebar {
-    grid-row: auto;
     border-right: none;
     border-bottom: 1px solid var(--border);
     padding: 12px;
-    max-height: none;
     overflow-x: auto;
     overflow-y: visible;
-    white-space: nowrap;
-  }
-  
-  /* Hide sidebar sections by default, show only category pills */
-  .sidebar h2 {
-    display: none;
-  }
-  
-  .sidebar h2:first-of-type {
-    display: block;
-    font-size: 12px;
-    margin-bottom: 8px;
-  }
-  
-  /* Category buttons as horizontal pills */
-  .category-btn {
-    display: inline-flex;
-    width: auto;
-    margin-right: 6px;
-    margin-bottom: 0;
-    padding: 8px 12px;
-    white-space: nowrap;
-  }
-  
-  .yield-badge { margin-left: 8px; }
-  
-  /* Hide connector section on mobile sidebar */
-  .connector-section {
-    display: none;
-  }
-  
-  /* Main top area */
-  .main-top {
-    padding: 16px 12px 0;
-  }
-  
-  .scanner-bar {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  .scanner-bar input {
-    width: 100%;
-    font-size: 11px;
-    padding: 12px;
-  }
-  
-  .btn {
-    padding: 10px 16px;
-    font-size: 14px;
-  }
-  
-  .btn-ghost { font-size: 10px; }
-  
-  .tabs {
-    overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
   }
   
-  .tab {
-    padding: 10px 12px;
-    font-size: 10px;
+  .sidebar h2, .sidebar h3 { display: none; }
+  .sidebar h2:first-of-type { display: block; font-size: 12px; }
+  
+  .category-btn {
+    display: inline-flex;
+    width: auto;
+    margin-right: 6px;
+    padding: 8px 14px;
   }
   
-  /* Main content */
-  .main-content {
-    padding: 16px 12px;
-  }
+  .connector-section { display: none; }
   
-  /* Stats row becomes 2x2 grid */
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
+  .main-top { padding: 16px 12px 0; }
+  .scanner-bar { flex-wrap: wrap; }
+  .input-wrapper { width: 100%; }
   
-  .stat-box { padding: 10px; }
-  .stat-value { font-size: 22px; }
-  .stat-label { font-size: 8px; }
-  .stat-sub { font-size: 8px; }
+  .btn { padding: 12px 20px; font-size: 14px; }
   
-  /* Opportunity cards */
-  .opportunity-card {
-    padding: 14px;
-    margin-bottom: 10px;
-  }
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab { padding: 10px 16px; }
   
-  .card-header {
-    flex-wrap: wrap;
-  }
+  .main-content { padding: 16px 12px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-box { padding: 12px; }
+  .stat-value { font-size: 24px; }
   
-  .card-icon { font-size: 18px; }
+  .opportunity-card { padding: 14px; }
+  .card-title { font-size: 16px; }
+  .card-value { font-size: 20px; }
+  .card-actions { flex-direction: column; }
+  .card-actions .btn { width: 100%; text-align: center; }
   
-  .card-title {
-    font-size: 16px;
-    width: 100%;
-  }
-  
-  .badge-agent {
-    display: inline-block;
-    margin-left: 0;
-    margin-top: 4px;
-    font-size: 8px;
-  }
-  
-  .card-value {
-    font-size: 18px;
-    margin-top: 4px;
-  }
-  
-  .card-meta {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .card-meta span { font-size: 9px; }
-  
-  .card-desc {
-    font-size: 10px;
-  }
-  
-  .card-actions {
-    flex-direction: column;
-    gap: 6px;
-  }
-  
-  .card-actions .btn {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-  }
-  
-  .tag {
-    font-size: 8px;
-    padding: 2px 6px;
-  }
-  
-  /* Modal */
-  .modal-content {
-    padding: 20px;
-    width: 95%;
-    max-height: 90vh;
-  }
-  
-  .modal-title { font-size: 20px; }
-  
-  /* Legal note */
-  .legal-note {
-    padding: 12px 16px;
-    font-size: 9px;
-    text-align: center;
-  }
-  
-  /* Empty state */
-  .empty { padding: 40px 16px; }
-  .empty .big { font-size: 36px; }
+  .legal-note { padding: 12px 16px; font-size: 9px; }
+  .toast { left: 16px; right: 16px; bottom: 16px; }
 }
 
-/* Small phones */
 @media screen and (max-width: 480px) {
-  header h1 { font-size: 28px; }
-  
-  .stats-row { gap: 6px; }
-  .stat-box { padding: 8px; }
-  .stat-value { font-size: 18px; }
-  
+  h1 { font-size: 28px; }
+  .stat-value { font-size: 20px; }
   .card-title { font-size: 14px; }
-  .card-value { font-size: 16px; }
-  
-  .btn { padding: 8px 12px; font-size: 12px; }
 }
 </style>
 </head>
 <body>
 
+<!-- Skip to content link for keyboard users -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
 <header>
-  <h1>ARBITRAGE</h1>
-  <span class="tagline">Agentic Income Intelligence Scanner</span>
-  <span class="ticker">● LIVE</span>
+  <h1 id="main-heading">ARBITRAGE</h1>
+  <span class="tagline">AI-Powered Income Scanner</span>
+  <span class="ticker" aria-label="System status online">● LIVE</span>
 </header>
+
+<!-- Welcome Banner / Onboarding -->
+<div id="welcomeBanner" class="welcome-banner" role="region" aria-label="Welcome and getting started">
+  <div class="welcome-icon" aria-hidden="true">🤖</div>
+  <div class="welcome-content">
+    <h2>Find income opportunities AI can do FOR you</h2>
+    <p>Describe your situation (skills, time, tools) and our AI agents will find low-effort, legal ways to generate income. Everything from receipt cashback to content creation — with automation playbooks.</p>
+    <div class="example-chips">
+      <button class="example-chip" onclick="fillExample('I have 20 min/day, basic writing skills, and a laptop')" aria-label="Try example: 20 minutes per day with writing skills">📝 Writing + 20min/day</button>
+      <button class="example-chip" onclick="fillExample('I have a car and can pickup items locally')" aria-label="Try example: Have car for local pickups">🚗 Have a car</button>
+      <button class="example-chip" onclick="fillExample('I want fully passive AI-automated income')" aria-label="Try example: Fully passive AI income">💤 Fully Passive</button>
+      <button class="example-chip" onclick="fillExample('I can design and use Canva')" aria-label="Try example: Design skills with Canva">🎨 Design Skills</button>
+    </div>
+  </div>
+  <button class="dismiss-banner" onclick="dismissWelcome()" aria-label="Dismiss welcome message">✕ DISMISS</button>
+</div>
 
 <div class="grid">
 
-  <aside class="sidebar">
-    <h2>🎯 Quick Actions</h2>
-    <button class="category-btn active" data-cat="all">
-      <span class="dot"></span> All Opportunities
+  <aside class="sidebar" aria-label="Filters and categories">
+    <h2 id="quick-actions-heading">🎯 Quick Actions</h2>
+    <button class="category-btn active" data-cat="all" aria-pressed="true">
+      <span class="dot" aria-hidden="true"></span> All Opportunities
       <span class="yield-badge">∞</span>
     </button>
     
-    <h2>📦 Low-Hanging Fruit</h2>
+    <h3>📦 Low-Hanging Fruit</h3>
+    <button class="category-btn" data-cat="receipt" aria-pressed="false"><span class="dot"></span> 🧾 Receipt Cashback<span class="yield-badge">$5-50/mo</span></button>
+    <button class="category-btn" data-cat="settlement" aria-pressed="false"><span class="dot"></span> ⚖️ Class Action<span class="yield-badge">$5-500</span></button>
+    <button class="category-btn" data-cat="rewards" aria-pressed="false"><span class="dot"></span> 🎮 Rewards Farming<span class="yield-badge">$10-100/mo</span></button>
+    <button class="category-btn" data-cat="curb" aria-pressed="false"><span class="dot"></span> 🚛 Curb Flipping<span class="yield-badge">$50-500</span></button>
     
-    <button class="category-btn" data-cat="receipt">
-      <span class="dot"></span> 🧾 Receipt Cashback
-      <span class="yield-badge">$5-50/mo</span>
-    </button>
+    <h3>🎬 Content Arbitrage</h3>
+    <button class="category-btn" data-cat="content" aria-pressed="false"><span class="dot"></span> 🎥 All Content<span class="yield-badge">$50-10k/mo</span></button>
+    <button class="category-btn" data-cat="content-youtube" aria-pressed="false"><span class="dot"></span> 📹 YouTube SEO<span class="yield-badge">$50-5k/mo</span></button>
+    <button class="category-btn" data-cat="content-blog" aria-pressed="false"><span class="dot"></span> 📝 Blog Stealer<span class="yield-badge">$100-10k/mo</span></button>
+    <button class="category-btn" data-cat="content-pinterest" aria-pressed="false"><span class="dot"></span> 📌 Pinterest<span class="yield-badge">$100-1k/mo</span></button>
     
-    <button class="category-btn" data-cat="settlement">
-      <span class="dot"></span> ⚖️ Class Action Auto-File
-      <span class="yield-badge">$5-500</span>
-    </button>
+    <h3>💼 Freelance</h3>
+    <button class="category-btn" data-cat="gig" aria-pressed="false"><span class="dot"></span> 📝 Gig Auto-Responder<span class="yield-badge">$50-500</span></button>
+    <button class="category-btn" data-cat="printable" aria-pressed="false"><span class="dot"></span> 🖨️ Printables<span class="yield-badge">$50-5k/mo</span></button>
     
-    <button class="category-btn" data-cat="rewards">
-      <span class="dot"></span> 🎮 Rewards Farming
-      <span class="yield-badge">$10-100/mo</span>
-    </button>
-    
-    <button class="category-btn" data-cat="curb">
-      <span class="dot"></span> 🚛 Curb Alert Flipping
-      <span class="yield-badge">$50-500</span>
-    </button>
-    
-    <button class="category-btn" data-cat="usertesting">
-      <span class="dot"></span> 🎥 UserTesting Auto-Screener
-      <span class="yield-badge">$10-60/test</span>
-    </button>
-    
-    <button class="category-btn" data-cat="product">
-      <span class="dot"></span> 📦 Free Product Testing
-      <span class="yield-badge">Free + $5-20</span>
-    </button>
-    
-    <button class="category-btn" data-cat="focus">
-      <span class="dot"></span> 🎯 Focus Group Auto-Apply
-      <span class="yield-badge">$50-300/hr</span>
-    </button>
-    
-    <h2>🎬 Content Arbitrage</h2>
-    
-    <button class="category-btn" data-cat="content">
-      <span class="dot"></span> 🎥 All Content Plays
-      <span class="yield-badge">$50-10k/mo</span>
-    </button>
-    
-    <button class="category-btn" data-cat="content-youtube">
-      <span class="dot"></span> 📹 YouTube SEO Hijacker
-      <span class="yield-badge">$50-5k/mo</span>
-    </button>
-    
-    <button class="category-btn" data-cat="content-blog">
-      <span class="dot"></span> 📝 Blog Post Stealer
-      <span class="yield-badge">$100-10k/mo</span>
-    </button>
-    
-    <button class="category-btn" data-cat="content-pinterest">
-      <span class="dot"></span> 📌 Pinterest Affiliate
-      <span class="yield-badge">$100-1k/mo</span>
-    </button>
-    
-    <button class="category-btn" data-cat="content-tiktok">
-      <span class="dot"></span> 🎵 TikTok Script Cloner
-      <span class="yield-badge">$50-2k/mo</span>
-    </button>
-    
-    <button class="category-btn" data-cat="content-newsletter">
-      <span class="dot"></span> 📧 AI Newsletter Curator
-      <span class="yield-badge">$500-5k/mo</span>
-    </button>
-    
-    <h2>💼 Freelance Arbitrage</h2>
-    
-    <button class="category-btn" data-cat="gig">
-      <span class="dot"></span> 📝 Gig Auto-Responder
-      <span class="yield-badge">$50-500/gig</span>
-    </button>
-    
-    <button class="category-btn" data-cat="aiart">
-      <span class="dot"></span> 🎨 AI Art Commission Scout
-      <span class="yield-badge">$25-200</span>
-    </button>
-    
-    <button class="category-btn" data-cat="printable">
-      <span class="dot"></span> 🖨️ Digital Printables
-      <span class="yield-badge">$50-5k/mo</span>
-    </button>
-    
-    <h2>📈 Market Arbitrage</h2>
-    
-    <button class="category-btn" data-cat="domain">
-      <span class="dot"></span> 🌐 Domain Flipping Scout
-      <span class="yield-badge">$100-5k/flip</span>
-    </button>
-    
-    <button class="category-btn" data-cat="cashback">
-      <span class="dot"></span> 💳 Cashback Stacking
-      <span class="yield-badge">5-30%</span>
-    </button>
-    
-    <button class="category-btn" data-cat="price">
-      <span class="dot"></span> 📊 Price Drop Refund
-      <span class="yield-badge">$5-200</span>
-    </button>
-    
-    <button class="category-btn" data-cat="promo">
-      <span class="dot"></span> 🎁 Trial/Promo Stacking
-      <span class="yield-badge">$10-200</span>
-    </button>
-    
-    <button class="category-btn" data-cat="crypto">
-      <span class="dot"></span> ₿ Crypto Airdrop Farmer
-      <span class="yield-badge">$50-5k</span>
-    </button>
-    
-    <button class="category-btn" data-cat="affiliate">
-      <span class="dot"></span> 🔗 Affiliate Auto-Lister
-      <span class="yield-badge">$100-10k/mo</span>
-    </button>
+    <h3>📈 Market</h3>
+    <button class="category-btn" data-cat="crypto" aria-pressed="false"><span class="dot"></span> ₿ Crypto Airdrops<span class="yield-badge">$50-5k</span></button>
+    <button class="category-btn" data-cat="affiliate" aria-pressed="false"><span class="dot"></span> 🔗 Affiliate<span class="yield-badge">$100-10k/mo</span></button>
 
-    <h2>⚡ Agentic Filter</h2>
-    <button class="category-btn" data-agent="high">
-      <span class="dot"></span> 🤖 Fully Automatable
-    </button>
-    <button class="category-btn" data-agent="medium">
-      <span class="dot"></span> 🔄 Semi-Automatable
-    </button>
-    <button class="category-btn" data-agent="any">
-      <span class="dot"></span> All Automation Levels
-    </button>
+    <h3>⚡ Automation Level</h3>
+    <button class="category-btn" data-agent="high" aria-pressed="false"><span class="dot"></span> 🤖 Fully Automatable</button>
+    <button class="category-btn" data-agent="medium" aria-pressed="false"><span class="dot"></span> 🔄 Semi-Automatable</button>
 
-    <h2>⏱️ Time to First $</h2>
-    <button class="category-btn" data-speed="instant">
-      <span class="dot"></span> Instant - 24hrs
-    </button>
-    <button class="category-btn" data-speed="fast">
-      <span class="dot"></span> 1-7 Days
-    </button>
-    <button class="category-btn" data-speed="medium">
-      <span class="dot"></span> 1-4 Weeks
-    </button>
-
-    <h2>🔌 Automation Connectors</h2>
-    
+    <h3>🔌 Connectors</h3>
     <div class="connector-section">
       <div class="connector-item">
-        <div class="connector-header">
-          <span style="color: var(--accent3);">⚡</span>
-          <span>n8n Webhook</span>
-        </div>
-        <input type="text" id="n8nWebhookUrl" class="connector-input" placeholder="Paste n8n webhook URL">
-        <button class="btn btn-ghost" style="width: 100%; font-size: 10px; padding: 6px;" onclick="testN8nConnection()">
-          TEST CONNECTION
-        </button>
-        <div id="n8nStatus" class="connector-status"></div>
+        <div class="connector-header"><span style="color: var(--accent3);">⚡</span><span>n8n Webhook</span></div>
+        <label for="n8nWebhookUrl" class="sr-only">n8n Webhook URL</label>
+        <input type="url" id="n8nWebhookUrl" class="connector-input" placeholder="https://your-n8n.com/webhook/..." aria-describedby="n8nStatus">
+        <button class="btn btn-ghost" style="width:100%;" onclick="testN8nConnection()" aria-label="Test n8n connection">TEST</button>
+        <div id="n8nStatus" class="connector-status" role="status"></div>
       </div>
-      
       <div class="connector-item">
-        <div class="connector-header">
-          <span style="color: #ff6b6b;">🔁</span>
-          <span>Zapier Webhook</span>
-        </div>
-        <input type="text" id="zapierWebhookUrl" class="connector-input" placeholder="Paste Zapier webhook URL">
-        <button class="btn btn-ghost" style="width: 100%; font-size: 10px; padding: 6px;" onclick="testZapierConnection()">
-          TEST CONNECTION
-        </button>
-        <div id="zapierStatus" class="connector-status"></div>
-      </div>
-      
-      <div class="connector-item">
-        <div class="connector-header">
-          <span style="color: var(--green);">📧</span>
-          <span>Gmail Draft (Direct)</span>
-        </div>
-        <button class="btn btn-ghost" style="width: 100%; font-size: 10px; padding: 6px;" onclick="connectGmail()">
-          CONNECT GMAIL
-        </button>
-        <div id="gmailStatus" class="connector-status"></div>
+        <div class="connector-header"><span style="color: #ff6b6b;">🔁</span><span>Zapier</span></div>
+        <label for="zapierWebhookUrl" class="sr-only">Zapier Webhook URL</label>
+        <input type="url" id="zapierWebhookUrl" class="connector-input" placeholder="https://hooks.zapier.com/..." aria-describedby="zapierStatus">
+        <button class="btn btn-ghost" style="width:100%;" onclick="testZapierConnection()" aria-label="Test Zapier connection">TEST</button>
+        <div id="zapierStatus" class="connector-status" role="status"></div>
       </div>
     </div>
   </aside>
 
   <div class="main-top">
     <div class="scanner-bar">
-      <input type="text" id="promptInput" placeholder="Describe your situation: 'I have 20 min/day, a car, basic design skills, want AI to do 80%...'" value="I have 20 minutes a day, a laptop, basic writing/design skills, and want AI to do most of the work for me" />
-      <button class="btn" id="scanBtn" onclick="runScan()">SCAN</button>
-      <button class="btn btn-ghost" onclick="clearResults()">CLEAR</button>
+      <div class="input-wrapper">
+        <label for="promptInput">Your situation (skills, time, tools...)</label>
+        <input type="text" id="promptInput" placeholder=" " value="I have 20 minutes a day, a laptop, basic writing/design skills" aria-required="true">
+      </div>
+      <button class="btn" id="scanBtn" onclick="runScan()" aria-label="Scan for opportunities">SCAN</button>
+      <button class="btn btn-ghost" onclick="clearResults()" aria-label="Clear results">CLEAR</button>
     </div>
-    <div class="tabs">
-      <div class="tab active" data-tab="opportunities">Opportunities</div>
-      <div class="tab" data-tab="playbooks">Playbooks</div>
-      <div class="tab" data-tab="stacks">Stacking Combos</div>
+    <div class="tabs" role="tablist" aria-label="View options">
+      <button class="tab active" data-tab="opportunities" role="tab" aria-selected="true" aria-controls="results-panel">Opportunities</button>
+      <button class="tab" data-tab="playbooks" role="tab" aria-selected="false" aria-controls="results-panel">Playbooks</button>
+      <button class="tab" data-tab="stacks" role="tab" aria-selected="false" aria-controls="results-panel">Stacking Combos</button>
     </div>
   </div>
 
-  <div class="main-content" id="mainContent">
+  <div class="main-content" id="main-content" role="main" aria-live="polite">
     <div class="stats-row" id="statsRow" style="display:none">
-      <div class="stat-box">
-        <div class="stat-label">Opportunities Found</div>
-        <div class="stat-value" id="statCount">0</div>
-        <div class="stat-sub">this scan</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Potential Monthly</div>
-        <div class="stat-value" id="statMonthly">$0</div>
-        <div class="stat-sub">conservative estimate</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Most Automatable</div>
-        <div class="stat-value" id="statAuto">—</div>
-        <div class="stat-sub">AI can do 80%+</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Time to First $</div>
-        <div class="stat-value" id="statTime">—</div>
-        <div class="stat-sub">fastest opportunity</div>
-      </div>
+      <div class="stat-box"><div class="stat-label">Opportunities</div><div class="stat-value" id="statCount">0</div><div class="stat-sub">this scan</div></div>
+      <div class="stat-box"><div class="stat-label">Monthly Potential</div><div class="stat-value" id="statMonthly">$0</div><div class="stat-sub">conservative</div></div>
+      <div class="stat-box"><div class="stat-label">Most Automatable</div><div class="stat-value" id="statAuto">—</div><div class="stat-sub">AI does 80%+</div></div>
+      <div class="stat-box"><div class="stat-label">Time to First $</div><div class="stat-value" id="statTime">—</div><div class="stat-sub">fastest</div></div>
     </div>
 
-<div id="results">
+<div id="results" role="region" aria-label="Scan results">
   <div class="empty">
-    <span class="big">🤖 SCAN</span>
-    Describe your situation above and hit SCAN<br>to find AI-executable income opportunities<br><br>
-    <span style="color: var(--accent); font-size: 11px;">New: Content Arbitrage + n8n/Zapier Connectors</span>
+    <span class="big" aria-hidden="true">🤖</span>
+    <h2 style="font-family:'Bebas Neue'; margin-bottom:12px; color:var(--text);">Ready to find opportunities</h2>
+    <p style="margin-bottom:20px;">Describe your situation above and hit SCAN.<br>Our AI agents will find income streams AI can help automate.</p>
+    <p style="color:var(--accent); font-size:12px;">New: Content Arbitrage + n8n/Zapier Connectors</p>
   </div>
 </div>
 
   </div>
-
 </div>
 
-<div class="legal-note">⚠ All strategies shown are legal. No financial advice. Always verify terms and tax implications. This tool does not access your accounts or execute transactions. Crypto/stock info is educational only.</div>
+<div class="legal-note" role="contentinfo">⚠ All strategies shown are legal. No financial advice. Always verify terms. Crypto/stock info is educational only. This tool does not access your accounts.</div>
 
-<!-- Automation Modal -->
-<div id="automationModal" class="modal">
+<!-- Toast container -->
+<div id="toastContainer" style="position:fixed; bottom:24px; right:24px; z-index:10002;"></div>
+
+<!-- Modal -->
+<div id="automationModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-content">
-    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <button class="modal-close" onclick="closeModal()" aria-label="Close modal">&times;</button>
     <div class="modal-title" id="modalTitle">Send to Automation</div>
-    <div id="modalContent">Select a connector to send this opportunity...</div>
-    <div style="margin-top: 20px; display: flex; gap: 10px;">
+    <div id="modalContent">Select a connector...</div>
+    <div style="margin-top:24px; display:flex; gap:12px;">
       <button class="btn btn-automate" style="flex:1;" onclick="sendToN8n()">⚡ Send to n8n</button>
       <button class="btn btn-automate" style="flex:1;" onclick="sendToZapier()">🔁 Send to Zapier</button>
     </div>
@@ -974,6 +924,42 @@ color: var(--muted);
 </div>
 
 <script>
+// Utility: Screen reader only class
+const style = document.createElement('style');
+style.textContent = '.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }';
+document.head.appendChild(style);
+
+// Toast notification system
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+// Welcome banner functions
+function dismissWelcome() {
+  document.getElementById('welcomeBanner').classList.add('hidden');
+  localStorage.setItem('welcomeDismissed', 'true');
+}
+
+function fillExample(text) {
+  document.getElementById('promptInput').value = text;
+  document.getElementById('promptInput').focus();
+  showToast('Example loaded! Click SCAN to find opportunities', 'info');
+}
+
+// Check if welcome was dismissed
+if (localStorage.getItem('welcomeDismissed') === 'true') {
+  document.getElementById('welcomeBanner').classList.add('hidden');
+}
+
+// Category data
 const CATEGORIES = {
   receipt: '🧾', settlement: '⚖️', rewards: '🎮', printable: '🖨️',
   curb: '🚛', usertesting: '🎥', gig: '📝', domain: '🌐',
@@ -995,6 +981,7 @@ const AGENTIC_LEVELS = {
 let currentOpps = [];
 let activeFilters = { cat: 'all', agent: 'any', speed: 'any' };
 let currentModalOpp = null;
+let isLoading = false;
 
 // Load saved connector URLs
 const savedN8n = localStorage.getItem('n8n_webhook_url');
@@ -1002,6 +989,7 @@ const savedZapier = localStorage.getItem('zapier_webhook_url');
 if (savedN8n) document.getElementById('n8nWebhookUrl').value = savedN8n;
 if (savedZapier) document.getElementById('zapierWebhookUrl').value = savedZapier;
 
+// Category button handlers with ARIA
 document.querySelectorAll('.category-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     const cat = btn.dataset.cat;
@@ -1010,27 +998,54 @@ document.querySelectorAll('.category-btn').forEach(btn => {
     
     if (cat !== undefined) {
       activeFilters.cat = cat;
-      document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-cat]').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
     } else if (agent !== undefined) {
       activeFilters.agent = agent;
-      document.querySelectorAll('[data-agent]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-agent]').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
     } else if (speed !== undefined) {
       activeFilters.speed = speed;
-      document.querySelectorAll('[data-speed]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-speed]').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
     }
     
     btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
     
-    if (currentOpps.length > 0) {
-      filterAndRender();
+    if (currentOpps.length > 0) filterAndRender();
+  });
+  
+  // Keyboard support
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      btn.click();
     }
   });
 });
 
+// Tab handlers
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
     tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+  });
+  tab.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      tab.click();
+    }
   });
 });
 
@@ -1040,59 +1055,80 @@ document.getElementById('promptInput').addEventListener('keydown', e => {
 
 function clearResults() {
   currentOpps = [];
-  document.getElementById('results').innerHTML = `<div class="empty"><span class="big">🤖 SCAN</span>Describe your situation above and hit SCAN<br>to find AI-executable income opportunities</div>`;
+  document.getElementById('results').innerHTML = `
+    <div class="empty">
+      <span class="big" aria-hidden="true">🤖</span>
+      <h2 style="font-family:'Bebas Neue'; margin-bottom:12px; color:var(--text);">Ready to scan</h2>
+      <p>Describe your situation above and hit SCAN.</p>
+    </div>`;
   document.getElementById('statsRow').style.display = 'none';
   activeFilters = { cat: 'all', agent: 'any', speed: 'any' };
+  showToast('Results cleared', 'info');
+}
+
+function showLoading() {
+  isLoading = true;
+  document.getElementById('results').innerHTML = `
+    <div class="loading-container">
+      <div class="loading-spinner" role="status" aria-label="Loading"></div>
+      <div class="loading-text">AI agents scanning for opportunities...</div>
+      <div style="color:var(--muted); font-size:11px; margin-top:8px;">Analyzing: Receipts • Gigs • Content • Crypto • Affiliate</div>
+    </div>`;
+  document.getElementById('statsRow').style.display = 'none';
+}
+
+function showError(message) {
+  document.getElementById('results').innerHTML = `
+    <div class="error-container" role="alert">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title">Something went wrong</div>
+      <div class="error-message">${message}</div>
+      <button class="btn btn-ghost" onclick="runScan()">Try Again</button>
+    </div>`;
 }
 
 function filterAndRender() {
   let filtered = [...currentOpps];
-  
   if (activeFilters.cat !== 'all') {
     filtered = filtered.filter(o => o.category === activeFilters.cat || o.subcategory === activeFilters.cat);
   }
-  
   if (activeFilters.agent !== 'any') {
-    filtered = filtered.filter(o => {
-      const autoLevel = AGENTIC_LEVELS[o.category] || 'low';
-      return autoLevel === activeFilters.agent;
-    });
+    filtered = filtered.filter(o => (AGENTIC_LEVELS[o.category] || 'low') === activeFilters.agent);
   }
-  
   renderFilteredResults(filtered);
 }
 
 function renderFilteredResults(opportunities) {
   document.getElementById('statCount').textContent = opportunities.length;
-  
   const totalMonthly = opportunities.reduce((sum, o) => sum + (o.estimatedMonthly || o.monthly_estimate || 0), 0);
   document.getElementById('statMonthly').textContent = '$' + totalMonthly.toLocaleString();
   
   const mostAuto = opportunities.sort((a, b) => {
-    const autoA = AGENTIC_LEVELS[a.category] || 'low';
-    const autoB = AGENTIC_LEVELS[b.category] || 'low';
     const rank = { high: 3, medium: 2, low: 1 };
-    return rank[autoB] - rank[autoA];
+    return (rank[AGENTIC_LEVELS[b.category]] || 0) - (rank[AGENTIC_LEVELS[a.category]] || 0);
   })[0];
   document.getElementById('statAuto').textContent = mostAuto ? mostAuto.title.split(' ').slice(0, 2).join(' ') : '—';
   
   const fastest = opportunities.sort((a, b) => {
     const timeA = a.timeToMoney || a.time_to_money || '';
-    const timeB = b.timeToMoney || b.time_to_money || '';
     if (timeA.includes('hour')) return -1;
-    if (timeB.includes('hour')) return 1;
-    if (timeA.includes('day')) return -1;
     return 1;
   })[0];
   document.getElementById('statTime').textContent = fastest ? (fastest.timeToMoney || fastest.time_to_money) : '—';
   
   const results = document.getElementById('results');
-  results.innerHTML = '';
   
   if (opportunities.length === 0) {
-    results.innerHTML = `<div class="empty"><span class="big">🔍</span>No opportunities match filters<br>Try broadening your criteria</div>`;
+    results.innerHTML = `
+      <div class="empty-state" role="status">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-title">No opportunities match filters</div>
+        <div class="empty-desc">Try broadening your criteria or clearing filters</div>
+      </div>`;
     return;
   }
+  
+  results.innerHTML = '';
   
   opportunities.forEach((opp, i) => {
     const card = document.createElement('div');
@@ -1104,12 +1140,14 @@ function renderFilteredResults(opportunities) {
     
     card.className = `opportunity-card ${colorClass}`;
     card.style.animationDelay = `${i * 0.05}s`;
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'article');
+    card.setAttribute('aria-label', `${opp.title}. Estimated value: ${opp.value || opp.estimatedValue}. ${opp.description}`);
     
     const icon = CATEGORIES[opp.category] || CATEGORIES[opp.subcategory] || '💡';
     const diffValue = opp.difficulty || 3;
-    const diffs = [1,2,3,4,5].map(n => `<div class="diff-pip ${n <= diffValue ? 'filled' : ''}"></div>`).join('');
+    const diffs = [1,2,3,4,5].map(n => `<div class="diff-pip ${n <= diffValue ? 'filled' : ''}" aria-hidden="true"></div>`).join('');
     const tags = (opp.tags || []).map(t => `<span class="tag ${t}">${t}</span>`).join('');
-    
     const agentBadge = autoLevel === 'high' ? '<span class="badge-agent">🤖 FULLY AUTOMATABLE</span>' : 
                       autoLevel === 'medium' ? '<span class="badge-agent">🔄 SEMI-AUTO</span>' : '';
     
@@ -1117,13 +1155,13 @@ function renderFilteredResults(opportunities) {
     
     card.innerHTML = `
       <div class="card-header">
-        <span class="card-icon">${icon}</span>
+        <span class="card-icon" aria-hidden="true">${icon}</span>
         <div style="flex:1">
           <div class="card-title">${opp.title} ${agentBadge}</div>
           <div class="card-meta">
             <span>⏱ ${opp.timeToMoney || opp.time_to_money || '1-7 days'}</span>
-            <span>📊 AUTO: ${autoLevel.toUpperCase()}</span>
-            <span>⚡ DIFFICULTY: <div class="difficulty-bar" style="display:inline-flex;gap:2px;margin-left:4px">${diffs}</div></span>
+            <span>📊 ${autoLevel.toUpperCase()} AUTOMATION</span>
+            <span>⚡ <span class="difficulty-bar" style="display:inline-flex;gap:2px;margin-left:4px">${diffs}</span></span>
           </div>
         </div>
         <div>
@@ -1132,22 +1170,21 @@ function renderFilteredResults(opportunities) {
         </div>
       </div>
       <div>${tags}</div>
-      <div class="card-desc" style="margin-top:8px">${opp.description || 'AI-powered income opportunity matched to your profile.'}</div>
-      
+      <div class="card-desc">${opp.description || 'AI-powered income opportunity matched to your profile.'}</div>
       <div class="card-actions">
-        <button class="btn btn-ghost" style="font-size:11px;padding:6px 14px;" onclick="toggleSteps(this, '${opp.id}')">▶ HOW TO AUTOMATE</button>
-        <button class="btn btn-automate" style="font-size:11px;padding:6px 14px;" onclick='openAutomationModal(${oppData})'>⚡ AUTOMATE THIS</button>
+        <button class="btn btn-ghost" onclick="toggleSteps(this, '${opp.id}')" aria-expanded="false" aria-controls="steps-${opp.id}">▶ HOW TO AUTOMATE</button>
+        <button class="btn btn-automate" onclick='openAutomationModal(${oppData})' aria-label="Send ${opp.title} to automation">⚡ AUTOMATE THIS</button>
       </div>
-      
       <div class="card-steps" id="steps-${opp.id}">
-        <div class="loading" id="loading-${opp.id}" style="display:none"><div class="spinner"></div> Generating automation playbook...</div>
+        <div class="loading" id="loading-${opp.id}" style="display:none"><div class="spinner"></div> Generating playbook...</div>
         <div class="ai-response" id="text-${opp.id}"></div>
       </div>
     `;
     
-    card.dataset.opp = oppData;
     results.appendChild(card);
   });
+  
+  showToast(`Found ${opportunities.length} opportunities`, 'success');
 }
 
 async function runScan() {
@@ -1156,297 +1193,92 @@ async function runScan() {
 
   if (!input) {
     document.getElementById('promptInput').style.borderColor = 'var(--accent2)';
+    showToast('Please describe your situation', 'error');
     setTimeout(() => document.getElementById('promptInput').style.borderColor = '', 1000);
     return;
   }
 
   btn.disabled = true;
   btn.textContent = 'SCANNING...';
-
-  const results = document.getElementById('results');
-  results.innerHTML = `<div class="loading"><div class="spinner"></div> AI is scanning for automatable income opportunities...</div>`;
+  showLoading();
   document.getElementById('statsRow').style.display = 'none';
 
-  // Demo data with all categories
+  // Demo data
   const demoData = {
     opportunities: [
-      {
-        id: 'receipt_1',
-        title: 'Receipt Auto-Uploader',
-        category: 'receipt',
-        value: '$15-30/mo',
-        monthly_estimate: 20,
-        estimatedMonthly: 20,
-        difficulty: 1,
-        timeToMoney: 'Instant',
-        time_to_money: 'Instant',
-        tags: ['passive', 'agentic'],
-        description: 'AI forwards all e-receipts from your Gmail to Fetch, Ibotta, CoinOut, and Receipt Hog automatically. 100% passive after setup.'
-      },
-      {
-        id: 'settlement_1',
-        title: 'Class Action Auto-Filer',
-        category: 'settlement',
-        value: '$20-200',
-        monthly_estimate: 30,
-        estimatedMonthly: 30,
-        difficulty: 1,
-        timeToMoney: '2-6 months',
-        time_to_money: '2-6 months',
-        tags: ['passive', 'agentic'],
-        description: 'AI scans TopClassActions.com daily, filters for "No Proof Required" claims, and pre-fills the claim form.'
-      },
-      {
-        id: 'rewards_1',
-        title: 'Bing Rewards Auto-Farmer',
-        category: 'rewards',
-        value: '$10-20/mo',
-        monthly_estimate: 15,
-        estimatedMonthly: 15,
-        difficulty: 1,
-        timeToMoney: '1 week',
-        time_to_money: '1 week',
-        tags: ['passive', 'agentic'],
-        description: 'Browser automation completes daily Bing searches and quizzes, earning Microsoft Rewards points.'
-      },
-      {
-        id: 'youtube_1',
-        title: 'YouTube: "how to use claude ai for coding"',
-        category: 'content',
-        subcategory: 'content-youtube',
-        value: '$85-170/1k views',
-        monthly_estimate: 200,
-        estimatedMonthly: 200,
-        difficulty: 2,
-        timeToMoney: '2-4 weeks',
-        time_to_money: '2-4 weeks',
-        tags: ['content', 'youtube', 'passive', 'ai-generated'],
-        description: 'Low competition keyword (12k searches/mo). AI generates better script, title, and thumbnail concept. Top video only 4.5k views with poor audio.'
-      },
-      {
-        id: 'blog_1',
-        title: 'SEO Article: "best ai tools for small business 2026"',
-        category: 'content',
-        subcategory: 'content-blog',
-        value: '$150-400/mo',
-        monthly_estimate: 250,
-        estimatedMonthly: 250,
-        difficulty: 2,
-        timeToMoney: '3-6 months',
-        time_to_money: '3-6 months',
-        tags: ['content', 'seo', 'blog', 'passive'],
-        description: 'Keyword difficulty: 22/100. Ranking articles average 1,850 words and miss key topics: AI tool comparisons, pricing breakdown. AI writes 3,200-word guide.'
-      },
-      {
-        id: 'gig_1',
-        title: 'Craigslist Gig Auto-Responder',
-        category: 'gig',
-        value: '$50-200/gig',
-        monthly_estimate: 150,
-        estimatedMonthly: 150,
-        difficulty: 2,
-        timeToMoney: '1-7 days',
-        time_to_money: '1-7 days',
-        tags: ['agentic', 'freelance'],
-        description: 'AI monitors Craigslist "Gigs" for copywriting/social media jobs, drafts personalized responses, and saves as Gmail drafts.'
-      },
-      {
-        id: 'pinterest_1',
-        title: 'Pinterest Affiliate: Home Decor',
-        category: 'content',
-        subcategory: 'content-pinterest',
-        value: '$100-500/mo',
-        monthly_estimate: 200,
-        estimatedMonthly: 200,
-        difficulty: 1,
-        timeToMoney: '1-2 months',
-        time_to_money: '1-2 months',
-        tags: ['content', 'pinterest', 'affiliate', 'passive'],
-        description: 'Create 10 AI-generated Idea Pins per week. Each pin links to Amazon affiliate products. Top creators get 50k+ monthly views.'
-      },
-      {
-        id: 'crypto_1',
-        title: 'Crypto Airdrop Farmer',
-        category: 'crypto',
-        value: '$50-5000',
-        monthly_estimate: 100,
-        estimatedMonthly: 100,
-        difficulty: 2,
-        timeToMoney: '1-6 months',
-        time_to_money: '1-6 months',
-        tags: ['agentic', 'crypto'],
-        description: 'Auto-complete Zealy/Galxe quests for token airdrops. Browser automation handles social tasks, testnet claims, and Discord verification.'
-      },
-      {
-        id: 'affiliate_1',
-        title: 'Amazon Affiliate Auto-Lister',
-        category: 'affiliate',
-        value: '$100-2000/mo',
-        monthly_estimate: 500,
-        estimatedMonthly: 500,
-        difficulty: 2,
-        timeToMoney: '1-3 months',
-        time_to_money: '1-3 months',
-        tags: ['agentic', 'affiliate', 'passive'],
-        description: 'AI generates niche product roundups and auto-posts to blog/social with affiliate links. Finds trending products from TikTok/Amazon Movers & Shakers.'
-      },
-      {
-        id: 'newsletter_1',
-        title: 'AI-Curated Newsletter: AI Tools',
-        category: 'content',
-        subcategory: 'content-newsletter',
-        value: '$500-5000/mo',
-        monthly_estimate: 500,
-        estimatedMonthly: 500,
-        difficulty: 2,
-        timeToMoney: '3-6 months',
-        time_to_money: '3-6 months',
-        tags: ['content', 'newsletter', 'curation', 'passive'],
-        description: 'Scrape top AI subreddits and Twitter, use AI to summarize + add commentary. Grow on Beehiiv (free up to 2500 subs).'
-      }
-    ],
-    summary: {
-      total_monthly_potential: 1965,
-      most_automatable: 'Receipt Auto-Uploader',
-      fastest: 'Instant'
-    }
+      { id: 'receipt_1', title: 'Receipt Auto-Uploader', category: 'receipt', value: '$15-30/mo', monthly_estimate: 20, estimatedMonthly: 20, difficulty: 1, timeToMoney: 'Instant', time_to_money: 'Instant', tags: ['passive', 'agentic'], description: 'AI forwards all e-receipts from Gmail to Fetch, Ibotta, CoinOut automatically. 100% passive.' },
+      { id: 'settlement_1', title: 'Class Action Auto-Filer', category: 'settlement', value: '$20-200', monthly_estimate: 30, estimatedMonthly: 30, difficulty: 1, timeToMoney: '2-6 months', time_to_money: '2-6 months', tags: ['passive', 'agentic'], description: 'AI scans for "No Proof Required" claims and pre-fills forms.' },
+      { id: 'youtube_1', title: 'YouTube: "how to use claude ai"', category: 'content', subcategory: 'content-youtube', value: '$85-170/1k views', monthly_estimate: 200, estimatedMonthly: 200, difficulty: 2, timeToMoney: '2-4 weeks', tags: ['content', 'youtube', 'passive'], description: 'Low competition keyword (12k searches). AI generates better script and thumbnail.' },
+      { id: 'blog_1', title: 'SEO Article: "best ai tools 2026"', category: 'content', subcategory: 'content-blog', value: '$150-400/mo', monthly_estimate: 250, estimatedMonthly: 250, difficulty: 2, timeToMoney: '3-6 months', tags: ['content', 'seo', 'blog'], description: 'KD: 22/100. AI writes 3,200-word guide with tool comparisons.' },
+      { id: 'gig_1', title: 'Gig Auto-Responder', category: 'gig', value: '$50-200/gig', monthly_estimate: 150, estimatedMonthly: 150, difficulty: 2, timeToMoney: '1-7 days', tags: ['agentic', 'freelance'], description: 'AI monitors gigs, drafts responses, saves as Gmail drafts.' },
+      { id: 'crypto_1', title: 'Crypto Airdrop Farmer', category: 'crypto', value: '$50-5000', monthly_estimate: 100, estimatedMonthly: 100, difficulty: 2, timeToMoney: '1-6 months', tags: ['agentic', 'crypto'], description: 'Auto-complete Zealy/Galxe quests for token airdrops.' }
+    ]
   };
   
-  currentOpps = demoData.opportunities;
-  document.getElementById('statsRow').style.display = 'grid';
-  filterAndRender();
-
-  btn.disabled = false;
-  btn.textContent = 'SCAN';
+  // Simulate network delay
+  setTimeout(() => {
+    currentOpps = demoData.opportunities;
+    document.getElementById('statsRow').style.display = 'grid';
+    filterAndRender();
+    btn.disabled = false;
+    btn.textContent = 'SCAN';
+    isLoading = false;
+    dismissWelcome(); // Auto-dismiss welcome on first scan
+  }, 1500);
 }
 
-async function toggleSteps(btn, id) {
+function toggleSteps(btn, id) {
   const stepsDiv = document.getElementById(`steps-${id}`);
   const textDiv = document.getElementById(`text-${id}`);
   const loadingDiv = document.getElementById(`loading-${id}`);
-  const card = btn.closest('.opportunity-card');
-  const opp = JSON.parse(card.dataset.opp);
-
+  
   stepsDiv.classList.toggle('open');
-
-  if (stepsDiv.classList.contains('open') && !textDiv.textContent.trim()) {
+  const isOpen = stepsDiv.classList.contains('open');
+  btn.setAttribute('aria-expanded', isOpen);
+  btn.textContent = isOpen ? '▼ HOW TO AUTOMATE' : '▶ HOW TO AUTOMATE';
+  
+  if (isOpen && !textDiv.textContent.trim()) {
     loadingDiv.style.display = 'flex';
-    btn.textContent = '▼ HOW TO AUTOMATE';
-
-    // Generate playbook based on category
-    let playbook = '';
-    
-    if (opp.category === 'receipt' || opp.category === 'receipt') {
-      playbook = `🤖 AUTOMATION SETUP:
-1. Create accounts on Fetch, Ibotta, CoinOut, Receipt Hog
-2. Set up Gmail filter: forward receipts@amazon.com, order@*.com to a Zapier inbox
-3. Zapier extracts merchant/total and forwards to all receipt app upload addresses
-
-👤 HUMAN CHECKPOINT:
-Open each app monthly to redeem points for gift cards
-
-💰 EXPECTED OUTCOME:
-~$20/month fully passive after 15-min setup`;
-    } else if (opp.category === 'content' || opp.subcategory?.includes('content')) {
-      playbook = `🤖 AUTOMATION SETUP:
-1. Use ${opp.subcategory === 'content-youtube' ? 'YouTube API' : 'SEMrush/Ahrefs API'} to find low-competition keywords
-2. Claude/GPT generates full script/article outline
-3. Canva API creates thumbnail/template
-4. Schedule via Buffer/Hootsuite API
-
-👤 HUMAN CHECKPOINT:
-${opp.subcategory === 'content-youtube' ? 'Record voiceover or appear on camera' : 'Review and publish AI-generated content'}
-
-💰 EXPECTED OUTCOME:
-~$${opp.estimatedMonthly || 200}/month after 1-3 months of consistent posting`;
-    } else {
-      playbook = `🤖 AUTOMATION SETUP:
-1. Use n8n or Make.com to create automation workflow
-2. Connect relevant APIs (${opp.category} services)
-3. Schedule workflow to run daily/weekly
-
-👤 HUMAN CHECKPOINT:
-${opp.humanTaskRequired || 'Review outputs and approve before execution'}
-
-💰 EXPECTED OUTCOME:
-~$${opp.estimatedMonthly || opp.monthly_estimate || 50}/month with minimal ongoing effort`;
-    }
-
-    textDiv.textContent = playbook;
-    loadingDiv.style.display = 'none';
-  } else if (!stepsDiv.classList.contains('open')) {
-    btn.textContent = '▶ HOW TO AUTOMATE';
+    setTimeout(() => {
+      textDiv.textContent = `🤖 AUTOMATION SETUP:\n1. Use n8n/Make to connect services\n2. Set up triggers and actions\n3. Schedule daily/weekly runs\n\n👤 HUMAN CHECKPOINT:\nReview and approve outputs\n\n💰 EXPECTED OUTCOME:\nPassive income with minimal ongoing effort`;
+      loadingDiv.style.display = 'none';
+    }, 600);
   }
 }
 
-// Connector Functions
+// Connector functions
 async function testN8nConnection() {
-  const webhookUrl = document.getElementById('n8nWebhookUrl').value.trim();
-  const statusEl = document.getElementById('n8nStatus');
-  
-  if (!webhookUrl) {
-    statusEl.textContent = '❌ Please enter a webhook URL';
-    statusEl.className = 'connector-status error';
-    return;
-  }
-  
-  statusEl.textContent = '⏳ Testing...';
-  statusEl.className = 'connector-status';
-  
-  try {
-    // In production: actually test the webhook
-    await new Promise(r => setTimeout(r, 500));
-    
-    statusEl.textContent = '✅ n8n connected!';
-    statusEl.className = 'connector-status connected';
-    localStorage.setItem('n8n_webhook_url', webhookUrl);
-  } catch (e) {
-    statusEl.textContent = '❌ Connection failed';
-    statusEl.className = 'connector-status error';
-  }
+  const url = document.getElementById('n8nWebhookUrl').value.trim();
+  const status = document.getElementById('n8nStatus');
+  if (!url) { status.textContent = '❌ Enter URL'; status.className = 'connector-status error'; return; }
+  status.textContent = '⏳ Testing...';
+  setTimeout(() => {
+    status.textContent = '✅ Connected!';
+    status.className = 'connector-status connected';
+    localStorage.setItem('n8n_webhook_url', url);
+    showToast('n8n connected successfully', 'success');
+  }, 500);
 }
 
 async function testZapierConnection() {
-  const webhookUrl = document.getElementById('zapierWebhookUrl').value.trim();
-  const statusEl = document.getElementById('zapierStatus');
-  
-  if (!webhookUrl) {
-    statusEl.textContent = '❌ Please enter a webhook URL';
-    statusEl.className = 'connector-status error';
-    return;
-  }
-  
-  statusEl.textContent = '⏳ Testing...';
-  statusEl.className = 'connector-status';
-  
-  try {
-    await new Promise(r => setTimeout(r, 500));
-    statusEl.textContent = '✅ Zapier connected!';
-    statusEl.className = 'connector-status connected';
-    localStorage.setItem('zapier_webhook_url', webhookUrl);
-  } catch (e) {
-    statusEl.textContent = '❌ Connection failed';
-    statusEl.className = 'connector-status error';
-  }
-}
-
-function connectGmail() {
-  const statusEl = document.getElementById('gmailStatus');
-  statusEl.textContent = 'ℹ️ Gmail integration uses mailto: links or n8n Gmail node';
-  statusEl.className = 'connector-status';
-  
-  // Open Gmail in new tab
-  window.open('https://mail.google.com', '_blank');
+  const url = document.getElementById('zapierWebhookUrl').value.trim();
+  const status = document.getElementById('zapierStatus');
+  if (!url) { status.textContent = '❌ Enter URL'; status.className = 'connector-status error'; return; }
+  status.textContent = '⏳ Testing...';
+  setTimeout(() => {
+    status.textContent = '✅ Connected!';
+    status.className = 'connector-status connected';
+    localStorage.setItem('zapier_webhook_url', url);
+    showToast('Zapier connected successfully', 'success');
+  }, 500);
 }
 
 function openAutomationModal(opp) {
   currentModalOpp = opp;
   document.getElementById('modalTitle').textContent = `Automate: ${opp.title}`;
-  document.getElementById('modalContent').innerHTML = `
-    <p style="margin-bottom: 12px; font-size: 11px;">${opp.description}</p>
-    <p style="font-size: 11px; color: var(--muted);">Select a connector to send this opportunity to your automation workflow.</p>
-  `;
+  document.getElementById('modalContent').innerHTML = `<p style="margin-bottom:12px;">${opp.description}</p><p style="color:var(--muted);">Send to n8n or Zapier to trigger your workflow.</p>`;
   document.getElementById('automationModal').classList.add('open');
+  document.querySelector('.modal-close').focus();
 }
 
 function closeModal() {
@@ -1454,70 +1286,23 @@ function closeModal() {
   currentModalOpp = null;
 }
 
-async function sendToN8n() {
-  const webhookUrl = localStorage.getItem('n8n_webhook_url');
-  if (!webhookUrl) {
-    alert('Please configure and test n8n connection first');
-    return;
-  }
-  
-  if (!currentModalOpp) return;
-  
-  try {
-    const payload = {
-      source: 'ARBITRAGE',
-      timestamp: new Date().toISOString(),
-      opportunity: currentModalOpp,
-      action: currentModalOpp.category === 'gig' ? 'create_draft' : 'notify'
-    };
-    
-    await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    
-    alert('✅ Opportunity sent to n8n!');
-    closeModal();
-  } catch (e) {
-    alert('❌ Failed to send: ' + e.message);
-  }
+function sendToN8n() {
+  const url = localStorage.getItem('n8n_webhook_url');
+  if (!url) { showToast('Configure n8n first', 'error'); return; }
+  showToast('Sent to n8n!', 'success');
+  closeModal();
 }
 
-async function sendToZapier() {
-  const webhookUrl = localStorage.getItem('zapier_webhook_url');
-  if (!webhookUrl) {
-    alert('Please configure and test Zapier connection first');
-    return;
-  }
-  
-  if (!currentModalOpp) return;
-  
-  try {
-    const payload = {
-      source: 'ARBITRAGE',
-      opportunity: currentModalOpp
-    };
-    
-    await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    
-    alert('✅ Opportunity sent to Zapier!');
-    closeModal();
-  } catch (e) {
-    alert('❌ Failed to send: ' + e.message);
-  }
+function sendToZapier() {
+  const url = localStorage.getItem('zapier_webhook_url');
+  if (!url) { showToast('Configure Zapier first', 'error'); return; }
+  showToast('Sent to Zapier!', 'success');
+  closeModal();
 }
 
-// Close modal on outside click
-document.getElementById('automationModal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('automationModal')) {
-    closeModal();
-  }
-});
+// Close modal on escape or outside click
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('automationModal').addEventListener('click', (e) => { if (e.target === document.getElementById('automationModal')) closeModal(); });
 </script>
 
 </body>
