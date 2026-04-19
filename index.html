@@ -1203,28 +1203,34 @@ async function runScan() {
   showLoading();
   document.getElementById('statsRow').style.display = 'none';
 
-  // Demo data
-  const demoData = {
-    opportunities: [
-      { id: 'receipt_1', title: 'Receipt Auto-Uploader', category: 'receipt', value: '$15-30/mo', monthly_estimate: 20, estimatedMonthly: 20, difficulty: 1, timeToMoney: 'Instant', time_to_money: 'Instant', tags: ['passive', 'agentic'], description: 'AI forwards all e-receipts from Gmail to Fetch, Ibotta, CoinOut automatically. 100% passive.' },
-      { id: 'settlement_1', title: 'Class Action Auto-Filer', category: 'settlement', value: '$20-200', monthly_estimate: 30, estimatedMonthly: 30, difficulty: 1, timeToMoney: '2-6 months', time_to_money: '2-6 months', tags: ['passive', 'agentic'], description: 'AI scans for "No Proof Required" claims and pre-fills forms.' },
-      { id: 'youtube_1', title: 'YouTube: "how to use claude ai"', category: 'content', subcategory: 'content-youtube', value: '$85-170/1k views', monthly_estimate: 200, estimatedMonthly: 200, difficulty: 2, timeToMoney: '2-4 weeks', tags: ['content', 'youtube', 'passive'], description: 'Low competition keyword (12k searches). AI generates better script and thumbnail.' },
-      { id: 'blog_1', title: 'SEO Article: "best ai tools 2026"', category: 'content', subcategory: 'content-blog', value: '$150-400/mo', monthly_estimate: 250, estimatedMonthly: 250, difficulty: 2, timeToMoney: '3-6 months', tags: ['content', 'seo', 'blog'], description: 'KD: 22/100. AI writes 3,200-word guide with tool comparisons.' },
-      { id: 'gig_1', title: 'Gig Auto-Responder', category: 'gig', value: '$50-200/gig', monthly_estimate: 150, estimatedMonthly: 150, difficulty: 2, timeToMoney: '1-7 days', tags: ['agentic', 'freelance'], description: 'AI monitors gigs, drafts responses, saves as Gmail drafts.' },
-      { id: 'crypto_1', title: 'Crypto Airdrop Farmer', category: 'crypto', value: '$50-5000', monthly_estimate: 100, estimatedMonthly: 100, difficulty: 2, timeToMoney: '1-6 months', tags: ['agentic', 'crypto'], description: 'Auto-complete Zealy/Galxe quests for token airdrops.' }
-    ]
-  };
-  
-  // Simulate network delay
-  setTimeout(() => {
-    currentOpps = demoData.opportunities;
+  try {
+    // Call YOUR serverless function instead of Anthropic directly
+    const response = await fetch('/api/scan', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: input })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    currentOpps = data.opportunities;
     document.getElementById('statsRow').style.display = 'grid';
     filterAndRender();
-    btn.disabled = false;
-    btn.textContent = 'SCAN';
-    isLoading = false;
-    dismissWelcome(); // Auto-dismiss welcome on first scan
-  }, 1500);
+    
+    showToast(`Found ${data.opportunities.length} opportunities`, 'success');
+    dismissWelcome();
+
+  } catch (error) {
+    console.error('Scan failed:', error);
+    showError('Unable to scan. Please try again.');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'SCAN';
 }
 
 function toggleSteps(btn, id) {
