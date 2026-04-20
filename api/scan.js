@@ -77,7 +77,18 @@ Provide 4-7 opportunities tailored to: "${prompt}". Be specific and actionable.`
     res.json(parsed);
 
   } catch (error) {
-    console.error('Scan error:', error);
+  console.error('Scan error:', error);
+  
+  // TEMPORARY: Return the actual error to debug
+  res.status(500).json({ 
+    error: 'API call failed', 
+    message: error.message,
+    stack: error.stack 
+  });
+  
+  // Comment out the fallback for now
+  // res.json({ opportunities: [...] });
+}
     
     // Return fallback demo data on error
     res.json({
