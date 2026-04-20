@@ -79,12 +79,14 @@ Provide 4-7 opportunities tailored to: "${prompt}". Be specific and actionable.`
   } catch (error) {
   console.error('Scan error:', error);
   
-  // TEMPORARY: Return the actual error to debug
+  // Return the actual error so we can see it
   res.status(500).json({ 
-    error: 'API call failed', 
-    message: error.message,
-    stack: error.stack 
+    error: error.message,
+    stack: error.stack,
+    keyExists: !!process.env.ANTHROPIC_API_KEY,
+    keyPrefix: process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.substring(0, 15) + '...' : 'undefined'
   });
+}
   
   // Comment out the fallback for now
   // res.json({ opportunities: [...] });
