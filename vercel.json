@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/.well-known/x402",
+      "destination": "/api/x402-discovery"
+    }
+  ],
   "crons": [
     {
       "path": "/api/cron-autopilot",

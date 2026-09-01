@@ -1,5 +1,7 @@
 // api/lib/learning-graph.js
 // Bounded, explainable optimization graph. Payment/security configuration is never mutated here.
+import { bazaarResourceServerExtension } from '@x402/extensions/bazaar';
+
 export const GRAPH_VERSION = 2;
 
 const NODES = [
@@ -70,4 +72,9 @@ function bounded(v,min=.05,max=.99){return Math.max(min,Math.min(max,v));}
 export function applyObservation(graph,observation){const next=structuredClone(graph);const {from,to,success,strength=1,note=null}=observation||{};const edge=next.edges.find(x=>x.from===from&&x.to===to);if(!edge||typeof success!=='boolean')return next;const alpha=Math.max(.01,Math.min(.12,.04*Number(strength||1)));edge.weight=Number(bounded(edge.weight+alpha*((success?1:0)-edge.weight)).toFixed(4));edge.confidence=Number(bounded(edge.confidence+.025*Number(strength||1)).toFixed(4));edge.observations=(edge.observations||0)+1;if(note)edge.lastEvidence=String(note).slice(0,240);return next;}
 export function rankRecommendations(graph=getLearningGraph()){const byId=new Map(graph.nodes.map(n=>[n.id,n]));return graph.edges.filter(e=>e.from.startsWith('practice:')).map(e=>({practiceId:e.from,practice:byId.get(e.from)?.label||e.from,targetId:e.to,target:byId.get(e.to)?.label||e.to,relation:e.relation,score:Number((e.weight*e.confidence).toFixed(4)),confidence:e.confidence,evidence:e.lastEvidence||e.evidence||null})).sort((a,b)=>b.score-a.score);}
 export function learningEvent({serviceId,priceUsd,network='eip155:8453',phase='settled'}){return {event:'money_finder.learning.payment',version:GRAPH_VERSION,phase,serviceId,priceUsd,network,occurredAt:new Date().toISOString()};}
-export function registerLearningHooks(resourceServer,{serviceId,priceUsd}){if(!resourceServer?.onAfterSettle)return resourceServer;resourceServer.onAfterSettle(async context=>{console.info('MONEY_FINDER_LEARNING_EVENT',JSON.stringify({...learningEvent({serviceId,priceUsd}),transaction:context?.result?.transaction||context?.result?.txHash||null,payer:null}));});return resourceServer;}
+export function registerLearningHooks(resourceServer,{serviceId,priceUsd}){
+  if(resourceServer?.registerExtension) resourceServer.registerExtension(bazaarResourceServerExtension);
+  if(!resourceServer?.onAfterSettle)return resourceServer;
+  resourceServer.onAfterSettle(async context=>{console.info('MONEY_FINDER_LEARNING_EVENT',JSON.stringify({...learningEvent({serviceId,priceUsd}),transaction:context?.result?.transaction||context?.result?.txHash||null,payer:null}));});
+  return resourceServer;
+}
