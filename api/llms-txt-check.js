@@ -10,7 +10,7 @@ import { registerLearningHooks } from './lib/learning-graph.js';
 const ROUTE='/api/llms-txt-check';
 const NETWORK='eip155:8453';
 const PRICE='$0.001';
-const PUBLIC_ORIGIN='https://money-finder-nu.vercel.app';
+const PUBLIC_ORIGIN='https://milliapi.com';
 const PAY_TO=process.env.PAY_TO||'';
 const discovery=declareDiscoveryExtension({
   method:'GET',
@@ -27,7 +27,7 @@ async function handler(req,res){
     const result=await safePublicFetch(`${url.origin}/llms.txt`,{maxBytes:256000,accept:'text/plain,text/markdown,*/*;q=0.2'});
     const present=result.response.ok;
     return res.status(200).json({
-      product:'Money-Finder llms.txt Check',
+      product:'MilliAPI llms.txt Check',
       origin:url.origin,
       checkedAt:new Date().toISOString(),
       llmsTxt:{present,status:result.response.status,bytes:present?new TextEncoder().encode(result.text).byteLength:0,preview:present?result.text.slice(0,2000):null},
@@ -52,7 +52,7 @@ if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
       resource:`${PUBLIC_ORIGIN}${ROUTE}`,
       description:'Check whether a website publishes llms.txt and return its status, byte size, and a bounded preview for agent discovery workflows.',
       mimeType:'application/json',
-      serviceName:'Money-Finder',
+      serviceName:'MilliAPI',
       tags:['llms-txt','ai-discovery','ai-search','web','metadata'],
       iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,
       extensions:{...discovery}
