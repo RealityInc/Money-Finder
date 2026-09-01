@@ -6,7 +6,8 @@ import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { registerLearningHooks } from './lib/learning-graph.js';
 import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 import { idempotencyMiddleware } from './lib/idempotency.js';
-import { auditPublicUrl, decodeBaselineToken, verifyRepairsAgainstBaseline } from './lib/web-readiness-core.js';
+import { auditPublicUrl, decodeBaselineToken } from './lib/web-readiness-core.js';
+import { buildRepairArtifacts } from './lib/repair-artifacts.js';
 
 const NETWORK='eip155:8453';
 const PRICE='$0.002';
@@ -24,6 +25,21 @@ const discoveryExtension=declareDiscoveryExtension({
   }
 });
 
+function verifyRepairs(current,baseline){
+  const before=new Set(baseline?.recommendationIds||[]);
+  const after=new Set((current?.recommendations||[]).map(item=>item.id));
+  const resolvedRecommendationIds=[...before].filter(id=>!after.has(id)).sort();
+  const remainingRecommendationIds=[...before].filter(id=>after.has(id)).sort();
+  const introducedRecommendationIds=[...after].filter(id=>!before.has(id)).sort();
+  const scoreDelta=Number(current?.score||0)-Number(baseline?.score||0);
+  let status='unchanged';
+  if(before.size===0) status=introducedRecommendationIds.length?'regressed':'nothing_to_verify';
+  else if(remainingRecommendationIds.length===0&&introducedRecommendationIds.length===0&&scoreDelta>=0) status='verified';
+  else if(resolvedRecommendationIds.length>0&&scoreDelta>=0) status='partially_verified';
+  else if(scoreDelta<0||introducedRecommendationIds.length>0) status='regressed';
+  return {status,scoreDelta,resolvedRecommendationIds,remainingRecommendationIds,introducedRecommendationIds,baselineCheckedAt:baseline.checkedAt,currentCheckedAt:current.checkedAt};
+}
+
 async function verifyHandler(req,res){
   const url=req.body?.url; const token=req.body?.baselineToken;
   if(typeof url!=='string'||typeof token!=='string') return res.status(400).json({error:'JSON body must contain url and baselineToken'});
@@ -33,10 +49,10 @@ async function verifyHandler(req,res){
     const baselineHost=new URL(baseline.target).hostname.toLowerCase();
     const currentHost=new URL(current.target).hostname.toLowerCase();
     if(baselineHost!==currentHost) return res.status(409).json({error:'Baseline token belongs to a different hostname',baselineTarget:baseline.target,currentTarget:current.target});
-    const verification=verifyRepairsAgainstBaseline(current,baseline);
+    const verification=verifyRepairs(current,baseline);
     return res.status(200).json({
       product:'MilliAPI Repair Verification',version:1,target:current.target,...verification,
-      current:{score:current.score,verdict:current.verdict,summary:current.summary,remainingRecommendations:current.recommendations||[],repairArtifacts:current.repairArtifacts},
+      current:{score:current.score,verdict:current.verdict,summary:current.summary,remainingRecommendations:current.recommendations||[],repairArtifacts:buildRepairArtifacts(current)},
       nextBaselineToken:current.baselineToken,
       pricing:{protocol:'x402',pricePerCallUsd:0.002,currency:'USDC',network:'Base'}
     });
@@ -59,11 +75,11 @@ app.options(ROUTE,(_req,res)=>res.status(204).end());
 app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
-  const description='Verify whether fixes recommended by a prior MilliAPI audit actually resolved the observed readiness issues. Returns resolved, remaining, and newly introduced findings plus a fresh baseline.';
-  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,method:'POST',amount:2000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:['ai-agents','repair-verification','web-audit','repeat-buyers'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
+  const description='Verify whether fixes recommended by a prior MilliAPI audit actually resolved the observed readiness issues. Performs a fresh uncached audit and returns resolved, remaining, and newly introduced findings plus current repair artifacts and a fresh baseline.';
+  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,method:'POST',amount:2000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:['ai-agents','repair-verification','web-audit','repeat-buyers','repair-artifacts'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
   const facilitator=createCdpFacilitatorClient();
   const resourceServer=registerLearningHooks(new x402ResourceServer(facilitator).register(NETWORK,new ExactEvmScheme()),{serviceId:'service:repair_verify',priceUsd:0.002});
-  app.use(paymentMiddleware({[`POST ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',tags:['ai-agents','repair-verification','web-audit','repeat-buyers'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}},resourceServer,{appName:'MilliAPI'}));
+  app.use(paymentMiddleware({[`POST ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',tags:['ai-agents','repair-verification','web-audit','repeat-buyers','repair-artifacts'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}},resourceServer,{appName:'MilliAPI'}));
 }else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402_payment_configuration_incomplete'}));
 
 app.post(ROUTE,verifyHandler);
