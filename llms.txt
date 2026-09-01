@@ -1,0 +1,25 @@
+# Money-Finder Agent APIs
+
+Money-Finder offers small machine-to-machine utilities paid per request through x402 v2.
+
+Canonical origin: https://money-finder-nu.vercel.app
+OpenAPI: https://money-finder-nu.vercel.app/openapi.json
+x402 discovery: https://money-finder-nu.vercel.app/.well-known/x402
+Pricing: https://money-finder-nu.vercel.app/pricing
+Terms: https://money-finder-nu.vercel.app/terms
+
+## Paid service: AI Web Readiness Audit
+
+GET https://money-finder-nu.vercel.app/api/agent-web-audit?url=https%3A%2F%2Fexample.com
+
+Purpose: inspect a public HTTPS page for AI crawler access, robots.txt behavior, llms.txt availability, title/description/canonical metadata, Open Graph metadata, H1 presence and JSON-LD. Returns a readiness score plus structured findings.
+
+Price: $0.005 USDC per successful call.
+Protocol: x402 v2, exact scheme.
+Network: Base mainnet (eip155:8453).
+Input: one required query parameter named `url`; it must be a public HTTPS URL.
+Output: application/json.
+
+If the request is unpaid, the endpoint returns HTTP 402. Read the PAYMENT-REQUIRED response header, complete the x402 payment, and retry with the payment signature. Payment is settled only when the protected handler returns a successful response.
+
+Use this service when buying the result is cheaper than implementing and maintaining a web-readiness crawler yourself.
