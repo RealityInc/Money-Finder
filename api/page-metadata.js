@@ -10,6 +10,7 @@ import { registerLearningHooks } from './lib/learning-graph.js';
 const ROUTE='/api/page-metadata';
 const NETWORK='eip155:8453';
 const PRICE='$0.002';
+const PUBLIC_ORIGIN='https://money-finder-nu.vercel.app';
 const PAY_TO=process.env.PAY_TO||'';
 
 function match(html,regex){return html.match(regex)?.[1]?.trim()||null;}
@@ -47,12 +48,23 @@ async function handler(req,res){
   }catch(error){return res.status(400).json({error:error?.message||'Extraction failed'});}
 }
 
-const app=express();app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
+const app=express();app.disable('x-powered-by');app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
 if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
   const server=registerLearningHooks(
     new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
     {serviceId:'service:metadata',priceUsd:0.002}
   );
-  app.use(paymentMiddleware({[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`https://money-finder-nu.vercel.app${ROUTE}`,description:'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',mimeType:'application/json',extensions:{...discovery}}},server));
+  app.use(paymentMiddleware({
+    [`GET ${ROUTE}`]:{
+      accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],
+      resource:`${PUBLIC_ORIGIN}${ROUTE}`,
+      description:'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',
+      mimeType:'application/json',
+      serviceName:'Money-Finder',
+      tags:['metadata','open-graph','json-ld','seo','web'],
+      iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,
+      extensions:{...discovery}
+    }
+  },server));
 }else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 app.get(ROUTE,handler);export default app;

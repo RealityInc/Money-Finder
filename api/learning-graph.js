@@ -3,6 +3,8 @@
 
 import { getLearningGraph, rankRecommendations } from './lib/learning-graph.js';
 
+const ORIGIN = 'https://money-finder-nu.vercel.app';
+
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=1800');
@@ -17,6 +19,12 @@ export default function handler(req, res) {
     version: graph.version,
     purpose: graph.purpose,
     guardrails: graph.guardrails,
+    dashboard: `${ORIGIN}/learning.html`,
+    livePracticeAudit: `${ORIGIN}/api/x402-practice-audit`,
+    references: {
+      protocol: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md',
+      bazaar: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx'
+    },
     stats: {
       nodes: graph.nodes.length,
       edges: graph.edges.length,

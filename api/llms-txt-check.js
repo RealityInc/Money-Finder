@@ -10,6 +10,7 @@ import { registerLearningHooks } from './lib/learning-graph.js';
 const ROUTE='/api/llms-txt-check';
 const NETWORK='eip155:8453';
 const PRICE='$0.001';
+const PUBLIC_ORIGIN='https://money-finder-nu.vercel.app';
 const PAY_TO=process.env.PAY_TO||'';
 const discovery=declareDiscoveryExtension({
   method:'GET',
@@ -36,6 +37,7 @@ async function handler(req,res){
 }
 
 const app=express();
+app.disable('x-powered-by');
 app.set('trust proxy',true);
 app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});
 app.options(ROUTE,(_req,res)=>res.status(204).end());
@@ -44,7 +46,18 @@ if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
     new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
     {serviceId:'service:llms_txt',priceUsd:0.001}
   );
-  app.use(paymentMiddleware({[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`https://money-finder-nu.vercel.app${ROUTE}`,description:'Check whether a website publishes llms.txt and return its status, byte size, and a bounded preview for agent discovery workflows.',mimeType:'application/json',extensions:{...discovery}}},server));
+  app.use(paymentMiddleware({
+    [`GET ${ROUTE}`]:{
+      accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],
+      resource:`${PUBLIC_ORIGIN}${ROUTE}`,
+      description:'Check whether a website publishes llms.txt and return its status, byte size, and a bounded preview for agent discovery workflows.',
+      mimeType:'application/json',
+      serviceName:'Money-Finder',
+      tags:['llms-txt','ai-discovery','ai-search','web','metadata'],
+      iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,
+      extensions:{...discovery}
+    }
+  },server));
 }else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 app.get(ROUTE,handler);
 export default app;
