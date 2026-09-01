@@ -1,0 +1,34 @@
+name: Verify repair endpoint and refresh discovery
+on:
+  push:
+    branches:
+      - ops/verify-repair-discovery-20260901
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Verify unsigned repair challenge and refresh x402scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          body="$(mktemp)"
+          headers="$(mktemp)"
+          status=$(curl -sS --max-time 30 -D "$headers" -o "$body" -w '%{http_code}' -X POST 'https://milliapi.com/api/verify-site-repairs' -H 'content-type: application/json' --data '{"url":"https://example.com","baselineToken":"dummy"}')
+          echo "verify HTTP=$status"
+          test "$status" = '402'
+          grep -i '^payment-required:' "$headers" >/dev/null
+          node -e "const fs=require('fs');const d=JSON.parse(fs.readFileSync(process.argv[1],'utf8')); if(d.x402Version!==2) throw Error('bad x402 version'); if(d.accepts?.[0]?.amount!=='2000') throw Error('bad amount '+d.accepts?.[0]?.amount); if(d.accepts?.[0]?.network!=='eip155:8453') throw Error('bad network'); console.log(JSON.stringify({resource:d.resource?.url,amount:d.accepts[0].amount,network:d.accepts[0].network}))" "$body"
+          node <<'NODE'
+          const base='https://www.x402scan.com/api/trpc';
+          async function call(procedure,input){
+            const r=await fetch(`${base}/${procedure}?batch=1`,{method:'POST',headers:{'content-type':'application/json','x-trpc-source':'nextjs-react','user-agent':'MilliAPI-DiscoveryRefresh/1.1'},body:JSON.stringify({0:{json:input}})});
+            const text=await r.text();
+            console.log(procedure,'HTTP',r.status,text);
+            if(!r.ok) process.exit(1);
+          }
+          await call('public.resources.checkDiscovery',{origin:'https://milliapi.com',bustCache:true});
+          await call('public.resources.registerFromOrigin',{origin:'https://milliapi.com'});
+          NODE
