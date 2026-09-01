@@ -20,6 +20,11 @@ export default function handler(req, res) {
     description: 'Micropaid machine-readable utilities for AI agents.',
     protocol: 'x402',
     x402Version: 2,
+    optimizer: {
+      type: 'bounded-learning-graph',
+      endpoint: `${origin}/api/learning-graph`,
+      purpose: 'Rank x402 practices, product fit, discovery channels and buyer segments using explicit weighted evidence.'
+    },
     payment: {
       currency: 'USDC',
       network: 'Base',
@@ -30,7 +35,8 @@ export default function handler(req, res) {
     docs: {
       homepage: `${origin}/`,
       openapi: `${origin}/openapi.json`,
-      llms: `${origin}/llms.txt`
+      llms: `${origin}/llms.txt`,
+      learningGraph: `${origin}/api/learning-graph`
     },
     services: [
       {
