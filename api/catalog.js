@@ -7,7 +7,7 @@ export default function handler(req, res) {
 
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
-  const origin = 'https://money-finder-nu.vercel.app';
+  const origin = 'https://milliapi.com';
   const sharedInput = {
     query: {
       url: { type: 'string', format: 'uri', required: true, constraints: 'Public HTTPS URL only' }
@@ -16,7 +16,7 @@ export default function handler(req, res) {
   };
 
   return res.status(200).json({
-    name: 'Money-Finder',
+    name: 'MilliAPI',
     description: 'Micropaid machine-readable utilities for AI agents.',
     protocol: 'x402',
     x402Version: 2,
@@ -36,7 +36,8 @@ export default function handler(req, res) {
       homepage: `${origin}/`,
       openapi: `${origin}/openapi.json`,
       llms: `${origin}/llms.txt`,
-      learningGraph: `${origin}/api/learning-graph`
+      learningGraph: `${origin}/api/learning-graph`,
+      practiceAudit: `${origin}/api/x402-practice-audit`
     },
     services: [
       {
