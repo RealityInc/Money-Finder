@@ -17,7 +17,14 @@ export default async function handler(req, res) {
 
   try {
     const result = await preflightPublicUrl(target);
-    return res.status(200).json(result);
+    return res.status(200).json({
+      ...result,
+      paidAudit:{
+        ...(result.paidAudit||{}),
+        includes:['verdict','blockers','evidence','prioritized_fixes','crawler_policy','repair_artifacts','baseline_token'],
+        postRepairVerification:{endpoint:'https://milliapi.com/api/verify-site-repairs',priceUsd:0.002}
+      }
+    });
   } catch (error) {
     const message = error?.name === 'AbortError' ? 'Target request timed out' : error?.message || 'Preflight failed';
     return res.status(400).json({ error: message });
