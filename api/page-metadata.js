@@ -5,6 +5,7 @@ import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { normalizePublicHttpsUrl, safePublicFetch } from './lib/safe-public-fetch.js';
+import { registerLearningHooks } from './lib/learning-graph.js';
 
 const ROUTE='/api/page-metadata';
 const NETWORK='eip155:8453';
@@ -47,5 +48,11 @@ async function handler(req,res){
 }
 
 const app=express();app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
-if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){const server=new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme());app.use(paymentMiddleware({[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`https://money-finder-nu.vercel.app${ROUTE}`,description:'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',mimeType:'application/json',extensions:{...discovery}}},server));}else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
+if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
+  const server=registerLearningHooks(
+    new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
+    {serviceId:'service:metadata',priceUsd:0.002}
+  );
+  app.use(paymentMiddleware({[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`https://money-finder-nu.vercel.app${ROUTE}`,description:'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',mimeType:'application/json',extensions:{...discovery}}},server));
+}else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 app.get(ROUTE,handler);export default app;

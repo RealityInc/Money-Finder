@@ -5,6 +5,7 @@ import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { normalizePublicHttpsUrl, safePublicFetch } from './lib/safe-public-fetch.js';
+import { registerLearningHooks } from './lib/learning-graph.js';
 
 const ROUTE = '/api/ai-robots-check';
 const NETWORK = 'eip155:8453';
@@ -79,7 +80,10 @@ app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.se
 app.options(ROUTE,(_req,res)=>res.status(204).end());
 
 if (PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET) {
-  const server = new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme());
+  const server = registerLearningHooks(
+    new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
+    { serviceId:'service:ai_robots', priceUsd:0.001 }
+  );
   app.use(paymentMiddleware({ [`GET ${ROUTE}`]:{ accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}], resource:`https://money-finder-nu.vercel.app${ROUTE}`, description:'Check robots.txt homepage permissions for major AI crawlers including GPTBot, OAI-SearchBot, ClaudeBot, Google-Extended, PerplexityBot and Applebot-Extended.', mimeType:'application/json', extensions:{...discovery} } },server));
 } else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 
