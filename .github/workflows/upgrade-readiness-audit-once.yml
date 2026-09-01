@@ -1,0 +1,99 @@
+name: Upgrade readiness audit once
+
+on:
+  push:
+    branches:
+      - feature/flagship-readiness-audit
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/flagship-readiness-audit
+      - name: Patch audit response
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('api/agent-web-audit.js')
+          text = path.read_text()
+
+          imp = "import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';\n"
+          add = "import { buildReadinessAssessment } from './lib/readiness-assessment.js';\n"
+          if add not in text:
+              if imp not in text: raise SystemExit('import marker missing')
+              text = text.replace(imp, imp + add, 1)
+
+          old = """      score: 45,\n      page: {"""
+          new = """      score: 45,\n      verdict: 'needs_work',\n      agentRecommendation: 'improve_before_prioritizing_discovery',\n      summary: 'No blocking issue detected. Improvements are prioritized below.',\n      blockers: [],\n      recommendations: [\n        { id: 'add_canonical', priority: 'high', issue: 'No canonical URL was detected.', action: 'Add a canonical link element.', evidence: 'canonical missing' }\n      ],\n      evidence: [],\n      checksBundled: ['page_metadata', 'robots_txt', 'llms_txt', 'major_ai_crawler_homepage_access'],\n      page: {"""
+          if "verdict: 'needs_work'" not in text:
+              if old not in text: raise SystemExit('discovery example marker missing')
+              text = text.replace(old, new, 1)
+
+          old_schema = """        score: { type: 'number', minimum: 0, maximum: 100 },\n        page: { type: 'object' },"""
+          new_schema = """        score: { type: 'number', minimum: 0, maximum: 100 },\n        verdict: { type: 'string', enum: ['ready', 'mostly_ready', 'needs_work', 'blocked'] },\n        agentRecommendation: { type: 'string' },\n        summary: { type: 'string' },\n        blockers: { type: 'array' },\n        recommendations: { type: 'array' },\n        evidence: { type: 'array' },\n        checksBundled: { type: 'array' },\n        page: { type: 'object' },"""
+          if "verdict: { type: 'string'" not in text:
+              if old_schema not in text: raise SystemExit('schema marker missing')
+              text = text.replace(old_schema, new_schema, 1)
+
+          old_required = "required: ['product', 'target', 'checkedAt', 'score', 'page', 'discovery', 'aiCrawlerHomepageAccess']"
+          new_required = "required: ['product', 'target', 'checkedAt', 'score', 'verdict', 'agentRecommendation', 'summary', 'blockers', 'recommendations', 'evidence', 'checksBundled', 'page', 'discovery', 'aiCrawlerHomepageAccess']"
+          text = text.replace(old_required, new_required, 1)
+
+          marker = """    const score = scoreAudit({ page, robotsPresent, llmsPresent, crawlerAccess });\n\n    return res.status(200).json({"""
+          replacement = """    const score = scoreAudit({ page, robotsPresent, llmsPresent, crawlerAccess });\n    const assessment = buildReadinessAssessment({\n      score,\n      page,\n      robotsPresent,\n      robotsStatus: robotsResult.status === 'fulfilled' ? robotsResult.value.response.status : null,\n      llmsPresent,\n      llmsStatus: llmsResult.status === 'fulfilled' ? llmsResult.value.response.status : null,\n      crawlerAccess\n    });\n\n    return res.status(200).json({"""
+          if 'const assessment = buildReadinessAssessment' not in text:
+              if marker not in text: raise SystemExit('assessment marker missing')
+              text = text.replace(marker, replacement, 1)
+
+          old_response = """      version: 1,\n      target: pageFetch.finalUrl,\n      checkedAt: new Date().toISOString(),\n      score,\n      page,"""
+          new_response = """      version: 2,\n      target: pageFetch.finalUrl,\n      checkedAt: new Date().toISOString(),\n      score,\n      ...assessment,\n      page,"""
+          if 'version: 2' not in text:
+              if old_response not in text: raise SystemExit('response marker missing')
+              text = text.replace(old_response, new_response, 1)
+
+          old_desc = 'Check whether a public HTTPS page is ready for AI agents and answer engines. Returns AI-crawler access, robots.txt and llms.txt status, canonical and meta tags, Open Graph, JSON-LD, H1 count, and a 0-100 readiness score. Useful before crawling, indexing, or AI-search optimization.'
+          new_desc = 'Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, and major AI-crawler access.'
+          text = text.replace(old_desc, new_desc)
+
+          path.write_text(text)
+
+      - name: Test deterministic assessment
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { buildReadinessAssessment } from './api/lib/readiness-assessment.js';
+          const blocked = buildReadinessAssessment({
+            score: 40,
+            page: {noindex:true, canonical:null, description:null, jsonLdBlocks:0, h1Count:0, openGraph:{}},
+            robotsPresent:true, robotsStatus:200, llmsPresent:false, llmsStatus:404,
+            crawlerAccess:{GPTBot:{allowed:false}, ClaudeBot:{allowed:false}}
+          });
+          if (blocked.verdict !== 'blocked') throw new Error('Expected blocked verdict');
+          if (!blocked.blockers.some(x => x.id === 'page_noindex')) throw new Error('Missing noindex blocker');
+          if (!blocked.recommendations.length) throw new Error('Expected recommendations');
+
+          const ready = buildReadinessAssessment({
+            score: 95,
+            page: {noindex:false, canonical:'https://example.com/', description:'Example', jsonLdBlocks:1, h1Count:1, openGraph:{title:'Example',description:'Example'}},
+            robotsPresent:true, robotsStatus:200, llmsPresent:true, llmsStatus:200,
+            crawlerAccess:{GPTBot:{allowed:true}, ClaudeBot:{allowed:true}}
+          });
+          if (ready.verdict !== 'ready') throw new Error('Expected ready verdict');
+          console.log(JSON.stringify({blocked:blocked.verdict, ready:ready.verdict, checks:ready.checksBundled.length}));
+          NODE
+      - name: Commit audit upgrade
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add api/agent-web-audit.js
+          git commit -m 'Make readiness audit decision-ready'
+          git push origin HEAD:feature/flagship-readiness-audit
