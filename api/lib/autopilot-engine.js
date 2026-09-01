@@ -4,14 +4,16 @@
 import { assessOpportunity, summarizePolicy, POLICY_VERSION } from './safety-policy.js';
 import { getLearningGraph, rankRecommendations, GRAPH_VERSION } from './learning-graph.js';
 
+const ORIGIN = 'https://milliapi.com';
+
 const X402_PROGRAMS = [
   {
     id: 'ai-robots-x402',
     graphServiceId: 'service:ai_robots',
     title: 'AI Robots Policy Check API',
     category: 'api', automationClass: 'api_usage_fee',
-    sourceUrl: 'https://money-finder-nu.vercel.app/api/ai-robots-check?url=https%3A%2F%2Fexample.com',
-    landingUrl: 'https://money-finder-nu.vercel.app/api/ai-robots-check',
+    sourceUrl: `${ORIGIN}/api/ai-robots-check?url=https%3A%2F%2Fexample.com`,
+    landingUrl: `${ORIGIN}/api/ai-robots-check`,
     enrolled: true, enabled: true, expectedStatus: 402,
     payoutModel: '$0.001 per successful x402 API call',
     requiresRecurringHumanWork: false, requiresApplicationPerOpportunity: false,
@@ -22,8 +24,8 @@ const X402_PROGRAMS = [
     graphServiceId: 'service:llms_txt',
     title: 'llms.txt Check API',
     category: 'api', automationClass: 'api_usage_fee',
-    sourceUrl: 'https://money-finder-nu.vercel.app/api/llms-txt-check?url=https%3A%2F%2Fexample.com',
-    landingUrl: 'https://money-finder-nu.vercel.app/api/llms-txt-check',
+    sourceUrl: `${ORIGIN}/api/llms-txt-check?url=https%3A%2F%2Fexample.com`,
+    landingUrl: `${ORIGIN}/api/llms-txt-check`,
     enrolled: true, enabled: true, expectedStatus: 402,
     payoutModel: '$0.001 per successful x402 API call',
     requiresRecurringHumanWork: false, requiresApplicationPerOpportunity: false,
@@ -34,8 +36,8 @@ const X402_PROGRAMS = [
     graphServiceId: 'service:metadata',
     title: 'Page Metadata Extractor API',
     category: 'api', automationClass: 'api_usage_fee',
-    sourceUrl: 'https://money-finder-nu.vercel.app/api/page-metadata?url=https%3A%2F%2Fexample.com',
-    landingUrl: 'https://money-finder-nu.vercel.app/api/page-metadata',
+    sourceUrl: `${ORIGIN}/api/page-metadata?url=https%3A%2F%2Fexample.com`,
+    landingUrl: `${ORIGIN}/api/page-metadata`,
     enrolled: true, enabled: true, expectedStatus: 402,
     payoutModel: '$0.002 per successful x402 API call',
     requiresRecurringHumanWork: false, requiresApplicationPerOpportunity: false,
@@ -46,8 +48,8 @@ const X402_PROGRAMS = [
     graphServiceId: 'service:web_audit',
     title: 'AI Web Readiness Audit API',
     category: 'api', automationClass: 'api_usage_fee',
-    sourceUrl: 'https://money-finder-nu.vercel.app/api/agent-web-audit?url=https%3A%2F%2Fexample.com',
-    landingUrl: 'https://money-finder-nu.vercel.app/api/agent-web-audit',
+    sourceUrl: `${ORIGIN}/api/agent-web-audit?url=https%3A%2F%2Fexample.com`,
+    landingUrl: `${ORIGIN}/api/agent-web-audit`,
     enrolled: true, enabled: true, expectedStatus: 402,
     payoutModel: '$0.005 per successful x402 API call',
     requiresRecurringHumanWork: false, requiresApplicationPerOpportunity: false,
@@ -94,7 +96,7 @@ async function probeUrl(url, expectedStatus = 200) {
   try {
     const response = await fetch(url, {
       method: 'GET', redirect: 'follow', signal: controller.signal,
-      headers: { 'user-agent': 'Money-Finder-Autopilot/2.0 (+https://money-finder-nu.vercel.app)' }
+      headers: { 'user-agent': `MilliAPI-Autopilot/2.0 (+${ORIGIN})` }
     });
     return {
       ok: response.status === expectedStatus || (expectedStatus === 200 && response.ok),
