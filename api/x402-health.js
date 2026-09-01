@@ -1,8 +1,14 @@
 // api/x402-health.js
-// Public-safe diagnostic for Coinbase x402 facilitator connectivity.
+// Public-safe diagnostic for Coinbase x402 facilitator connectivity and route initialization.
 // Never returns credentials or the receiving wallet.
 
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
+import { x402ResourceServer, x402HTTPResourceServer } from '@x402/core/server';
+import { ExactEvmScheme } from '@x402/evm/exact/server';
+
+const NETWORK = 'eip155:8453';
+const PRICE = '$0.005';
+const ROUTE = '/api/agent-web-audit';
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -11,11 +17,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'GET only' });
   }
 
+  const payTo = process.env.PAY_TO || '';
   const configured = Boolean(process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET);
+  const payToShapeValid = /^0x[a-fA-F0-9]{40}$/.test(payTo.trim());
+
   if (!configured) {
     return res.status(503).json({
       ok: false,
       configured: false,
+      payToConfigured: Boolean(payTo),
+      payToShapeValid,
       error: 'CDP credentials are not configured in this deployment.'
     });
   }
@@ -23,18 +34,47 @@ export default async function handler(req, res) {
   try {
     const facilitator = createCdpFacilitatorClient();
     const supported = await facilitator.getSupported();
-    const base = supported.kinds?.filter(kind => kind.network === 'eip155:8453') || [];
+    const base = supported.kinds?.filter(kind => kind.network === NETWORK) || [];
 
-    return res.status(200).json({
-      ok: true,
+    let routeInitialization = { ok: false, message: 'Not attempted' };
+    try {
+      const resourceServer = new x402ResourceServer(facilitator)
+        .register(NETWORK, new ExactEvmScheme());
+      const httpServer = new x402HTTPResourceServer(resourceServer, {
+        [`GET ${ROUTE}`]: {
+          accepts: [{
+            scheme: 'exact',
+            price: PRICE,
+            network: NETWORK,
+            payTo: payTo.trim()
+          }],
+          description: 'AI web readiness audit',
+          mimeType: 'application/json'
+        }
+      });
+      await httpServer.initialize();
+      routeInitialization = { ok: true, message: 'Route initialized successfully' };
+    } catch (routeError) {
+      routeInitialization = {
+        ok: false,
+        message: (routeError instanceof Error ? routeError.message : String(routeError)).slice(0, 500)
+      };
+      console.error('x402 route initialization failed:', routeInitialization.message);
+    }
+
+    return res.status(routeInitialization.ok ? 200 : 502).json({
+      ok: routeInitialization.ok,
       configured: true,
+      payToConfigured: Boolean(payTo),
+      payToShapeValid,
       facilitatorReachable: true,
       baseMainnetSupported: base.length > 0,
       baseKinds: base.map(kind => ({
         x402Version: kind.x402Version,
         scheme: kind.scheme,
         network: kind.network
-      }))
+      })),
+      routeInitialization
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -46,6 +86,8 @@ export default async function handler(req, res) {
     return res.status(502).json({
       ok: false,
       configured: true,
+      payToConfigured: Boolean(payTo),
+      payToShapeValid,
       facilitatorReachable: false,
       errorType: error?.name || 'Error',
       message: message.slice(0, 300)
