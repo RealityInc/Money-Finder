@@ -1,0 +1,169 @@
+name: Run repair upgrade patcher
+on:
+  push:
+    branches: [feature/repair-verify-idempotency]
+permissions:
+  contents: write
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/repair-verify-idempotency
+      - name: Patch product surfaces
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+          import json
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f'missing marker: {label}')
+              return text.replace(old, new, 1)
+
+          p=Path('api/lib/web-readiness-core.js'); s=p.read_text()
+          if "./repair-artifacts.js" not in s:
+              s=replace_once(s,"import { buildReadinessAssessment } from './readiness-assessment.js';\n","import { buildReadinessAssessment } from './readiness-assessment.js';\nimport { buildRepairArtifacts } from './repair-artifacts.js';\n",'core import')
+          if 'export function verifyRepairsAgainstBaseline' not in s:
+              marker="export async function auditPublicUrl(input,{useCache=true}={}) {"
+              verify="""export function verifyRepairsAgainstBaseline(current, baseline) {
+            const before = new Set(baseline?.recommendationIds || []);
+            const after = new Set((current?.recommendations || []).map(item => item.id));
+            const resolvedRecommendationIds = [...before].filter(id => !after.has(id)).sort();
+            const remainingRecommendationIds = [...before].filter(id => after.has(id)).sort();
+            const introducedRecommendationIds = [...after].filter(id => !before.has(id)).sort();
+            const scoreDelta = Number(current?.score || 0) - Number(baseline?.score || 0);
+            let status = 'unchanged';
+            if (before.size === 0) status = introducedRecommendationIds.length ? 'regressed' : 'nothing_to_verify';
+            else if (remainingRecommendationIds.length === 0 && introducedRecommendationIds.length === 0 && scoreDelta >= 0) status = 'verified';
+            else if (resolvedRecommendationIds.length > 0 && scoreDelta >= 0) status = 'partially_verified';
+            else if (scoreDelta < 0 || introducedRecommendationIds.length > 0) status = 'regressed';
+            return { status, scoreDelta, resolvedRecommendationIds, remainingRecommendationIds, introducedRecommendationIds, baselineCheckedAt: baseline.checkedAt, currentCheckedAt: current.checkedAt };
+          }
+
+"""
+              s=replace_once(s,marker,verify+marker,'verification export')
+          s=s.replace("version:3,target:pageFetch.finalUrl", "version:4,target:pageFetch.finalUrl", 1)
+          if 'result.repairArtifacts=buildRepairArtifacts(result);' not in s:
+              s=replace_once(s,"  result.baselineToken=createBaselineToken(result);\n","  result.repairArtifacts=buildRepairArtifacts(result);\n  result.baselineToken=createBaselineToken(result);\n",'repair artifacts')
+          s=s.replace("'baseline_token']", "'baseline_token','repair_artifacts','post_repair_verification']", 1)
+          p.write_text(s)
+
+          paid_files=['api/agent-web-audit.js','api/agent-web-audit-batch.js','api/site-readiness-change.js','api/ai-robots-check.js','api/llms-txt-check.js','api/page-metadata.js']
+          for name in paid_files:
+              p=Path(name); s=p.read_text()
+              marker="import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';\n"
+              if "./lib/idempotency.js" not in s:
+                  s=replace_once(s,marker,marker+"import { idempotencyMiddleware } from './lib/idempotency.js';\n",name+' idempotency import')
+              s=s.replace("Content-Type, PAYMENT-SIGNATURE, X-PAYMENT'", "Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, Idempotency-Key'")
+              s=s.replace("PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE'", "PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Idempotent-Replay, X-Idempotency-Scope'")
+              options="app.options(ROUTE,(_req,res)=>res.status(204).end());"
+              if "app.use(ROUTE,idempotencyMiddleware());" not in s:
+                  s=replace_once(s,options,options+"\napp.use(ROUTE,idempotencyMiddleware());",name+' idempotency middleware')
+              p.write_text(s)
+
+          p=Path('api/agent-web-audit.js'); s=p.read_text()
+          if 'repairArtifacts:{count:2' not in s:
+              s=s.replace("evidence:[],checksBundled:['page_metadata','robots_txt','llms_txt','major_ai_crawler_homepage_access'],", "evidence:[],checksBundled:['page_metadata','robots_txt','llms_txt','major_ai_crawler_homepage_access'],repairArtifacts:{count:2,readyToApply:1,reviewRequired:0,fillRequired:1,artifacts:[{id:'canonical_link',recommendationId:'add_canonical',applyMode:'ready_to_apply',path:'<head>',format:'text/html',content:'<link rel=\\\"canonical\\\" href=\\\"https://example.com/\\\">'}]},")
+          s=s.replace("checksBundled:{type:'array'},baselineToken:{type:'string'}", "checksBundled:{type:'array'},repairArtifacts:{type:'object'},baselineToken:{type:'string'}")
+          s=s.replace("'checksBundled','baselineToken'", "'checksBundled','repairArtifacts','baselineToken'")
+          s=s.replace("prioritized fixes, 0-100 score", "ready-to-apply repair artifacts, prioritized fixes, 0-100 score")
+          s=s.replace("'change-baseline']", "'change-baseline','repair-artifacts']")
+          p.write_text(s)
+
+          p=Path('api/agent-web-audit-batch.js'); s=p.read_text().replace('ranked readiness verdicts, blockers, evidence, prioritized fixes, and portable baselines','ranked readiness verdicts, blockers, evidence, repair artifacts, prioritized fixes, and portable baselines'); p.write_text(s)
+
+          p=Path('api/catalog.js'); s=p.read_text()
+          s=s.replace("'baselineToken', 'cache', 'page'", "'baselineToken', 'repairArtifacts', 'cache', 'page'")
+          if "id: 'repair-verification'" not in s:
+              insert="""      {
+        id: 'repair-verification',
+        title: 'Repair Verification',
+        flagship: false,
+        recommendedFor: 'Agents that applied recommendations and want a cheap fresh check of which fixes actually resolved prior findings.',
+        description: 'Re-audits without using the normal result cache and compares recommendation IDs to a prior portable baseline.',
+        method: 'POST', endpoint: `${origin}/api/verify-site-repairs`, priceUsd: 0.002, priceAtomicUsdc: '2000',
+        input: { body: { url: { type:'string', format:'uri' }, baselineToken: { type:'string' } }, example: { url:'https://example.com', baselineToken:'<prior token>' } },
+        output: { contentType:'application/json', fields:['status','scoreDelta','resolvedRecommendationIds','remainingRecommendationIds','introducedRecommendationIds','current','nextBaselineToken'] },
+        tags: ['repair-verification','repeat-buyers','web-audit','remediation']
+      },
+"""
+              needle="      {\n        id: 'site-readiness-change',"
+              s=replace_once(s,needle,insert+needle,'catalog verify insert')
+          s=s.replace("Use the flagship audit for one site, batch for lists, and site-readiness-change with a prior baseline token for historical comparison.", "Use the flagship audit for one site, batch for lists, verify-site-repairs after applying fixes, and site-readiness-change for broader historical comparison.")
+          p.write_text(s)
+
+          p=Path('api/x402-discovery.js'); s=p.read_text()
+          if 'https://milliapi.com/api/verify-site-repairs' not in s:
+              needle="      'https://milliapi.com/api/site-readiness-change',\n"
+              s=replace_once(s,needle,needle+"      'https://milliapi.com/api/verify-site-repairs',\n",'x402 discovery verify')
+          p.write_text(s)
+
+          p=Path('llms.txt'); s=p.read_text()
+          s=s.replace('returns a machine-actionable verdict, blockers, supporting evidence, and prioritized fixes.', 'returns a machine-actionable verdict, blockers, supporting evidence, prioritized fixes, and repair artifacts with ready-to-apply or review-required snippets.')
+          if '### Repair Verification — $0.002 USDC' not in s:
+              section="""
+### Repair Verification — $0.002 USDC
+POST https://milliapi.com/api/verify-site-repairs
+
+After applying recommendations from a prior paid audit, send `url` and the prior `baselineToken`. MilliAPI performs a fresh uncached audit and returns `resolvedRecommendationIds`, `remainingRecommendationIds`, `introducedRecommendationIds`, `scoreDelta`, a verification status, and a new baseline token.
+
+Use an `Idempotency-Key` header (8–200 characters) on paid requests when retrying after a timeout. MilliAPI replays a successful cached response when the same request/key reaches the same warm runtime; reusing the exact x402 authorization is protected from duplicate onchain settlement by the payment nonce.
+
+"""
+              s=replace_once(s,'### AI Robots Policy Check — $0.001 USDC\n',section+'### AI Robots Policy Check — $0.001 USDC\n','llms verify section')
+          p.write_text(s)
+
+          p=Path('openapi.json'); data=json.loads(p.read_text())
+          data['info']['version']='1.6.0'
+          data['info']['description']='Decision-ready web intelligence for AI agents. Free preflight helps decide whether to buy; the flagship audit returns verdicts plus repair artifacts, batch handles lists, repair verification cheaply confirms applied fixes, and site-readiness-change provides broader historical comparison. Paid endpoints use x402 v2 with USDC on Base mainnet.'
+          audit=data['paths']['/api/agent-web-audit']['get']
+          audit['description']='Flagship one-site service. Returns score, verdict, blockers, evidence, prioritized fixes, ready-to-apply/review-required repair artifacts, raw observations, cache metadata, and a portable baseline token.'
+          data['paths']['/api/verify-site-repairs']={'post':{'summary':'Verify which previously recommended repairs actually worked','description':'Fresh uncached re-audit against a prior portable baseline. Returns resolved, remaining, and newly introduced recommendation IDs plus score delta and a new baseline.','operationId':'verifySiteRepairs','requestBody':{'required':True,'content':{'application/json':{'schema':{'$ref':'#/components/schemas/ChangeInput'}}}},'x-payment-info':{'protocols':[{'x402':{}}],'price':{'mode':'fixed','currency':'USD','amount':'0.002'}},'responses':{'200':{'description':'Repair verification result and next baseline token'},'402':{'$ref':'#/components/responses/PaymentRequired'}},'x-milliapi-pricing':{'protocol':'x402','priceUsd':0.002,'currency':'USDC','network':'eip155:8453'}}}
+          for item in data['paths'].values():
+              for op in item.values():
+                  if isinstance(op,dict) and 'x-payment-info' in op:
+                      op['x-milliapi-idempotency']={'header':'Idempotency-Key','scope':'best-effort-warm-runtime','ttlSeconds':900}
+          p.write_text(json.dumps(data,indent=2)+'\n')
+
+          p=Path('api/lib/learning-graph.js'); s=p.read_text()
+          if 'practice:actionable_repairs' not in s:
+              s=s.replace("  { id:'practice:privacy_min',type:'practice',label:'Minimize buyer telemetry' },", "  { id:'practice:privacy_min',type:'practice',label:'Minimize buyer telemetry' },\n  { id:'practice:actionable_repairs',type:'practice',label:'Return machine-applicable repair artifacts' },\n  { id:'practice:idempotent_retry',type:'practice',label:'Support retry-safe paid requests' },")
+              s=s.replace("  { id:'service:web_audit',type:'service',label:'AI Web Readiness Audit',endpoint:'/api/agent-web-audit',priceUsd:0.005 },", "  { id:'service:web_audit',type:'service',label:'AI Web Readiness Audit',endpoint:'/api/agent-web-audit',priceUsd:0.005 },\n  { id:'service:repair_verify',type:'service',label:'Repair Verification',endpoint:'/api/verify-site-repairs',priceUsd:0.002 },")
+              edge="  {from:'practice:privacy_min',to:'goal:repeat_buyers',relation:'improves_trust',weight:0.55,confidence:0.55},"
+              s=s.replace(edge,edge+"\n  {from:'practice:actionable_repairs',to:'goal:paid_calls',relation:'increases_value',weight:0.88,confidence:0.62},\n  {from:'practice:idempotent_retry',to:'goal:reliability',relation:'reduces_retry_risk',weight:0.9,confidence:0.72},")
+              s=s.replace("  {from:'service:web_audit',to:'buyer:ai_search',relation:'fits',weight:0.9,confidence:0.72},", "  {from:'service:web_audit',to:'buyer:ai_search',relation:'fits',weight:0.9,confidence:0.72},\n  {from:'service:repair_verify',to:'buyer:agent_developers',relation:'fits',weight:0.9,confidence:0.66},\n  {from:'service:repair_verify',to:'goal:repeat_buyers',relation:'creates_repeat_loop',weight:0.94,confidence:0.68},")
+          p.write_text(s)
+          PY
+      - name: Syntax and product tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in api/lib/idempotency.js api/lib/repair-artifacts.js api/lib/web-readiness-core.js api/agent-web-audit.js api/agent-web-audit-batch.js api/site-readiness-change.js api/verify-site-repairs.js api/ai-robots-check.js api/llms-txt-check.js api/page-metadata.js api/catalog.js api/x402-discovery.js api/lib/learning-graph.js; do node --check "$f"; done
+          node --input-type=module <<'NODE'
+          import { buildRepairArtifacts } from './api/lib/repair-artifacts.js';
+          import { createBaselineToken, decodeBaselineToken, verifyRepairsAgainstBaseline } from './api/lib/web-readiness-core.js';
+          const before={target:'https://example.com/',checkedAt:'2026-09-01T00:00:00Z',score:50,verdict:'needs_work',recommendations:[{id:'add_canonical'},{id:'publish_llms_txt'}],page:{title:'Example',description:null,canonical:null,noindex:false,jsonLdBlocks:1,h1Count:1,openGraph:{title:'Example',description:null}},discovery:{robotsTxt:{present:true,status:200},llmsTxt:{present:false,status:404}},aiCrawlerHomepageAccess:{GPTBot:{allowed:true}}};
+          const repairs=buildRepairArtifacts(before);
+          if(!repairs.artifacts.some(x=>x.id==='canonical_link')) throw new Error('canonical repair missing');
+          if(!repairs.artifacts.some(x=>x.id==='llms_txt_starter')) throw new Error('llms repair missing');
+          const baseline=decodeBaselineToken(createBaselineToken(before));
+          const after={...before,checkedAt:'2026-09-01T01:00:00Z',score:75,verdict:'mostly_ready',recommendations:[{id:'publish_llms_txt'}]};
+          const verified=verifyRepairsAgainstBaseline(after,baseline);
+          if(verified.status!=='partially_verified'||!verified.resolvedRecommendationIds.includes('add_canonical')) throw new Error('verification semantics failed');
+          console.log('repair artifacts',repairs.count,'verification',verified.status);
+          NODE
+          node -e "JSON.parse(require('fs').readFileSync('openapi.json','utf8')); console.log('openapi json ok')"
+      - name: Commit upgrade
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add api llms.txt openapi.json
+          git commit -m 'Add repair artifacts verification and retry safety'
+          git push origin HEAD:feature/repair-verify-idempotency
