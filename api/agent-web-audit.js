@@ -8,11 +8,12 @@ import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { safePublicFetch, normalizePublicHttpsUrl } from './lib/safe-public-fetch.js';
+import { registerLearningHooks } from './lib/learning-graph.js';
 
 const NETWORK = 'eip155:8453';
 const PRICE = '$0.005';
 const ROUTE = '/api/agent-web-audit';
-const PUBLIC_ORIGIN = 'https://money-finder-nu.vercel.app';
+const PUBLIC_ORIGIN = 'https://milliapi.com';
 const PAY_TO = process.env.PAY_TO || '';
 const PAYMENT_CONFIGURED = Boolean(
   PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET
@@ -45,7 +46,7 @@ const discoveryExtension = declareDiscoveryExtension({
   },
   output: {
     example: {
-      product: 'Money-Finder AI Web Readiness Audit',
+      product: 'MilliAPI AI Web Readiness Audit',
       target: 'https://example.com/',
       score: 45,
       page: {
@@ -268,7 +269,7 @@ async function auditHandler(req, res) {
     const score = scoreAudit({ page, robotsPresent, llmsPresent, crawlerAccess });
 
     return res.status(200).json({
-      product: 'Money-Finder AI Web Readiness Audit',
+      product: 'MilliAPI AI Web Readiness Audit',
       version: 1,
       target: pageFetch.finalUrl,
       checkedAt: new Date().toISOString(),
@@ -317,8 +318,10 @@ app.options(ROUTE, (_req, res) => res.status(204).end());
 
 if (PAYMENT_CONFIGURED) {
   const facilitator = createCdpFacilitatorClient();
-  const resourceServer = new x402ResourceServer(facilitator)
-    .register(NETWORK, new ExactEvmScheme());
+  const resourceServer = registerLearningHooks(
+    new x402ResourceServer(facilitator).register(NETWORK, new ExactEvmScheme()),
+    { serviceId: 'service:web_audit', priceUsd: 0.005 }
+  );
 
   app.use(
     paymentMiddleware(
@@ -335,14 +338,14 @@ if (PAYMENT_CONFIGURED) {
           resource: `${PUBLIC_ORIGIN}${ROUTE}`,
           description: 'Check whether a public HTTPS page is ready for AI agents and answer engines. Returns AI-crawler access, robots.txt and llms.txt status, canonical and meta tags, Open Graph, JSON-LD, H1 count, and a 0-100 readiness score. Useful before crawling, indexing, or AI-search optimization.',
           mimeType: 'application/json',
-          serviceName: 'Money-Finder',
+          serviceName: 'MilliAPI',
           tags: ['ai-agents', 'web-audit', 'ai-search', 'robots', 'llms-txt'],
           iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
           unpaidResponseBody: () => ({
             contentType: 'application/json',
             body: {
               error: 'payment_required',
-              service: 'Money-Finder AI Web Readiness Audit',
+              service: 'MilliAPI AI Web Readiness Audit',
               protocol: 'x402',
               priceUsd: 0.005,
               currency: 'USDC',
@@ -358,7 +361,7 @@ if (PAYMENT_CONFIGURED) {
       },
       resourceServer,
       {
-        appName: 'Money-Finder',
+        appName: 'MilliAPI',
         appLogo: `${PUBLIC_ORIGIN}/icon.svg`,
         testnet: false
       }

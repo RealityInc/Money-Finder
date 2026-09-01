@@ -10,7 +10,7 @@ import { registerLearningHooks } from './lib/learning-graph.js';
 const ROUTE = '/api/ai-robots-check';
 const NETWORK = 'eip155:8453';
 const PRICE = '$0.001';
-const PUBLIC_ORIGIN = 'https://money-finder-nu.vercel.app';
+const PUBLIC_ORIGIN = 'https://milliapi.com';
 const PAY_TO = process.env.PAY_TO || '';
 const BOTS = ['GPTBot','ChatGPT-User','OAI-SearchBot','ClaudeBot','Claude-User','Google-Extended','PerplexityBot','Applebot-Extended'];
 
@@ -63,7 +63,7 @@ async function handler(req,res) {
     const present = robots.response.ok;
     const groups = present ? parseRobots(robots.text) : [];
     return res.status(200).json({
-      product:'Money-Finder AI Robots Policy Check',
+      product:'MilliAPI AI Robots Policy Check',
       origin:url.origin,
       checkedAt:new Date().toISOString(),
       robotsTxt:{ present, status:robots.response.status },
@@ -92,7 +92,7 @@ if (PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET) {
       resource:`${PUBLIC_ORIGIN}${ROUTE}`,
       description:'Check robots.txt homepage permissions for major AI crawlers including GPTBot, OAI-SearchBot, ClaudeBot, Google-Extended, PerplexityBot and Applebot-Extended.',
       mimeType:'application/json',
-      serviceName:'Money-Finder',
+      serviceName:'MilliAPI',
       tags:['robots','ai-crawlers','ai-search','crawler-policy','web'],
       iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,
       extensions:{...discovery}
