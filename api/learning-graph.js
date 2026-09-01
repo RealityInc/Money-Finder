@@ -1,9 +1,9 @@
 // api/learning-graph.js
-// Read-only, privacy-minimized view of Money-Finder's optimization graph.
+// Read-only, privacy-minimized view of MilliAPI's optimization graph.
 
 import { getLearningGraph, rankRecommendations } from './lib/learning-graph.js';
 
-const ORIGIN = 'https://money-finder-nu.vercel.app';
+const ORIGIN = 'https://milliapi.com';
 
 export default function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
