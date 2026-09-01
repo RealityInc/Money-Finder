@@ -8,7 +8,9 @@ import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { registerLearningHooks } from './lib/learning-graph.js';
 import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
+import { idempotencyMiddleware } from './lib/idempotency.js';
 import { auditPublicUrl } from './lib/web-readiness-core.js';
+import { buildRepairArtifacts } from './lib/repair-artifacts.js';
 
 const NETWORK='eip155:8453';
 const PRICE='$0.005';
@@ -26,11 +28,12 @@ const discoveryExtension=declareDiscoveryExtension({
       agentRecommendation:'improve_before_prioritizing_discovery',summary:'No blocking issue detected. Improvements are prioritized below.',blockers:[],
       recommendations:[{id:'add_canonical',priority:'high',issue:'No canonical URL was detected.',action:'Add a canonical link element.',evidence:'canonical missing'}],
       evidence:[],checksBundled:['page_metadata','robots_txt','llms_txt','major_ai_crawler_homepage_access'],
+      repairArtifacts:{count:1,readyToApply:1,reviewRequired:0,fillRequired:0,artifacts:[{id:'canonical_link',recommendationId:'add_canonical',title:'Canonical link element',path:'<head>',format:'text/html',applyMode:'ready_to_apply',content:'<link rel="canonical" href="https://example.com/">'}]},
       baselineToken:'<portable baseline token for future change detection>',cache:{hit:false,scope:'best_effort_warm_runtime',ttlSeconds:600,ageSeconds:0},
       page:{title:'Example Domain',description:null,canonical:null,noindex:false,h1Count:1,jsonLdBlocks:0,openGraph:{title:null,description:null,image:null,type:null}},
       discovery:{robotsTxt:{present:false,status:404},llmsTxt:{present:false,status:404}},aiCrawlerHomepageAccess:{GPTBot:{allowed:true,reason:'No matching robots.txt group'}}
     },
-    schema:{type:'object',properties:{product:{type:'string'},target:{type:'string'},checkedAt:{type:'string'},score:{type:'number',minimum:0,maximum:100},verdict:{type:'string',enum:['ready','mostly_ready','needs_work','blocked']},agentRecommendation:{type:'string'},summary:{type:'string'},blockers:{type:'array'},recommendations:{type:'array'},evidence:{type:'array'},checksBundled:{type:'array'},baselineToken:{type:'string'},cache:{type:'object'},page:{type:'object'},discovery:{type:'object'},aiCrawlerHomepageAccess:{type:'object'},pricing:{type:'object'}},required:['product','target','checkedAt','score','verdict','agentRecommendation','summary','blockers','recommendations','evidence','checksBundled','baselineToken','page','discovery','aiCrawlerHomepageAccess']}
+    schema:{type:'object',properties:{product:{type:'string'},target:{type:'string'},checkedAt:{type:'string'},score:{type:'number',minimum:0,maximum:100},verdict:{type:'string',enum:['ready','mostly_ready','needs_work','blocked']},agentRecommendation:{type:'string'},summary:{type:'string'},blockers:{type:'array'},recommendations:{type:'array'},evidence:{type:'array'},checksBundled:{type:'array'},repairArtifacts:{type:'object'},baselineToken:{type:'string'},cache:{type:'object'},page:{type:'object'},discovery:{type:'object'},aiCrawlerHomepageAccess:{type:'object'},pricing:{type:'object'}},required:['product','target','checkedAt','score','verdict','agentRecommendation','summary','blockers','recommendations','evidence','checksBundled','repairArtifacts','baselineToken','page','discovery','aiCrawlerHomepageAccess']}
   }
 });
 
@@ -39,7 +42,8 @@ async function auditHandler(req,res){
   if(!target) return res.status(400).json({error:'Missing url query parameter',example:'/api/agent-web-audit?url=https%3A%2F%2Fexample.com'});
   try{
     const result=await auditPublicUrl(target);
-    return res.status(200).json({...result,pricing:{protocol:'x402',pricePerCallUsd:0.005,currency:'USDC',network:'Base',paymentActive:true}});
+    const repairArtifacts=buildRepairArtifacts(result);
+    return res.status(200).json({...result,repairArtifacts,pricing:{protocol:'x402',pricePerCallUsd:0.005,currency:'USDC',network:'Base',paymentActive:true}});
   }catch(error){
     const message=error?.name==='AbortError'?'Target request timed out':error?.message||'Audit failed';
     return res.status(400).json({error:message});
@@ -52,21 +56,22 @@ app.set('trust proxy',true);
 app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');
-  res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, Idempotency-Key');
+  res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Idempotent-Replay, X-Idempotency-Scope');
   res.setHeader('Cache-Control','private, no-store');
   next();
 });
 app.options(ROUTE,(_req,res)=>res.status(204).end());
+app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
-  const description='Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, major AI-crawler access, and a portable baseline for future change detection.';
-  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:['ai-agents','web-audit','ai-search','robots','llms-txt','change-baseline'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
+  const description='Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, ready-to-apply or review-required repair artifacts, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, major AI-crawler access, and a portable baseline for future change detection.';
+  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:['ai-agents','web-audit','ai-search','robots','llms-txt','change-baseline','repair-artifacts'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
   const facilitator=createCdpFacilitatorClient();
   const resourceServer=registerLearningHooks(new x402ResourceServer(facilitator).register(NETWORK,new ExactEvmScheme()),{serviceId:'service:web_audit',priceUsd:0.005});
   app.use(paymentMiddleware({[`GET ${ROUTE}`]:{
     accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',
-    tags:['ai-agents','web-audit','ai-search','robots','llms-txt','change-baseline'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}
+    tags:['ai-agents','web-audit','ai-search','robots','llms-txt','change-baseline','repair-artifacts'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}
   }},resourceServer,{appName:'MilliAPI',appLogo:`${PUBLIC_ORIGIN}/icon.svg`,testnet:false}));
 }else{
   app.use(ROUTE,(req,res,next)=>{
