@@ -5,6 +5,22 @@ import { assessOpportunity, summarizePolicy, POLICY_VERSION } from './safety-pol
 
 const DEFAULT_PROGRAMS = [
   {
+    id: 'web-readiness-x402',
+    title: 'AI Web Readiness Audit API',
+    category: 'api',
+    automationClass: 'api_usage_fee',
+    sourceUrl: 'https://money-finder-nu.vercel.app/api/agent-web-audit?url=https%3A%2F%2Fexample.com',
+    landingUrl: 'https://money-finder-nu.vercel.app/api/agent-web-audit',
+    enrolled: false,
+    enabled: false,
+    payoutModel: '$0.005 per successful x402 API call',
+    requiresRecurringHumanWork: false,
+    requiresApplicationPerOpportunity: false,
+    requiresClaimPerOpportunity: false,
+    requiresPurchaseOrCapital: false,
+    setupNote: 'Configure a receiving wallet and production x402 facilitator credentials, then activate payment middleware.'
+  },
+  {
     id: 'elevenlabs-affiliate',
     title: 'ElevenLabs Creator Affiliate Program',
     category: 'affiliate',
