@@ -6,6 +6,7 @@ import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { normalizePublicHttpsUrl, safePublicFetch } from './lib/safe-public-fetch.js';
 import { registerLearningHooks } from './lib/learning-graph.js';
+import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 
 const ROUTE = '/api/ai-robots-check';
 const NETWORK = 'eip155:8453';
@@ -82,6 +83,16 @@ app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.se
 app.options(ROUTE,(_req,res)=>res.status(204).end());
 
 if (PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET) {
+  app.use(ROUTE, fastUnpaidChallenge({
+    route: ROUTE,
+    amount: 1000,
+    payTo: PAY_TO,
+    description: 'Check robots.txt homepage permissions for major AI crawlers including GPTBot, OAI-SearchBot, ClaudeBot, Google-Extended, PerplexityBot and Applebot-Extended.',
+    serviceName: 'MilliAPI',
+    tags: ['robots','ai-crawlers','ai-search','crawler-policy','web'],
+    iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
+    extensions: { ...discovery }
+  }));
   const server = registerLearningHooks(
     new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
     { serviceId:'service:ai_robots', priceUsd:0.001 }
