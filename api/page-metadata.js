@@ -6,6 +6,7 @@ import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { normalizePublicHttpsUrl, safePublicFetch } from './lib/safe-public-fetch.js';
 import { registerLearningHooks } from './lib/learning-graph.js';
+import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 
 const ROUTE='/api/page-metadata';
 const NETWORK='eip155:8453';
@@ -50,6 +51,16 @@ async function handler(req,res){
 
 const app=express();app.disable('x-powered-by');app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
 if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
+  app.use(ROUTE, fastUnpaidChallenge({
+    route: ROUTE,
+    amount: 2000,
+    payTo: PAY_TO,
+    description: 'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',
+    serviceName: 'MilliAPI',
+    tags: ['metadata','open-graph','json-ld','seo','web'],
+    iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
+    extensions: { ...discovery }
+  }));
   const server=registerLearningHooks(
     new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
     {serviceId:'service:metadata',priceUsd:0.002}

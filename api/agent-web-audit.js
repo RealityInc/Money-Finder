@@ -9,6 +9,7 @@ import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { safePublicFetch, normalizePublicHttpsUrl } from './lib/safe-public-fetch.js';
 import { registerLearningHooks } from './lib/learning-graph.js';
+import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 
 const NETWORK = 'eip155:8453';
 const PRICE = '$0.005';
@@ -318,6 +319,16 @@ app.use((req, res, next) => {
 app.options(ROUTE, (_req, res) => res.status(204).end());
 
 if (PAYMENT_CONFIGURED) {
+  app.use(ROUTE, fastUnpaidChallenge({
+    route: ROUTE,
+    amount: 5000,
+    payTo: PAY_TO,
+    description: 'Check whether a public HTTPS page is ready for AI agents and answer engines. Returns AI-crawler access, robots.txt and llms.txt status, canonical and meta tags, Open Graph, JSON-LD, H1 count, and a 0-100 readiness score. Useful before crawling, indexing, or AI-search optimization.',
+    serviceName: 'MilliAPI',
+    tags: ['ai-agents', 'web-audit', 'ai-search', 'robots', 'llms-txt'],
+    iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
+    extensions: { ...discoveryExtension }
+  }));
   const facilitator = createCdpFacilitatorClient();
   const resourceServer = registerLearningHooks(
     new x402ResourceServer(facilitator).register(NETWORK, new ExactEvmScheme()),

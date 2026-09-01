@@ -6,6 +6,7 @@ import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { normalizePublicHttpsUrl, safePublicFetch } from './lib/safe-public-fetch.js';
 import { registerLearningHooks } from './lib/learning-graph.js';
+import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 
 const ROUTE='/api/llms-txt-check';
 const NETWORK='eip155:8453';
@@ -42,6 +43,16 @@ app.set('trust proxy',true);
 app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});
 app.options(ROUTE,(_req,res)=>res.status(204).end());
 if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
+  app.use(ROUTE, fastUnpaidChallenge({
+    route: ROUTE,
+    amount: 1000,
+    payTo: PAY_TO,
+    description: 'Check whether a website publishes llms.txt and return its status, byte size, and a bounded preview for agent discovery workflows.',
+    serviceName: 'MilliAPI',
+    tags: ['llms-txt','ai-discovery','ai-search','web','metadata'],
+    iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
+    extensions: { ...discovery }
+  }));
   const server=registerLearningHooks(
     new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
     {serviceId:'service:llms_txt',priceUsd:0.001}
