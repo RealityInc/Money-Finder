@@ -10,7 +10,7 @@ import { registerLearningHooks } from './lib/learning-graph.js';
 const ROUTE='/api/page-metadata';
 const NETWORK='eip155:8453';
 const PRICE='$0.002';
-const PUBLIC_ORIGIN='https://money-finder-nu.vercel.app';
+const PUBLIC_ORIGIN='https://milliapi.com';
 const PAY_TO=process.env.PAY_TO||'';
 
 function match(html,regex){return html.match(regex)?.[1]?.trim()||null;}
@@ -39,7 +39,7 @@ async function handler(req,res){
     const rawCanonical=link(html,'canonical');
     let canonical=rawCanonical;try{if(rawCanonical)canonical=new URL(rawCanonical,result.finalUrl).toString();}catch{}
     return res.status(200).json({
-      product:'Money-Finder Page Metadata Extractor',target:result.finalUrl,checkedAt:new Date().toISOString(),
+      product:'MilliAPI Page Metadata Extractor',target:result.finalUrl,checkedAt:new Date().toISOString(),
       title:entities(match(html,/<title[^>]*>([\s\S]*?)<\/title>/i)),description:meta(html,'description'),canonical,metaRobots:meta(html,'robots'),
       openGraph:{title:meta(html,'og:title','property'),description:meta(html,'og:description','property'),image:meta(html,'og:image','property'),type:meta(html,'og:type','property')},
       h1Count:(html.match(/<h1(?:\s|>)/gi)||[]).length,jsonLdBlocks:(html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>/gi)||[]).length,
@@ -60,7 +60,7 @@ if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
       resource:`${PUBLIC_ORIGIN}${ROUTE}`,
       description:'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',
       mimeType:'application/json',
-      serviceName:'Money-Finder',
+      serviceName:'MilliAPI',
       tags:['metadata','open-graph','json-ld','seo','web'],
       iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,
       extensions:{...discovery}
