@@ -48,6 +48,7 @@ const discoveryExtension = declareDiscoveryExtension({
     example: {
       product: 'MilliAPI AI Web Readiness Audit',
       target: 'https://example.com/',
+      checkedAt: '2026-09-01T00:00:00.000Z',
       score: 45,
       page: {
         title: 'Example Domain',
