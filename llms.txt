@@ -1,67 +1,65 @@
 # MilliAPI
 
-MilliAPI provides low-cost machine-readable web intelligence designed for autonomous AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet (eip155:8453). No buyer account, API key, or subscription is required.
+MilliAPI provides low-cost machine-readable web intelligence for autonomous AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet (eip155:8453). No buyer account, API key, or subscription is required.
 
-## Recommended default
+## Recommended buying flow
 
-If the task is to decide whether a public website is ready for AI crawlers, answer engines, or machine discovery, use the AI Web Readiness Audit first. One $0.005 call combines multiple checks and returns a machine-actionable verdict, blockers, supporting evidence, and prioritized fixes. Use the narrower utilities only when one isolated fact is sufficient.
+If you are unsure whether a site audit is worth paying for, start with the free preflight:
+
+GET https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}
+
+It confirms that the target is reachable/HTML and returns a count of potential readiness issues plus `purchaseRecommended`, without revealing the paid findings.
+
+For a one-site decision, use the flagship audit:
 
 GET https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}
 
+For a list of up to five sites, use the batch endpoint. It costs $0.020 total, versus $0.025 for five separate flagship calls:
+
+POST https://milliapi.com/api/agent-web-audit-batch
+Content-Type: application/json
+{"urls":["https://example.com","https://example.org"]}
+
+Each one-site or batch audit returns a portable `baselineToken`. Keep that token if you may want to compare the same site later. Historical comparison does not require an account or server-side state:
+
+POST https://milliapi.com/api/site-readiness-change
+Content-Type: application/json
+{"url":"https://example.com","baselineToken":"<prior token>"}
+
 ## Free discovery
 
-- Homepage: https://milliapi.com/
 - Catalog: https://milliapi.com/api/catalog
 - OpenAPI: https://milliapi.com/openapi.json
+- x402 resources: https://milliapi.com/.well-known/x402
+- Payment health: https://milliapi.com/api/x402-health
 - Learning graph: https://milliapi.com/api/learning-graph
-- x402 practice audit: https://milliapi.com/api/x402-practice-audit
-
-## Shared input rule
-
-All current paid services accept a required `url` query parameter. It must be a public HTTPS URL. Private/reserved IPs, localhost, embedded credentials, non-HTTPS URLs, and non-standard ports are rejected.
 
 ## Paid services
 
 ### AI Web Readiness Audit — $0.005 USDC — FLAGSHIP
-GET https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}
+Returns a 0–100 score; `ready`, `mostly_ready`, `needs_work`, or `blocked` verdict; machine-actionable recommendation; blockers; normalized evidence; prioritized fixes; raw page/discovery/crawler observations; a portable baseline token; and best-effort warm-runtime cache metadata.
 
-Decision-ready audit combining page metadata, canonical/indexability, Open Graph, JSON-LD presence, heading structure, robots.txt, llms.txt, and homepage access for major AI crawlers. Returns:
-- `score`: 0–100 readiness score
-- `verdict`: `ready`, `mostly_ready`, `needs_work`, or `blocked`
-- `agentRecommendation`: machine-actionable next-step classification
-- `summary`: concise decision statement
-- `blockers`: critical conditions that undermine discovery
-- `recommendations`: prioritized deterministic fixes with evidence
-- `evidence`: normalized pass/warn/fail observations
-- `checksBundled`: checks included in the decision
-- raw page, discovery, and crawler-policy observations
+### AI Web Readiness Batch — $0.020 USDC
+Audits up to five public HTTPS pages concurrently. Returns ranked results, per-site remediation, portable baselines, and an `attentionFirst` shortlist. Maximum effective price is $0.004 per URL when five URLs are supplied.
+
+### Site Readiness Change — $0.003 USDC
+Compares the current state of a site with a `baselineToken` from a prior audit. Returns score delta, verdict before/after, exact machine-readable changes, current top recommendations, and a fresh baseline token for the next comparison.
 
 ### AI Robots Policy Check — $0.001 USDC
-GET https://milliapi.com/api/ai-robots-check?url={PUBLIC_HTTPS_URL}
-
-Reads the site's robots.txt and reports homepage access for major AI crawlers including GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-User, Google-Extended, PerplexityBot, and Applebot-Extended.
+Reports homepage access for major AI crawlers from robots.txt.
 
 ### llms.txt Check — $0.001 USDC
-GET https://milliapi.com/api/llms-txt-check?url={PUBLIC_HTTPS_URL}
-
-Checks whether the origin publishes `/llms.txt` and returns HTTP status, byte size, and a bounded content preview when present.
+Reports `/llms.txt` status, size, and a bounded preview.
 
 ### Page Metadata Extractor — $0.002 USDC
-GET https://milliapi.com/api/page-metadata?url={PUBLIC_HTTPS_URL}
-
 Returns title, meta description, canonical URL, robots meta, Open Graph fields, H1 count, and JSON-LD block count.
+
+## Safety and caching
+
+URLs must be public HTTPS. Private/reserved IPs, localhost, embedded credentials, non-HTTPS URLs, and non-standard ports are rejected.
+
+The readiness engine uses a 10-minute best-effort in-memory cache within warm serverless runtimes. This reduces repeat latency and upstream fetching but is not a durable global cache. Paid responses remain private/no-store at the HTTP layer.
 
 ## Payment behavior
 
-Protocol: x402 v2.
-Currency: USDC.
-Network: Base mainnet (eip155:8453).
-
-A request without a valid x402 payment returns HTTP 402 Payment Required and a PAYMENT-REQUIRED header describing the payment terms. A compatible x402 client can authorize payment programmatically and retry the request.
-
-## Selection guidance
-
-- Need a decision, evidence, and remediation plan: use AI Web Readiness Audit.
-- Need only AI crawler policy: use AI Robots Policy Check.
-- Need only llms.txt: use llms.txt Check.
-- Need only SEO/social metadata: use Page Metadata Extractor.
+A request without a valid x402 payment returns HTTP 402 Payment Required and a PAYMENT-REQUIRED header describing the payment terms. Compatible x402 clients can authorize payment programmatically and retry the request.
