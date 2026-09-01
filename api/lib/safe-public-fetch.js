@@ -106,7 +106,7 @@ export async function safePublicFetch(input, options = {}) {
         signal: controller.signal,
         headers: {
           accept,
-          'user-agent': 'Money-Finder-WebAudit/1.0 (+https://money-finder-nu.vercel.app)',
+          'user-agent': 'MilliAPI-WebAudit/1.0 (+https://milliapi.com)',
           ...headers
         }
       });
