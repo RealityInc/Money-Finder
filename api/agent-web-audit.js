@@ -1,8 +1,20 @@
 // api/agent-web-audit.js
-// Low-cost, zero-upstream-cost web-readiness utility designed to become an
-// x402 paid endpoint once a receiving wallet is configured.
+// Paid AI web-readiness audit. x402 verifies and settles $0.005 USDC on Base
+// before the audit handler runs.
 
+import express from 'express';
+import { paymentMiddleware, x402ResourceServer } from '@x402/express';
+import { ExactEvmScheme } from '@x402/evm/exact/server';
+import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { safePublicFetch, normalizePublicHttpsUrl } from './lib/safe-public-fetch.js';
+
+const NETWORK = 'eip155:8453';
+const PRICE = '$0.005';
+const ROUTE = '/api/agent-web-audit';
+const PAY_TO = process.env.PAY_TO || '';
+const PAYMENT_CONFIGURED = Boolean(
+  PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET
+);
 
 const AI_BOTS = [
   'GPTBot',
@@ -157,15 +169,7 @@ function scoreAudit({ page, robotsPresent, llmsPresent, crawlerAccess }) {
   return score;
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=1800');
-
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
-
+async function auditHandler(req, res) {
   const target = Array.isArray(req.query?.url) ? req.query.url[0] : req.query?.url;
   if (!target) {
     return res.status(400).json({
@@ -223,10 +227,11 @@ export default async function handler(req, res) {
       },
       aiCrawlerHomepageAccess: crawlerAccess,
       pricing: {
-        intendedProtocol: 'x402',
-        intendedPricePerCallUsd: 0.005,
-        paymentActive: false,
-        note: 'Free during validation; x402 payment activates after a receiving wallet is configured.'
+        protocol: 'x402',
+        pricePerCallUsd: 0.005,
+        currency: 'USDC',
+        network: 'Base',
+        paymentActive: true
       }
     });
   } catch (error) {
@@ -234,3 +239,60 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: message });
   }
 }
+
+const app = express();
+app.disable('x-powered-by');
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');
+  res.setHeader('Access-Control-Expose-Headers', 'PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');
+  res.setHeader('Cache-Control', 'private, no-store');
+  next();
+});
+
+app.options(ROUTE, (_req, res) => res.status(204).end());
+
+if (PAYMENT_CONFIGURED) {
+  const facilitator = createCdpFacilitatorClient();
+  const resourceServer = new x402ResourceServer(facilitator)
+    .register(NETWORK, new ExactEvmScheme());
+
+  app.use(
+    paymentMiddleware(
+      {
+        [`GET ${ROUTE}`]: {
+          accepts: [
+            {
+              scheme: 'exact',
+              price: PRICE,
+              network: NETWORK,
+              payTo: PAY_TO
+            }
+          ],
+          description: 'Audit a public HTTPS page for AI crawler access, llms.txt, robots.txt, metadata, canonical tags and structured data.',
+          mimeType: 'application/json'
+        }
+      },
+      resourceServer
+    )
+  );
+} else {
+  app.use(ROUTE, (req, res, next) => {
+    if (req.method !== 'GET') return next();
+    return res.status(503).json({
+      error: 'x402 payment configuration incomplete',
+      missing: [
+        !PAY_TO ? 'PAY_TO' : null,
+        !process.env.CDP_API_KEY_ID ? 'CDP_API_KEY_ID' : null,
+        !process.env.CDP_API_KEY_SECRET ? 'CDP_API_KEY_SECRET' : null
+      ].filter(Boolean)
+    });
+  });
+}
+
+app.get(ROUTE, auditHandler);
+app.all(ROUTE, (_req, res) => res.status(405).json({ error: 'GET only' }));
+
+export default app;
