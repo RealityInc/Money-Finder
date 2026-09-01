@@ -10,6 +10,7 @@ import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { safePublicFetch, normalizePublicHttpsUrl } from './lib/safe-public-fetch.js';
 import { registerLearningHooks } from './lib/learning-graph.js';
 import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
+import { buildReadinessAssessment } from './lib/readiness-assessment.js';
 
 const NETWORK = 'eip155:8453';
 const PRICE = '$0.005';
@@ -51,6 +52,15 @@ const discoveryExtension = declareDiscoveryExtension({
       target: 'https://example.com/',
       checkedAt: '2026-09-01T00:00:00.000Z',
       score: 45,
+      verdict: 'needs_work',
+      agentRecommendation: 'improve_before_prioritizing_discovery',
+      summary: 'No blocking issue detected. Improvements are prioritized below.',
+      blockers: [],
+      recommendations: [
+        { id: 'add_canonical', priority: 'high', issue: 'No canonical URL was detected.', action: 'Add a canonical link element.', evidence: 'canonical missing' }
+      ],
+      evidence: [],
+      checksBundled: ['page_metadata', 'robots_txt', 'llms_txt', 'major_ai_crawler_homepage_access'],
       page: {
         title: 'Example Domain',
         description: null,
@@ -80,12 +90,19 @@ const discoveryExtension = declareDiscoveryExtension({
         target: { type: 'string' },
         checkedAt: { type: 'string' },
         score: { type: 'number', minimum: 0, maximum: 100 },
+        verdict: { type: 'string', enum: ['ready', 'mostly_ready', 'needs_work', 'blocked'] },
+        agentRecommendation: { type: 'string' },
+        summary: { type: 'string' },
+        blockers: { type: 'array' },
+        recommendations: { type: 'array' },
+        evidence: { type: 'array' },
+        checksBundled: { type: 'array' },
         page: { type: 'object' },
         discovery: { type: 'object' },
         aiCrawlerHomepageAccess: { type: 'object' },
         pricing: { type: 'object' }
       },
-      required: ['product', 'target', 'checkedAt', 'score', 'page', 'discovery', 'aiCrawlerHomepageAccess']
+      required: ['product', 'target', 'checkedAt', 'score', 'verdict', 'agentRecommendation', 'summary', 'blockers', 'recommendations', 'evidence', 'checksBundled', 'page', 'discovery', 'aiCrawlerHomepageAccess']
     }
   }
 });
@@ -269,13 +286,23 @@ async function auditHandler(req, res) {
     const crawlerAccess = Object.fromEntries(AI_BOTS.map(bot => [bot, botHomepageAccess(groups, bot)]));
     const page = parsePage(pageFetch.text, pageFetch.finalUrl);
     const score = scoreAudit({ page, robotsPresent, llmsPresent, crawlerAccess });
+    const assessment = buildReadinessAssessment({
+      score,
+      page,
+      robotsPresent,
+      robotsStatus: robotsResult.status === 'fulfilled' ? robotsResult.value.response.status : null,
+      llmsPresent,
+      llmsStatus: llmsResult.status === 'fulfilled' ? llmsResult.value.response.status : null,
+      crawlerAccess
+    });
 
     return res.status(200).json({
       product: 'MilliAPI AI Web Readiness Audit',
-      version: 1,
+      version: 2,
       target: pageFetch.finalUrl,
       checkedAt: new Date().toISOString(),
       score,
+      ...assessment,
       page,
       discovery: {
         robotsTxt: {
@@ -323,7 +350,7 @@ if (PAYMENT_CONFIGURED) {
     route: ROUTE,
     amount: 5000,
     payTo: PAY_TO,
-    description: 'Check whether a public HTTPS page is ready for AI agents and answer engines. Returns AI-crawler access, robots.txt and llms.txt status, canonical and meta tags, Open Graph, JSON-LD, H1 count, and a 0-100 readiness score. Useful before crawling, indexing, or AI-search optimization.',
+    description: 'Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, and major AI-crawler access.',
     serviceName: 'MilliAPI',
     tags: ['ai-agents', 'web-audit', 'ai-search', 'robots', 'llms-txt'],
     iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
@@ -348,7 +375,7 @@ if (PAYMENT_CONFIGURED) {
             }
           ],
           resource: `${PUBLIC_ORIGIN}${ROUTE}`,
-          description: 'Check whether a public HTTPS page is ready for AI agents and answer engines. Returns AI-crawler access, robots.txt and llms.txt status, canonical and meta tags, Open Graph, JSON-LD, H1 count, and a 0-100 readiness score. Useful before crawling, indexing, or AI-search optimization.',
+          description: 'Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, and major AI-crawler access.',
           mimeType: 'application/json',
           serviceName: 'MilliAPI',
           tags: ['ai-agents', 'web-audit', 'ai-search', 'robots', 'llms-txt'],
