@@ -1,0 +1,71 @@
+name: Refactor audit core once
+on:
+  push:
+    branches: [feature/agent-demand-upgrade]
+permissions:
+  contents: write
+jobs:
+  refactor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/agent-demand-upgrade
+      - name: Refactor flagship endpoint
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('api/agent-web-audit.js')
+          s=p.read_text()
+          s=s.replace("import { safePublicFetch, normalizePublicHttpsUrl } from './lib/safe-public-fetch.js';\n","")
+          s=s.replace("import { buildReadinessAssessment } from './lib/readiness-assessment.js';\n","")
+          marker="import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';\n"
+          add="import { auditPublicUrl } from './lib/web-readiness-core.js';\n"
+          if add not in s: s=s.replace(marker,marker+add,1)
+          start=s.index('function firstMatch(')
+          end=s.index('\nconst app = express();')
+          handler="""async function auditHandler(req, res) {
+            const target = Array.isArray(req.query?.url) ? req.query.url[0] : req.query?.url;
+            if (!target) return res.status(400).json({ error: 'Missing url query parameter', example: '/api/agent-web-audit?url=https%3A%2F%2Fexample.com' });
+            try {
+              const result = await auditPublicUrl(target);
+              return res.status(200).json({
+                ...result,
+                pricing: { protocol:'x402', pricePerCallUsd:0.005, currency:'USDC', network:'Base', paymentActive:true }
+              });
+            } catch (error) {
+              const message = error?.name === 'AbortError' ? 'Target request timed out' : error?.message || 'Audit failed';
+              return res.status(400).json({ error: message });
+            }
+          }
+"""
+          s=s[:start]+handler+s[end:]
+          s=s.replace("      checksBundled: ['page_metadata', 'robots_txt', 'llms_txt', 'major_ai_crawler_homepage_access'],\n", "      checksBundled: ['page_metadata', 'robots_txt', 'llms_txt', 'major_ai_crawler_homepage_access'],\n      baselineToken: '<portable baseline token for future change detection>',\n      cache: { hit: false, scope: 'best_effort_warm_runtime', ttlSeconds: 600, ageSeconds: 0 },\n",1)
+          s=s.replace("        checksBundled: { type: 'array' },\n", "        checksBundled: { type: 'array' },\n        baselineToken: { type: 'string' },\n        cache: { type: 'object' },\n",1)
+          p.write_text(s)
+      - name: Syntax and baseline tests
+        shell: bash
+        run: |
+          node --check api/agent-web-audit.js
+          node --check api/agent-web-audit-batch.js
+          node --check api/site-readiness-change.js
+          node --check api/agent-web-preflight.js
+          node --input-type=module <<'NODE'
+          import { createBaselineToken, decodeBaselineToken, compareWithBaseline } from './api/lib/web-readiness-core.js';
+          const sample={target:'https://example.com/',checkedAt:'2026-09-01T00:00:00Z',score:70,verdict:'mostly_ready',page:{noindex:false,canonical:'https://example.com/',description:'x',jsonLdBlocks:1,h1Count:1,openGraph:{title:'x',description:'x'}},discovery:{robotsTxt:{present:true,status:200},llmsTxt:{present:false,status:404}},aiCrawlerHomepageAccess:{GPTBot:{allowed:true}},recommendations:[]};
+          const token=createBaselineToken(sample); const baseline=decodeBaselineToken(token);
+          const newer={...sample,checkedAt:'2026-09-02T00:00:00Z',score:80,verdict:'mostly_ready'};
+          const diff=compareWithBaseline(newer,baseline);
+          if(!diff.changed||diff.scoreDelta!==10) throw new Error('baseline comparison failed');
+          console.log('baseline ok', token.length, diff.changes.length);
+          NODE
+      - name: Commit refactor
+        shell: bash
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add api/agent-web-audit.js
+          git commit -m 'Share audit engine across paid products'
+          git push origin HEAD:feature/agent-demand-upgrade
