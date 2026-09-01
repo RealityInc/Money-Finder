@@ -1,0 +1,83 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Money-Finder Agent APIs",
+    "version": "1.0.0",
+    "description": "Low-cost machine-to-machine utilities paid per request using x402 v2 on Base.",
+    "termsOfService": "https://money-finder-nu.vercel.app/terms"
+  },
+  "servers": [
+    { "url": "https://money-finder-nu.vercel.app" }
+  ],
+  "x-discovery": {
+    "category": "agent-utilities",
+    "paymentProtocol": "x402"
+  },
+  "paths": {
+    "/api/agent-web-audit": {
+      "get": {
+        "operationId": "auditAIWebReadiness",
+        "summary": "Audit a public HTTPS page for AI and metadata readiness",
+        "description": "Checks robots.txt behavior for major AI crawlers, llms.txt presence, title, description, canonical, Open Graph, H1 and JSON-LD, returning a readiness score and structured findings.",
+        "tags": ["web", "AI discovery", "metadata"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "description": "Public HTTPS page to audit.",
+            "schema": { "type": "string", "format": "uri", "pattern": "^https://" },
+            "example": "https://example.com"
+          }
+        ],
+        "x-payment-info": {
+          "protocols": ["x402"],
+          "price": { "mode": "fixed", "currency": "USD", "amount": "0.005" },
+          "settlementAsset": "USDC",
+          "network": "eip155:8453",
+          "scheme": "exact"
+        },
+        "responses": {
+          "200": {
+            "description": "Paid audit result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WebReadinessAudit" }
+              }
+            }
+          },
+          "400": { "description": "Invalid or unsafe target URL" },
+          "402": {
+            "description": "x402 payment required. Read the PAYMENT-REQUIRED response header, pay the quoted USDC amount on Base, and retry with the payment signature.",
+            "headers": {
+              "PAYMENT-REQUIRED": {
+                "description": "Base64-encoded x402 v2 payment requirements.",
+                "schema": { "type": "string" }
+              }
+            }
+          },
+          "422": { "description": "Target could not be audited as an HTML page" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WebReadinessAudit": {
+        "type": "object",
+        "required": ["product", "version", "target", "checkedAt", "score", "page", "discovery", "aiCrawlerHomepageAccess", "pricing"],
+        "properties": {
+          "product": { "type": "string" },
+          "version": { "type": "integer" },
+          "target": { "type": "string", "format": "uri" },
+          "checkedAt": { "type": "string", "format": "date-time" },
+          "score": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "page": { "type": "object", "additionalProperties": true },
+          "discovery": { "type": "object", "additionalProperties": true },
+          "aiCrawlerHomepageAccess": { "type": "object", "additionalProperties": true },
+          "pricing": { "type": "object", "additionalProperties": true }
+        }
+      }
+    }
+  }
+}
