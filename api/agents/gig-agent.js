@@ -1,129 +1,43 @@
 // api/agents/gig-agent.js
-// Handles Craigslist, Upwork, Fiverr gig auto-responding
+// Gig helper. It deliberately does not scrape Craigslist or mass-submit applications.
+// Jobs must be supplied by a permitted upstream source or by the user.
 
-export default async function gigAgent(userProfile) {
-  const { location = 'austin', skills = [], platforms = ['craigslist'] } = userProfile;
-  
-  const opportunities = [];
-  let monthlyPotential = 0;
-  
-  // Determine which gig types to search
-  const gigTypes = [];
-  if (skills.includes('writing')) gigTypes.push('writing', 'copywriting', 'blogging');
-  if (skills.includes('design')) gigTypes.push('graphic design', 'logo design');
-  if (skills.includes('social')) gigTypes.push('social media', 'instagram');
-  
-  for (const platform of platforms) {
-    if (platform === 'craigslist') {
-      const craigslistGigs = await scrapeCraigslistGigs(location, gigTypes);
-      
-      craigslistGigs.forEach(gig => {
-        if (gig.payMentioned && gig.estimatedPay > 20) {
-          const emailDraft = generateGigEmail(gig, userProfile);
-          
-          opportunities.push({
-            id: `gig_${Date.now()}_${Math.random().toString(36)}`,
-            category: 'gig',
-            title: gig.title,
-            description: gig.description,
-            platform: 'Craigslist',
-            estimatedValue: gig.estimatedPay,
-            timeToMoney: '1-7 days',
-            automationLevel: 'medium',
-            humanTaskRequired: 'Review and send email draft, then complete the work',
-            actionItem: {
-              type: 'email_draft',
-              to: gig.replyEmail,
-              subject: emailDraft.subject,
-              body: emailDraft.body,
-              mailtoLink: emailDraft.mailtoLink
-            },
-            tags: ['gig', 'freelance', skills[0]]
-          });
-          
-          monthlyPotential += gig.estimatedPay * 2; // Assume 2 gigs per month
-        }
-      });
-    }
-    
-    if (platform === 'upwork') {
-      // Upwork RSS feed scraper
-      // Similar logic
-    }
-  }
-  
+export default async function gigAgent(params = {}) {
+  const jobs = Array.isArray(params.jobs) ? params.jobs : [];
+  const skills = Array.isArray(params.skills) ? params.skills : [];
+
+  const opportunities = jobs
+    .filter(job => job && job.title)
+    .map((job, index) => {
+      const draft = generateGigDraft(job, params);
+      return {
+        id: job.id || `gig_${index + 1}`,
+        category: 'gig',
+        title: job.title,
+        description: job.description || '',
+        platform: job.platform || 'provided source',
+        estimatedValue: Number(job.estimatedPay || 0),
+        automationLevel: 'low',
+        zeroTouchEligible: false,
+        humanTaskRequired: 'Review the opportunity, submit truthfully, and complete the paid work.',
+        actionItem: { type: 'draft_only', ...draft },
+        tags: ['gig', 'manual-work', ...skills.slice(0, 2)]
+      };
+    });
+
   return {
     opportunities,
-    monthlyPotential,
+    monthlyPotential: 0,
     agent: 'gig-agent',
-    status: 'success'
+    status: 'success',
+    note: 'Gig applications are intentionally excluded from zero-touch execution.'
   };
 }
 
-function scrapeCraigslistGigs(location, gigTypes) {
-  // In production: Use Apify actor or ScrapingBee
-  // For now, return mock data
-  
-  const mockGigs = [
-    {
-      title: 'Need blog writer for HVAC company',
-      description: 'Looking for writer to create 5 blog posts about energy efficiency. SEO knowledge a plus.',
-      payMentioned: true,
-      estimatedPay: 75,
-      replyEmail: 'jobs@example.com',
-      topic: 'HVAC',
-      postedDate: new Date().toISOString()
-    },
-    {
-      title: 'Social media manager for fitness brand',
-      description: 'Need 10 posts per week for Instagram and TikTok. Fitness knowledge required.',
-      payMentioned: true,
-      estimatedPay: 200,
-      replyEmail: 'hiring@fitbrand.com',
-      topic: 'Fitness',
-      postedDate: new Date().toISOString()
-    },
-    {
-      title: 'Copywriter for SaaS landing page',
-      description: 'Conversion-focused copy for new product launch. Tech experience needed.',
-      payMentioned: true,
-      estimatedPay: 300,
-      replyEmail: 'marketing@saas.com',
-      topic: 'SaaS',
-      postedDate: new Date().toISOString()
-    }
-  ];
-  
-  return mockGigs.filter(gig => 
-    gigTypes.some(type => 
-      gig.title.toLowerCase().includes(type) || 
-      gig.description.toLowerCase().includes(type)
-    )
-  );
-}
-
-function generateGigEmail(gig, userProfile) {
-  const subject = `Re: ${gig.title} - Experienced Writer Available Immediately`;
-  const body = `Hi,
-
-I saw your post looking for a ${gig.topic} writer and I'm very interested.
-
-I have experience writing in this niche and can provide relevant samples. I'm available to start today and can meet quick turnaround times.
-
-A few quick questions:
-- What's the total word count needed?
-- Do you have a style guide or tone preference?
-- What's your budget range?
-
-Happy to do a paid test piece if that helps establish fit.
-
-Best,
-[Your Name]
-[Portfolio Link]`;
-
-  return {
-    subject,
-    body,
-    mailtoLink: `mailto:${gig.replyEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  };
+function generateGigDraft(job, params) {
+  const name = params.name || '[Your Name]';
+  const portfolio = params.portfolio || '[Portfolio Link]';
+  const subject = `Re: ${job.title}`;
+  const body = `Hi,\n\nI’m interested in ${job.title}. My background appears relevant to what you’re looking for, and I’d be happy to share the most applicable samples.\n\nIf the scope and timing are still current, I can take a closer look and confirm fit.\n\nBest,\n${name}\n${portfolio}`;
+  return { subject, body };
 }
