@@ -4,16 +4,17 @@ export default function handler(req,res){
   res.setHeader('Cache-Control','public, s-maxage=3600, stale-while-revalidate=86400');
   if(req.method!=='GET') return res.status(405).json({error:'GET only'});
   return res.status(200).json({
-    version:2,
+    version:3,
     freePreflight:'https://milliapi.com/api/agent-web-preflight',
     resources:[
       'https://milliapi.com/api/agent-web-audit',
       'https://milliapi.com/api/agent-web-audit-batch',
+      'https://milliapi.com/api/verify-site-repairs',
       'https://milliapi.com/api/site-readiness-change',
       'https://milliapi.com/api/ai-robots-check',
       'https://milliapi.com/api/llms-txt-check',
       'https://milliapi.com/api/page-metadata'
     ],
-    instructions:'Use the free preflight when purchase value is uncertain. See https://milliapi.com/openapi.json and https://milliapi.com/api/catalog for schemas, prices, examples, and product-selection guidance.'
+    instructions:'Use the free preflight when purchase value is uncertain. The flagship audit returns repair artifacts; use repair verification after applying fixes. See https://milliapi.com/openapi.json and https://milliapi.com/api/catalog for schemas, prices, examples, retry-safety guidance, and product selection.'
   });
 }
