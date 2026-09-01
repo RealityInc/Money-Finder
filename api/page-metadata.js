@@ -1,0 +1,51 @@
+// api/page-metadata.js
+import express from 'express';
+import { paymentMiddleware, x402ResourceServer } from '@x402/express';
+import { ExactEvmScheme } from '@x402/evm/exact/server';
+import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
+import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
+import { normalizePublicHttpsUrl, safePublicFetch } from './lib/safe-public-fetch.js';
+
+const ROUTE='/api/page-metadata';
+const NETWORK='eip155:8453';
+const PRICE='$0.002';
+const PAY_TO=process.env.PAY_TO||'';
+
+function match(html,regex){return html.match(regex)?.[1]?.trim()||null;}
+function entities(v){return v?.replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&lt;/gi,'<').replace(/&gt;/gi,'>')||v;}
+function meta(html,key,attr='name'){
+  const escaped=key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return entities(match(html,new RegExp(`<meta[^>]+${attr}=["']${escaped}["'][^>]+content=["']([^"']*)["'][^>]*>`,'i'))||match(html,new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+${attr}=["']${escaped}["'][^>]*>`,'i')));
+}
+function link(html,rel){const escaped=rel.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');return entities(match(html,new RegExp(`<link[^>]+rel=["'][^"']*${escaped}[^"']*["'][^>]+href=["']([^"']+)["'][^>]*>`,'i'))||match(html,new RegExp(`<link[^>]+href=["']([^"']+)["'][^>]+rel=["'][^"']*${escaped}[^"']*["'][^>]*>`,'i')));}
+
+const discovery=declareDiscoveryExtension({
+  method:'GET',input:{url:'https://example.com'},inputSchema:{properties:{url:{type:'string',format:'uri',description:'Public HTTPS page to inspect'}},required:['url']},
+  output:{example:{target:'https://example.com/',title:'Example Domain',description:null,canonical:null,openGraph:{title:null,description:null,image:null,type:null},h1Count:1,jsonLdBlocks:0}}
+});
+
+async function handler(req,res){
+  try{
+    const raw=Array.isArray(req.query.url)?req.query.url[0]:req.query.url;
+    if(!raw)return res.status(400).json({error:'Missing url query parameter'});
+    const normalized=await normalizePublicHttpsUrl(raw);
+    const result=await safePublicFetch(normalized.toString(),{maxBytes:1000000});
+    if(!result.response.ok)return res.status(422).json({error:`Target returned HTTP ${result.response.status}`});
+    const type=result.response.headers.get('content-type')||'';
+    if(!/text\/html|application\/xhtml\+xml/i.test(type))return res.status(422).json({error:`Target is not HTML (${type||'unknown'})`});
+    const html=result.text;
+    const rawCanonical=link(html,'canonical');
+    let canonical=rawCanonical;try{if(rawCanonical)canonical=new URL(rawCanonical,result.finalUrl).toString();}catch{}
+    return res.status(200).json({
+      product:'Money-Finder Page Metadata Extractor',target:result.finalUrl,checkedAt:new Date().toISOString(),
+      title:entities(match(html,/<title[^>]*>([\s\S]*?)<\/title>/i)),description:meta(html,'description'),canonical,metaRobots:meta(html,'robots'),
+      openGraph:{title:meta(html,'og:title','property'),description:meta(html,'og:description','property'),image:meta(html,'og:image','property'),type:meta(html,'og:type','property')},
+      h1Count:(html.match(/<h1(?:\s|>)/gi)||[]).length,jsonLdBlocks:(html.match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>/gi)||[]).length,
+      pricing:{protocol:'x402',pricePerCallUsd:0.002,currency:'USDC',network:'Base'}
+    });
+  }catch(error){return res.status(400).json({error:error?.message||'Extraction failed'});}
+}
+
+const app=express();app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
+if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){const server=new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme());app.use(paymentMiddleware({[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`https://money-finder-nu.vercel.app${ROUTE}`,description:'Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.',mimeType:'application/json',extensions:{...discovery}}},server));}else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
+app.get(ROUTE,handler);export default app;
