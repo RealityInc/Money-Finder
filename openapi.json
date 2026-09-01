@@ -1,83 +1,13 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Money-Finder Micropaid APIs",
-    "version": "1.0.0",
-    "description": "Machine-readable utilities for AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet."
-  },
-  "servers": [
-    { "url": "https://money-finder-nu.vercel.app" }
-  ],
-  "paths": {
-    "/api/catalog": {
-      "get": {
-        "summary": "List Money-Finder services",
-        "operationId": "listServices",
-        "responses": {
-          "200": {
-            "description": "Machine-readable service catalog",
-            "content": { "application/json": { "schema": { "type": "object" } } }
-          }
-        }
-      }
-    },
-    "/api/agent-web-audit": {
-      "get": {
-        "summary": "Audit a public website for AI crawler and machine-discovery readiness",
-        "description": "Costs $0.005 USDC per successful call via x402 v2 on Base mainnet. A request without payment returns HTTP 402 with payment requirements.",
-        "operationId": "auditWebReadiness",
-        "parameters": [
-          {
-            "name": "url",
-            "in": "query",
-            "required": true,
-            "description": "Public HTTPS URL to audit",
-            "schema": { "type": "string", "format": "uri", "pattern": "^https://" },
-            "example": "https://example.com"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Paid audit result",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "product": { "type": "string" },
-                    "version": { "type": "integer" },
-                    "target": { "type": "string", "format": "uri" },
-                    "checkedAt": { "type": "string", "format": "date-time" },
-                    "score": { "type": "integer", "minimum": 0, "maximum": 100 },
-                    "page": { "type": "object" },
-                    "discovery": { "type": "object" },
-                    "aiCrawlerHomepageAccess": { "type": "object" },
-                    "pricing": { "type": "object" }
-                  },
-                  "required": ["product", "target", "checkedAt", "score", "page", "discovery", "aiCrawlerHomepageAccess", "pricing"]
-                }
-              }
-            }
-          },
-          "400": { "description": "Invalid or disallowed target URL" },
-          "402": {
-            "description": "x402 payment required",
-            "headers": {
-              "PAYMENT-REQUIRED": {
-                "description": "Base64-encoded x402 v2 payment requirements",
-                "schema": { "type": "string" }
-              }
-            }
-          }
-        },
-        "x-money-finder-pricing": {
-          "protocol": "x402",
-          "version": 2,
-          "priceUsd": 0.005,
-          "currency": "USDC",
-          "network": "eip155:8453"
-        }
-      }
-    }
+  "openapi":"3.1.0",
+  "info":{"title":"Money-Finder Micropaid APIs","version":"1.1.0","description":"Machine-readable utilities for AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet."},
+  "servers":[{"url":"https://money-finder-nu.vercel.app"}],
+  "components":{"parameters":{"PublicUrl":{"name":"url","in":"query","required":true,"description":"Public HTTPS URL","schema":{"type":"string","format":"uri","pattern":"^https://"},"example":"https://example.com"}},"responses":{"PaymentRequired":{"description":"x402 payment required","headers":{"PAYMENT-REQUIRED":{"description":"Base64-encoded x402 v2 payment requirements","schema":{"type":"string"}}}}}},
+  "paths":{
+    "/api/catalog":{"get":{"summary":"List Money-Finder services and prices","operationId":"listServices","responses":{"200":{"description":"Free machine-readable catalog","content":{"application/json":{"schema":{"type":"object"}}}}}}},
+    "/api/ai-robots-check":{"get":{"summary":"Check robots.txt policy for AI crawlers","operationId":"checkAiRobotsPolicy","parameters":[{"$ref":"#/components/parameters/PublicUrl"}],"responses":{"200":{"description":"AI crawler policy result","content":{"application/json":{"schema":{"type":"object"}}}},"402":{"$ref":"#/components/responses/PaymentRequired"}},"x-money-finder-pricing":{"protocol":"x402","priceUsd":0.001,"currency":"USDC","network":"eip155:8453"}}},
+    "/api/llms-txt-check":{"get":{"summary":"Check whether a website publishes llms.txt","operationId":"checkLlmsTxt","parameters":[{"$ref":"#/components/parameters/PublicUrl"}],"responses":{"200":{"description":"llms.txt discovery result","content":{"application/json":{"schema":{"type":"object"}}}},"402":{"$ref":"#/components/responses/PaymentRequired"}},"x-money-finder-pricing":{"protocol":"x402","priceUsd":0.001,"currency":"USDC","network":"eip155:8453"}}},
+    "/api/page-metadata":{"get":{"summary":"Extract page metadata for agent workflows","operationId":"extractPageMetadata","parameters":[{"$ref":"#/components/parameters/PublicUrl"}],"responses":{"200":{"description":"Page metadata","content":{"application/json":{"schema":{"type":"object"}}}},"402":{"$ref":"#/components/responses/PaymentRequired"}},"x-money-finder-pricing":{"protocol":"x402","priceUsd":0.002,"currency":"USDC","network":"eip155:8453"}}},
+    "/api/agent-web-audit":{"get":{"summary":"Audit AI crawler and machine-discovery readiness","operationId":"auditWebReadiness","parameters":[{"$ref":"#/components/parameters/PublicUrl"}],"responses":{"200":{"description":"Combined readiness audit","content":{"application/json":{"schema":{"type":"object","properties":{"score":{"type":"integer","minimum":0,"maximum":100},"page":{"type":"object"},"discovery":{"type":"object"},"aiCrawlerHomepageAccess":{"type":"object"}}}}}},"402":{"$ref":"#/components/responses/PaymentRequired"}},"x-money-finder-pricing":{"protocol":"x402","priceUsd":0.005,"currency":"USDC","network":"eip155:8453"}}}
   }
 }
