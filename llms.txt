@@ -1,12 +1,14 @@
-# Money-Finder
+# MilliAPI
 
-Money-Finder provides low-cost machine-readable APIs designed for autonomous AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet (eip155:8453). No buyer account, API key, or subscription is required.
+MilliAPI provides low-cost machine-readable APIs designed for autonomous AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet (eip155:8453). No buyer account, API key, or subscription is required.
 
 ## Free discovery
 
-- Homepage: https://money-finder-nu.vercel.app/
-- Catalog: https://money-finder-nu.vercel.app/api/catalog
-- OpenAPI: https://money-finder-nu.vercel.app/openapi.json
+- Homepage: https://milliapi.com/
+- Catalog: https://milliapi.com/api/catalog
+- OpenAPI: https://milliapi.com/openapi.json
+- Learning graph: https://milliapi.com/api/learning-graph
+- x402 practice audit: https://milliapi.com/api/x402-practice-audit
 
 ## Shared input rule
 
@@ -15,22 +17,22 @@ All current paid services accept a required `url` query parameter. It must be a 
 ## Paid services
 
 ### AI Robots Policy Check — $0.001 USDC
-GET https://money-finder-nu.vercel.app/api/ai-robots-check?url={PUBLIC_HTTPS_URL}
+GET https://milliapi.com/api/ai-robots-check?url={PUBLIC_HTTPS_URL}
 
 Reads the site's robots.txt and reports homepage access for major AI crawlers including GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-User, Google-Extended, PerplexityBot, and Applebot-Extended.
 
 ### llms.txt Check — $0.001 USDC
-GET https://money-finder-nu.vercel.app/api/llms-txt-check?url={PUBLIC_HTTPS_URL}
+GET https://milliapi.com/api/llms-txt-check?url={PUBLIC_HTTPS_URL}
 
 Checks whether the origin publishes `/llms.txt` and returns HTTP status, byte size, and a bounded content preview when present.
 
 ### Page Metadata Extractor — $0.002 USDC
-GET https://money-finder-nu.vercel.app/api/page-metadata?url={PUBLIC_HTTPS_URL}
+GET https://milliapi.com/api/page-metadata?url={PUBLIC_HTTPS_URL}
 
 Returns title, meta description, canonical URL, robots meta, Open Graph fields, H1 count, and JSON-LD block count.
 
 ### AI Web Readiness Audit — $0.005 USDC
-GET https://money-finder-nu.vercel.app/api/agent-web-audit?url={PUBLIC_HTTPS_URL}
+GET https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}
 
 Combined audit for AI crawler access and machine-discovery readiness. Returns a 0–100 score plus page metadata, robots.txt and llms.txt information, Open Graph and JSON-LD checks, and crawler homepage access.
 
