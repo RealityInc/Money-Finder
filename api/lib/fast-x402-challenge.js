@@ -13,6 +13,7 @@ export function fastUnpaidChallenge({
   amount,
   payTo,
   description,
+  method = 'GET',
   serviceName = 'MilliAPI',
   tags = [],
   iconUrl = 'https://milliapi.com/icon.svg',
@@ -22,7 +23,7 @@ export function fastUnpaidChallenge({
   mimeType = 'application/json',
 }) {
   return function fastChallengeMiddleware(req, res, next) {
-    if (req.method !== 'GET' || hasPaymentHeader(req)) return next();
+    if (req.method !== method || hasPaymentHeader(req)) return next();
 
     const paymentRequired = {
       x402Version: 2,
