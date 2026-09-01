@@ -1,0 +1,32 @@
+name: One-time Bazaar audit schema patch
+on:
+  push:
+    branches:
+      - fix/bazaar-web-audit-example
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/bazaar-web-audit-example
+      - name: Add checkedAt to Bazaar discovery example
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('api/agent-web-audit.js')
+          s = p.read_text()
+          old = "      target: 'https://example.com/',\n      score: 45,"
+          new = "      target: 'https://example.com/',\n      checkedAt: '2026-09-01T00:00:00.000Z',\n      score: 45,"
+          if old not in s:
+              raise SystemExit('target snippet not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+          git rm .github/workflows/patch-bazaar-audit-once.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add api/agent-web-audit.js
+          git commit -m 'Fix Bazaar web-audit discovery example'
+          git push origin HEAD:fix/bazaar-web-audit-example
