@@ -5,12 +5,14 @@
 import express from 'express';
 import { paymentMiddleware, x402ResourceServer } from '@x402/express';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
+import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { safePublicFetch, normalizePublicHttpsUrl } from './lib/safe-public-fetch.js';
 
 const NETWORK = 'eip155:8453';
 const PRICE = '$0.005';
 const ROUTE = '/api/agent-web-audit';
+const PUBLIC_ORIGIN = 'https://money-finder-nu.vercel.app';
 const PAY_TO = process.env.PAY_TO || '';
 const PAYMENT_CONFIGURED = Boolean(
   PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET
@@ -26,6 +28,64 @@ const AI_BOTS = [
   'PerplexityBot',
   'Applebot-Extended'
 ];
+
+const discoveryExtension = declareDiscoveryExtension({
+  input: {
+    url: 'https://example.com'
+  },
+  inputSchema: {
+    properties: {
+      url: {
+        type: 'string',
+        format: 'uri',
+        description: 'Public HTTPS page to audit. Private IPs, localhost, credentials, and non-standard ports are rejected.'
+      }
+    },
+    required: ['url']
+  },
+  output: {
+    example: {
+      product: 'Money-Finder AI Web Readiness Audit',
+      target: 'https://example.com/',
+      score: 45,
+      page: {
+        title: 'Example Domain',
+        description: null,
+        canonical: null,
+        noindex: false,
+        h1Count: 1,
+        jsonLdBlocks: 0,
+        openGraph: {
+          title: null,
+          description: null,
+          image: null,
+          type: null
+        }
+      },
+      discovery: {
+        robotsTxt: { present: false, status: 404 },
+        llmsTxt: { present: false, status: 404 }
+      },
+      aiCrawlerHomepageAccess: {
+        GPTBot: { allowed: true, reason: 'No matching robots.txt group' }
+      }
+    },
+    schema: {
+      type: 'object',
+      properties: {
+        product: { type: 'string' },
+        target: { type: 'string' },
+        checkedAt: { type: 'string' },
+        score: { type: 'number', minimum: 0, maximum: 100 },
+        page: { type: 'object' },
+        discovery: { type: 'object' },
+        aiCrawlerHomepageAccess: { type: 'object' },
+        pricing: { type: 'object' }
+      },
+      required: ['product', 'target', 'checkedAt', 'score', 'page', 'discovery', 'aiCrawlerHomepageAccess']
+    }
+  }
+});
 
 function firstMatch(text, regex) {
   return text.match(regex)?.[1]?.trim() || null;
@@ -242,6 +302,7 @@ async function auditHandler(req, res) {
 
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', true);
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -271,11 +332,36 @@ if (PAYMENT_CONFIGURED) {
               payTo: PAY_TO
             }
           ],
-          description: 'Audit a public HTTPS page for AI crawler access, llms.txt, robots.txt, metadata, canonical tags and structured data.',
-          mimeType: 'application/json'
+          resource: `${PUBLIC_ORIGIN}${ROUTE}`,
+          description: 'Check whether a public HTTPS page is ready for AI agents and answer engines. Returns AI-crawler access, robots.txt and llms.txt status, canonical and meta tags, Open Graph, JSON-LD, H1 count, and a 0-100 readiness score. Useful before crawling, indexing, or AI-search optimization.',
+          mimeType: 'application/json',
+          serviceName: 'Money-Finder',
+          tags: ['ai-agents', 'web-audit', 'ai-search', 'robots', 'llms-txt'],
+          iconUrl: `${PUBLIC_ORIGIN}/icon.svg`,
+          unpaidResponseBody: () => ({
+            contentType: 'application/json',
+            body: {
+              error: 'payment_required',
+              service: 'Money-Finder AI Web Readiness Audit',
+              protocol: 'x402',
+              priceUsd: 0.005,
+              currency: 'USDC',
+              network: 'Base',
+              input: { url: 'https://example.com' },
+              docs: `${PUBLIC_ORIGIN}/openapi.json`
+            }
+          }),
+          extensions: {
+            ...discoveryExtension
+          }
         }
       },
-      resourceServer
+      resourceServer,
+      {
+        appName: 'Money-Finder',
+        appLogo: `${PUBLIC_ORIGIN}/icon.svg`,
+        testnet: false
+      }
     )
   );
 } else {
