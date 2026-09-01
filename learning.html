@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Money-Finder Learning Graph — x402 Optimizer</title>
-<meta name="description" content="Live x402 practice score, learning graph, endpoint health, and bounded optimization recommendations for Money-Finder.">
+<title>MilliAPI Learning Graph — x402 Optimizer</title>
+<meta name="description" content="Live x402 practice score, learning graph, endpoint health, and bounded optimization recommendations for MilliAPI.">
 <meta name="robots" content="index,follow">
-<link rel="canonical" href="https://money-finder-nu.vercel.app/learning.html">
+<link rel="canonical" href="https://milliapi.com/learning.html">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <style>
 :root{--bg:#080a07;--panel:#11150f;--panel2:#171d13;--line:#293222;--text:#eef6e7;--muted:#94a18c;--lime:#c8ff00;--green:#42f58d;--cyan:#60d8ff;--orange:#ffb45b;--red:#ff6868}
@@ -14,17 +14,17 @@
 </style>
 </head>
 <body><div class="wrap">
-<header class="top"><div class="brand">MONEY<span>-FINDER</span> / LEARNING</div><a class="back" href="/">← storefront</a></header>
+<header class="top"><div class="brand">MILLI<span>API</span> / LEARNING</div><a class="back" href="/">← storefront</a></header>
 <section class="hero">
   <div class="scoreCard"><div class="label">x402 practice score</div><div id="score" class="score">—</div><div id="grade" class="grade">loading</div><div id="checked" class="metric" style="justify-content:center"></div></div>
-  <div class="card intro"><div class="label">Bounded self-improvement</div><h1>See what the seller is learning.</h1><p>Money-Finder maintains an explicit graph connecting x402 practices, discovery channels, products, buyer segments, reliability and paid usage. Live checks score the payment surface against x402 v2 and Bazaar conventions. Low-risk discovery and documentation improvements can be automated; financial and settlement changes stay behind review gates.</p><div class="status"><span class="pill good">privacy-minimized</span><span class="pill">x402 v2</span><span class="pill">Bazaar</span><span class="pill">Base / USDC</span><span class="pill">bounded weights</span></div></div>
+  <div class="card intro"><div class="label">Bounded self-improvement</div><h1>See what the seller is learning.</h1><p>MilliAPI maintains an explicit graph connecting x402 practices, discovery channels, products, buyer segments, reliability and paid usage. Live checks score the payment surface against x402 v2 and Bazaar conventions. Low-risk discovery and documentation improvements can be automated; financial and settlement changes stay behind review gates.</p><div class="status"><span class="pill good">privacy-minimized</span><span class="pill">x402 v2</span><span class="pill">Bazaar</span><span class="pill">Base / USDC</span><span class="pill">bounded weights</span></div></div>
 </section>
 <section class="section"><div class="sectionTitle"><h2>Live paid endpoints</h2><small>402 challenge readiness + latency</small></div><div id="services" class="grid4"></div></section>
 <section class="section"><div class="sectionTitle"><h2>Highest-leverage practices</h2><small>graph weight × confidence</small></div><div id="recommendations" class="recs"></div></section>
-<section class="section"><div class="sectionTitle"><h2>Learning graph</h2><small>practices → channels/buyers → goals</small></div><div class="card graphCard"><div class="graphLegend"><span><i class="legendDot" style="background:#c8ff00"></i>practice</span><span><i class="legendDot" style="background:#60d8ff"></i>channel</span><span><i class="legendDot" style="background:#ffb45b"></i>buyer</span><span><i class="legendDot" style="background:#42f58d"></i>goal</span><span><i class="legendDot" style="background:#b792ff"></i>service</span></div><svg id="graph" class="graph" viewBox="0 0 1000 560" role="img" aria-label="Money-Finder learning graph"></svg></div></section>
+<section class="section"><div class="sectionTitle"><h2>Learning graph</h2><small>practices → channels/buyers → goals</small></div><div class="card graphCard"><div class="graphLegend"><span><i class="legendDot" style="background:#c8ff00"></i>practice</span><span><i class="legendDot" style="background:#60d8ff"></i>channel</span><span><i class="legendDot" style="background:#ffb45b"></i>buyer</span><span><i class="legendDot" style="background:#42f58d"></i>goal</span><span><i class="legendDot" style="background:#b792ff"></i>service</span></div><svg id="graph" class="graph" viewBox="0 0 1000 560" role="img" aria-label="MilliAPI learning graph"></svg></div></section>
 <section class="section"><div class="sectionTitle"><h2>Current findings</h2><small>live production audit</small></div><div id="findings" class="findings"></div></section>
 <section class="section"><div class="sectionTitle"><h2>Automation guardrails</h2><small>what may and may not change itself</small></div><div id="guardrails" class="guardrails"></div></section>
-<footer>Money-Finder learning graph · public read-only view · no buyer identity, IP addresses, wallet secrets or payment credentials are exposed here.</footer>
+<footer>MilliAPI learning graph · public read-only view · no buyer identity, IP addresses, wallet secrets or payment credentials are exposed here.</footer>
 </div>
 <script>
 const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
