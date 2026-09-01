@@ -10,6 +10,7 @@ import { registerLearningHooks } from './lib/learning-graph.js';
 const ROUTE = '/api/ai-robots-check';
 const NETWORK = 'eip155:8453';
 const PRICE = '$0.001';
+const PUBLIC_ORIGIN = 'https://money-finder-nu.vercel.app';
 const PAY_TO = process.env.PAY_TO || '';
 const BOTS = ['GPTBot','ChatGPT-User','OAI-SearchBot','ClaudeBot','Claude-User','Google-Extended','PerplexityBot','Applebot-Extended'];
 
@@ -75,6 +76,7 @@ async function handler(req,res) {
 }
 
 const app = express();
+app.disable('x-powered-by');
 app.set('trust proxy', true);
 app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});
 app.options(ROUTE,(_req,res)=>res.status(204).end());
@@ -84,7 +86,18 @@ if (PAY_TO && process.env.CDP_API_KEY_ID && process.env.CDP_API_KEY_SECRET) {
     new x402ResourceServer(createCdpFacilitatorClient()).register(NETWORK,new ExactEvmScheme()),
     { serviceId:'service:ai_robots', priceUsd:0.001 }
   );
-  app.use(paymentMiddleware({ [`GET ${ROUTE}`]:{ accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}], resource:`https://money-finder-nu.vercel.app${ROUTE}`, description:'Check robots.txt homepage permissions for major AI crawlers including GPTBot, OAI-SearchBot, ClaudeBot, Google-Extended, PerplexityBot and Applebot-Extended.', mimeType:'application/json', extensions:{...discovery} } },server));
+  app.use(paymentMiddleware({
+    [`GET ${ROUTE}`]:{
+      accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],
+      resource:`${PUBLIC_ORIGIN}${ROUTE}`,
+      description:'Check robots.txt homepage permissions for major AI crawlers including GPTBot, OAI-SearchBot, ClaudeBot, Google-Extended, PerplexityBot and Applebot-Extended.',
+      mimeType:'application/json',
+      serviceName:'Money-Finder',
+      tags:['robots','ai-crawlers','ai-search','crawler-policy','web'],
+      iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,
+      extensions:{...discovery}
+    }
+  },server));
 } else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 
 app.get(ROUTE,handler);
