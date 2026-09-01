@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Money-Finder">
+  <rect width="128" height="128" rx="24" fill="#090b08"/>
+  <path d="M26 86V42h15l23 27 23-27h15v44H85V65L64 89 43 65v21H26Z" fill="#c8ff00"/>
+  <circle cx="103" cy="28" r="9" fill="#42f58d"/>
+</svg>
