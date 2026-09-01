@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Money-Finder Agent APIs — tiny x402 utilities for AI agents</title>
+  <meta name="description" content="Low-cost machine-to-machine APIs priced in fractions of a cent and paid automatically with x402 on Base.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://money-finder-nu.vercel.app/">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="alternate" type="application/json" href="/openapi.json" title="OpenAPI">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM instructions">
+  <style>
+    :root{--bg:#07110e;--panel:#0d1c17;--panel2:#11251e;--text:#f0fff8;--muted:#9ab8aa;--line:#1d3d31;--lime:#a8ff9d;--mint:#4be6ab;--amber:#ffd477;--shadow:0 24px 80px rgba(0,0,0,.28)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 75% -10%,rgba(75,230,171,.14),transparent 34%),radial-gradient(circle at 0 28%,rgba(168,255,157,.06),transparent 28%),var(--bg);color:var(--text);font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    a{color:inherit}.wrap{width:min(1120px,calc(100% - 36px));margin:auto}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.02em;text-decoration:none}.brand img{width:31px;height:31px}.navlinks{display:flex;align-items:center;gap:20px;color:var(--muted);font-size:14px}.navlinks a{text-decoration:none}.navlinks a:hover{color:var(--text)}
+    .hero{padding:72px 0 56px;display:grid;grid-template-columns:1.12fr .88fr;gap:64px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:7px 11px;color:var(--lime);font-size:13px;background:rgba(17,37,30,.65)}.dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 18px var(--mint)}h1{font-size:clamp(47px,7vw,82px);line-height:.98;letter-spacing:-.065em;margin:22px 0 24px;max-width:850px}.grad{color:var(--lime)}.lede{font-size:20px;color:#c3d8ce;max-width:680px;margin:0 0 30px}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:45px;padding:0 17px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;border:1px solid var(--line)}.btn.primary{background:var(--lime);color:#07110e;border-color:var(--lime)}.btn.secondary{background:var(--panel);color:var(--text)}
+    .terminal{background:#050b09;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}.bar{height:42px;border-bottom:1px solid #163027;display:flex;align-items:center;padding:0 15px;gap:7px}.bar i{width:8px;height:8px;border-radius:50%;background:#315448}.bar i:first-child{background:#74dd95}.code{padding:20px 21px 23px;font:13px/1.7 ui-monospace,SFMono-Regular,Menlo,monospace;color:#bfd4c9;overflow:auto}.code .k{color:var(--lime)}.code .v{color:var(--amber)}
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:8px 0 84px}.metric{padding:20px;border:1px solid var(--line);border-radius:14px;background:rgba(13,28,23,.75)}.metric b{display:block;font-size:24px;letter-spacing:-.03em}.metric span{color:var(--muted);font-size:13px}
+    .section{padding:0 0 82px}.sectionhead{display:flex;justify-content:space-between;gap:30px;align-items:end;margin-bottom:24px}.section h2{font-size:36px;letter-spacing:-.04em;margin:0}.section p.sub{color:var(--muted);max-width:560px;margin:0}.card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,rgba(17,37,30,.92),rgba(10,22,18,.95));padding:28px;box-shadow:0 14px 46px rgba(0,0,0,.16)}.service{display:grid;grid-template-columns:1fr 210px;gap:28px}.service h3{font-size:27px;margin:4px 0 7px;letter-spacing:-.035em}.pill{display:inline-block;border:1px solid #2f6650;color:#aee7ca;border-radius:999px;padding:4px 9px;font-size:12px;margin-right:5px}.service p{color:#b5cabf;max-width:700px}.price{text-align:right}.price strong{font-size:35px;display:block;letter-spacing:-.04em}.price span{color:var(--muted);font-size:13px}.spec{margin-top:21px;padding-top:20px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.spec div span{color:var(--muted);font-size:12px;display:block}.spec div b{font-size:14px;font-weight:600;word-break:break-word}
+    .machine{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.machine a{text-decoration:none}.machine .mini{height:100%;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--panel);transition:.18s transform,.18s border-color}.machine .mini:hover{transform:translateY(-2px);border-color:#397a60}.mini b{display:block;margin-bottom:6px}.mini span{color:var(--muted);font-size:14px}.arrow{color:var(--lime);float:right}
+    .status{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:14px}.status .light{width:9px;height:9px;border-radius:50%;background:#6e7c75}.status.ok .light{background:var(--mint);box-shadow:0 0 14px rgba(75,230,171,.6)}
+    footer{border-top:1px solid var(--line);padding:28px 0 42px;color:var(--muted);font-size:13px}.footerrow{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.footerrow a{color:#c4d7ce;text-decoration:none}
+    @media(max-width:820px){.hero{grid-template-columns:1fr;gap:38px;padding-top:45px}.metrics{grid-template-columns:repeat(2,1fr)}.service{grid-template-columns:1fr}.price{text-align:left}.spec{grid-template-columns:repeat(2,1fr)}.machine{grid-template-columns:1fr}.navlinks a:not(:last-child){display:none}}
+  </style>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebAPI","name":"Money-Finder Agent APIs","description":"Low-cost x402 APIs for autonomous software agents.","url":"https://money-finder-nu.vercel.app/","documentation":"https://money-finder-nu.vercel.app/openapi.json","provider":{"@type":"Organization","name":"Money-Finder"}}</script>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav"><a class="brand" href="/"><img src="/icon.svg" alt="">Money-Finder</a><div class="navlinks"><a href="#services">Services</a><a href="/openapi.json">OpenAPI</a><a href="/llms.txt">llms.txt</a><a href="/dashboard">Dashboard</a></div></nav>
+    <main>
+      <section class="hero">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> x402 v2 · Base · USDC</div>
+          <h1>Tiny APIs.<br><span class="grad">Tiny payments.</span></h1>
+          <p class="lede">Machine-to-machine utilities priced for autonomous agents. No subscription, account, invoice, or API key. Request a resource, pay the x402 challenge, get the result.</p>
+          <div class="actions"><a class="btn primary" href="#services">Browse paid utilities</a><a class="btn secondary" href="/openapi.json">Read OpenAPI</a></div>
+        </div>
+        <div class="terminal" aria-label="x402 example">
+          <div class="bar"><i></i><i></i><i></i></div>
+          <div class="code"><span class="k">GET</span> /api/agent-web-audit?url=https://example.com<br><br><span class="v">HTTP/1.1 402 Payment Required</span><br>PAYMENT-REQUIRED: &lt;x402-v2&gt;<br><br>price&nbsp;&nbsp;&nbsp; <span class="k">$0.005 USDC</span><br>network&nbsp; Base (eip155:8453)<br>scheme&nbsp;&nbsp; exact<br><br><span class="v">→ pay → retry → 200 JSON</span></div>
+        </div>
+      </section>
+
+      <div class="metrics"><div class="metric"><b>$0.005</b><span>current paid call</span></div><div class="metric"><b>0</b><span>accounts required</span></div><div class="metric"><b>x402 v2</b><span>payment protocol</span></div><div class="metric"><b>Base</b><span>USDC settlement</span></div></div>
+
+      <section class="section" id="services">
+        <div class="sectionhead"><div><h2>Agent utilities</h2></div><p class="sub">Services are deliberately narrow, deterministic, and inexpensive so an agent can decide that buying the answer is cheaper than rebuilding the capability.</p></div>
+        <article class="card service">
+          <div><span class="pill">web</span><span class="pill">AI discovery</span><span class="pill">metadata</span><h3>AI Web Readiness Audit</h3><p>Inspect a public HTTPS page for AI-crawler access, robots.txt behavior, llms.txt availability, title/description/canonical metadata, Open Graph, H1 presence and JSON-LD. Returns a compact readiness score plus machine-readable findings.</p><div class="spec"><div><span>Method</span><b>GET</b></div><div><span>Input</span><b>?url=https://…</b></div><div><span>Output</span><b>application/json</b></div><div><span>Protocol</span><b>x402 exact</b></div></div></div>
+          <div class="price"><strong>$0.005</strong><span>USDC / successful call</span><div style="margin-top:18px"><a class="btn secondary" href="/openapi.json">Schema →</a></div></div>
+        </article>
+      </section>
+
+      <section class="section">
+        <div class="sectionhead"><div><h2>Built for discovery</h2></div><div id="status" class="status"><span class="light"></span><span>checking payment rail…</span></div></div>
+        <div class="machine">
+          <a href="/openapi.json"><div class="mini"><span class="arrow">↗</span><b>OpenAPI 3.1</b><span>Parameters, JSON response schema, 402 response, and x402 pricing metadata.</span></div></a>
+          <a href="/llms.txt"><div class="mini"><span class="arrow">↗</span><b>llms.txt</b><span>Short instructions for LLMs and autonomous agents deciding how to call the service.</span></div></a>
+          <a href="/.well-known/x402"><div class="mini"><span class="arrow">↗</span><b>/.well-known/x402</b><span>Machine-readable fan-out for x402 crawlers and compatibility indexes.</span></div></a>
+        </div>
+      </section>
+    </main>
+    <footer><div class="footerrow"><span>Money-Finder is an experiment in autonomous micropayment economics.</span><span><a href="/pricing">Pricing</a> · <a href="/terms">Terms</a> · <a href="/dashboard">Internal dashboard</a></span></div></footer>
+  </div>
+  <script>
+    fetch('/api/x402-health').then(r=>r.json()).then(d=>{const el=document.getElementById('status');if(d.ok&&d.baseMainnetSupported&&d.routeInitialization&&d.routeInitialization.ok){el.classList.add('ok');el.querySelector('span:last-child').textContent='payment rail operational';}else{el.querySelector('span:last-child').textContent='payment rail checking';}}).catch(()=>{});
+  </script>
+</body>
+</html>
