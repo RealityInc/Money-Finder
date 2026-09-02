@@ -18,6 +18,7 @@ const ROUTE='/api/agent-web-audit';
 const PUBLIC_ORIGIN='https://milliapi.com';
 const PAY_TO=process.env.PAY_TO||'';
 const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET);
+const RESOURCE_TAGS=['ai-agents','web-audit','ai-search','repair-artifacts','change-baseline'];
 
 const discoveryExtension=declareDiscoveryExtension({
   input:{url:'https://example.com'},
@@ -66,12 +67,12 @@ app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
   const description='Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, ready-to-apply or review-required repair artifacts, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, major AI-crawler access, and a portable baseline for future change detection.';
-  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:['ai-agents','web-audit','ai-search','robots','llms-txt','change-baseline','repair-artifacts'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
+  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
   const facilitator=createCdpFacilitatorClient();
   const resourceServer=registerLearningHooks(new x402ResourceServer(facilitator).register(NETWORK,new ExactEvmScheme()),{serviceId:'service:web_audit',priceUsd:0.005});
   app.use(paymentMiddleware({[`GET ${ROUTE}`]:{
     accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',
-    tags:['ai-agents','web-audit','ai-search','robots','llms-txt','change-baseline','repair-artifacts'],iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}
+    tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}
   }},resourceServer,{appName:'MilliAPI',appLogo:`${PUBLIC_ORIGIN}/icon.svg`,testnet:false}));
 }else{
   app.use(ROUTE,(req,res,next)=>{
