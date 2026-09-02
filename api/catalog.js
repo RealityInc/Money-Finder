@@ -9,12 +9,12 @@ export default function handler(req,res){
   const sharedInput={query:{url:{type:'string',format:'uri',required:true,constraints:'Public HTTPS URL only'}},example:{url:'https://example.com'}};
   return res.status(200).json({
     name:'MilliAPI',
-    description:'Micropaid decision-ready web intelligence and machine-applicable repair guidance for AI agents.',
+    description:'Micropaid decision-ready web intelligence and machine-applicable repair guidance for AI agents, agent developers, and MCP tool builders.',
     protocol:'x402',x402Version:2,
     recommendedDefaultService:'ai-web-readiness-audit',
     buyingFlow:{
       preflight:`${origin}/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}`,
-      instruction:'Run the free preflight when uncertain whether an audit is worth buying. Use the flagship audit for one site, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison.',
+      instruction:'Run the free preflight when uncertain whether an audit is worth buying. Use the flagship audit for one site, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison. The flagship HTTP utility is also suitable as a backend for an x402-aware MCP tool wrapper.',
       retrySafety:{header:'Idempotency-Key',supportedOn:['ai-web-readiness-audit','ai-web-readiness-batch','repair-verification','site-readiness-change'],scope:'best-effort warm-runtime replay; exact x402 authorizations also carry anti-replay nonces'}
     },
     payment:{currency:'USDC',network:'Base',networkId:'eip155:8453',accountRequired:false,apiKeyRequired:false},
@@ -27,11 +27,11 @@ export default function handler(req,res){
     services:[
       {
         id:'ai-web-readiness-audit',title:'AI Web Readiness Audit',flagship:true,
-        recommendedFor:'One-site decisions: readiness verdict, supporting evidence, prioritized remediation, machine-applicable repair artifacts, and a portable baseline for future comparison.',
+        recommendedFor:'One-site agent decisions and MCP tool backends: readiness verdict, supporting evidence, prioritized remediation, machine-applicable repair artifacts, and a portable baseline for future comparison.',
         description:'Decision-ready audit combining crawler access, robots.txt, llms.txt, canonical/indexability, metadata, Open Graph, JSON-LD and headings, then returning repair snippets classified as ready-to-apply, review-required, or fill-required.',
         method:'GET',endpoint:`${origin}/api/agent-web-audit`,priceUsd:0.005,priceAtomicUsdc:'5000',input:sharedInput,
         output:{contentType:'application/json',fields:['score','verdict','agentRecommendation','summary','blockers','recommendations','evidence','checksBundled','repairArtifacts','baselineToken','cache','page','discovery','aiCrawlerHomepageAccess','pricing']},
-        tags:['decision-ready','web','ai-crawlers','remediation','repair-artifacts','portable-baseline']
+        tags:['decision-ready','web','ai-crawlers','agent-tool','mcp-backend','remediation','repair-artifacts','portable-baseline']
       },
       {
         id:'ai-web-readiness-batch',title:'AI Web Readiness Batch',flagship:false,
