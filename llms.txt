@@ -2,6 +2,14 @@
 
 MilliAPI provides low-cost machine-readable web intelligence and repair guidance for autonomous AI agents. Paid endpoints use x402 v2 with USDC on Base mainnet (eip155:8453). No buyer account, API key, or subscription is required.
 
+## Seller trust before spending
+
+An autonomous buyer can inspect MilliAPI's current public x402 seller surface for free before authorizing payment:
+
+GET https://milliapi.com/api/x402-practice-audit
+
+This public-safe audit checks HTTP 402 behavior, x402 v2 terms, exact USDC on Base, advertised amounts, resource metadata, Bazaar discovery, challenge latency, discovery documents, and facilitator health. It returns a score, grade, per-service checks, payment-health state and findings without exposing the receiving wallet, credentials, payment signatures or buyer data.
+
 ## Recommended buying flow
 
 If you are unsure whether a site audit is worth paying for, start with the free preflight:
@@ -46,7 +54,7 @@ Framework-neutral tool definitions are available at:
 
 GET https://milliapi.com/api/agent-tool-manifest
 
-The manifest describes the recommended preflight → audit → repair → verify → monitor sequence, JSON input schemas, HTTP invocation, x402 price/network requirements, retry semantics, and adapter guidance.
+The manifest exposes the free seller-practice audit alongside the recommended preflight → audit → repair → verify → monitor sequence, JSON input schemas, HTTP invocation, x402 price/network requirements, retry semantics, and adapter guidance.
 
 - LangChain: register manifest entries as `StructuredTool` / `DynamicStructuredTool` implementations whose call function performs the described HTTP request. Delegate HTTP 402 settlement to an x402-capable fetch/client.
 - LlamaIndex: register entries as `FunctionTool` or a custom `ToolSpec`; the implementation calls the described endpoint and delegates 402 settlement to an x402-capable client.
@@ -62,6 +70,7 @@ This response replay is best-effort serverless-runtime state, not a durable glob
 
 ## Free discovery
 
+- Seller practice audit: https://milliapi.com/api/x402-practice-audit
 - Tool manifest: https://milliapi.com/api/agent-tool-manifest
 - Catalog: https://milliapi.com/api/catalog
 - OpenAPI: https://milliapi.com/openapi.json

@@ -1,6 +1,7 @@
 const origin = 'https://milliapi.com';
+const noInput = { type: 'object', properties: {}, additionalProperties: false };
 
-function tool({ name, description, method, path, priceUsd, inputSchema, bodyTemplate = null }) {
+function tool({ name, description, method, path, priceUsd, inputSchema = noInput, bodyTemplate = null }) {
   return {
     name,
     description,
@@ -36,13 +37,18 @@ export default function handler(req, res) {
   };
 
   return res.status(200).json({
-    schemaVersion: 1,
+    schemaVersion: 2,
     name: 'MilliAPI Agent Tool Manifest',
-    description: 'Framework-neutral tool definitions for registering MilliAPI as callable tools in agent runtimes. The manifest describes HTTP invocation and x402 payment requirements; it does not require a MilliAPI account or API key.',
+    description: 'Framework-neutral tool definitions for registering MilliAPI as callable tools in agent runtimes. The manifest describes free seller-trust inspection, HTTP invocation and x402 payment requirements; it does not require a MilliAPI account or API key.',
     canonical: `${origin}/api/agent-tool-manifest`,
     openapi: `${origin}/openapi.json`,
     catalog: `${origin}/api/catalog`,
+    sellerTrust: {
+      tool: 'milliapi_x402_practice_audit',
+      guidance: 'An autonomous buyer may call the free practice audit before spending to inspect current x402 challenge conformance, discovery metadata, challenge latency and facilitator health.',
+    },
     recommendedFlow: [
+      'optionally call milliapi_x402_practice_audit when seller trust or payment readiness is uncertain',
       'milliapi_web_preflight',
       'milliapi_web_readiness_audit',
       'apply returned repairArtifacts where safe',
@@ -50,6 +56,13 @@ export default function handler(req, res) {
       'milliapi_readiness_change for later monitoring',
     ],
     tools: [
+      tool({
+        name: 'milliapi_x402_practice_audit',
+        description: 'Free public-safe audit of MilliAPI seller conformance and availability across x402 challenge behavior, Base USDC terms, advertised prices, Bazaar discovery, discovery documents, latency and facilitator health.',
+        method: 'GET',
+        path: '/api/x402-practice-audit',
+        priceUsd: 0,
+      }),
       tool({
         name: 'milliapi_web_preflight',
         description: 'Free preflight that confirms a public site is reachable and estimates whether the paid AI-readiness audit is worth buying.',
