@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MilliAPI Micropaid APIs",
-    "version": "1.7.0",
-    "description": "Decision-ready web intelligence for AI agents. Use the free preflight when purchase value is uncertain; use the flagship audit for a verdict plus machine-applicable repair artifacts, repair verification after applying fixes, site-readiness-change for later monitoring, and batch for lists. A free framework-neutral agent tool manifest describes the recommended tools and x402 invocation semantics. Paid endpoints use x402 v2 with USDC on Base mainnet."
+    "version": "1.8.0",
+    "description": "Decision-ready web intelligence for AI agents. Buyers can inspect a free x402 seller-practice audit before spending, use the free preflight when purchase value is uncertain, use the flagship audit for a verdict plus machine-applicable repair artifacts, repair verification after applying fixes, site-readiness-change for later monitoring, and batch for lists. A free framework-neutral agent tool manifest describes the recommended tools and x402 invocation semantics. Paid endpoints use x402 v2 with USDC on Base mainnet."
   },
   "servers": [{"url": "https://milliapi.com"}],
   "components": {
@@ -44,8 +44,9 @@
     }
   },
   "paths": {
-    "/api/catalog": {"get": {"summary": "List services, prices, buying guidance, retry safety, integrations, and free preflight", "operationId": "listServices", "responses": {"200": {"description": "Free machine-readable catalog"}}}},
-    "/api/agent-tool-manifest": {"get": {"summary": "Get framework-neutral tool definitions for agent runtimes", "description": "Returns recommended workflow, JSON input schemas, HTTP invocation, x402 price/network requirements, retry semantics, and adapter guidance for LangChain, LlamaIndex, MCP wrappers and custom agent runtimes.", "operationId": "getAgentToolManifest", "responses": {"200": {"description": "Free agent tool manifest"}}}},
+    "/api/catalog": {"get": {"summary": "List services, prices, buying guidance, seller trust, retry safety, integrations, and free preflight", "operationId": "listServices", "responses": {"200": {"description": "Free machine-readable catalog"}}}},
+    "/api/agent-tool-manifest": {"get": {"summary": "Get framework-neutral tool definitions for agent runtimes", "description": "Returns optional free seller-trust inspection, recommended workflow, JSON input schemas, HTTP invocation, x402 price/network requirements, retry semantics, and adapter guidance for LangChain, LlamaIndex, MCP wrappers and custom agent runtimes.", "operationId": "getAgentToolManifest", "responses": {"200": {"description": "Free agent tool manifest"}}}},
+    "/api/x402-practice-audit": {"get": {"summary": "Inspect MilliAPI x402 seller conformance and availability before spending", "description": "Public-safe seller audit covering HTTP 402 behavior, x402 v2 terms, exact USDC on Base, advertised amounts, resource metadata, Bazaar discovery, challenge latency, discovery documents, and facilitator health. It does not return wallet addresses, credentials, buyer data or payment signatures.", "operationId": "auditMilliapiX402SellerPractice", "responses": {"200": {"description": "Seller practice score, grade, service checks, payment health and findings"}}}},
     "/api/agent-web-preflight": {"get": {"summary": "Free preflight before deciding whether to buy an audit", "operationId": "preflightWebReadiness", "parameters": [{"$ref": "#/components/parameters/PublicUrl"}], "responses": {"200": {"description": "Reachability, HTML suitability, potential-issue count, and purchase recommendation", "content": {"application/json": {"schema": {"type": "object"}}}}}}},
     "/api/agent-web-audit": {"get": {
       "summary": "Get a decision-ready AI web-readiness verdict, remediation plan, and repair artifacts",
@@ -99,6 +100,7 @@
   },
   "x-agent-tools": {
     "manifest": "https://milliapi.com/api/agent-tool-manifest",
+    "sellerTrust": "https://milliapi.com/api/x402-practice-audit",
     "frameworks": ["LangChain", "LlamaIndex", "MCP wrappers", "custom agent runtimes"],
     "nativePackageClaimed": false
   }
