@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "MilliAPI Micropaid APIs",
-    "version": "1.6.0",
-    "description": "Decision-ready web intelligence for AI agents. Use the free preflight when purchase value is uncertain; use the flagship audit for a verdict plus machine-applicable repair artifacts, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison. Paid endpoints use x402 v2 with USDC on Base mainnet."
+    "version": "1.7.0",
+    "description": "Decision-ready web intelligence for AI agents. Use the free preflight when purchase value is uncertain; use the flagship audit for a verdict plus machine-applicable repair artifacts, repair verification after applying fixes, site-readiness-change for later monitoring, and batch for lists. A free framework-neutral agent tool manifest describes the recommended tools and x402 invocation semantics. Paid endpoints use x402 v2 with USDC on Base mainnet."
   },
   "servers": [{"url": "https://milliapi.com"}],
   "components": {
@@ -44,7 +44,8 @@
     }
   },
   "paths": {
-    "/api/catalog": {"get": {"summary": "List services, prices, buying guidance, retry safety, and free preflight", "operationId": "listServices", "responses": {"200": {"description": "Free machine-readable catalog"}}}},
+    "/api/catalog": {"get": {"summary": "List services, prices, buying guidance, retry safety, integrations, and free preflight", "operationId": "listServices", "responses": {"200": {"description": "Free machine-readable catalog"}}}},
+    "/api/agent-tool-manifest": {"get": {"summary": "Get framework-neutral tool definitions for agent runtimes", "description": "Returns recommended workflow, JSON input schemas, HTTP invocation, x402 price/network requirements, retry semantics, and adapter guidance for LangChain, LlamaIndex, MCP wrappers and custom agent runtimes.", "operationId": "getAgentToolManifest", "responses": {"200": {"description": "Free agent tool manifest"}}}},
     "/api/agent-web-preflight": {"get": {"summary": "Free preflight before deciding whether to buy an audit", "operationId": "preflightWebReadiness", "parameters": [{"$ref": "#/components/parameters/PublicUrl"}], "responses": {"200": {"description": "Reachability, HTML suitability, potential-issue count, and purchase recommendation", "content": {"application/json": {"schema": {"type": "object"}}}}}}},
     "/api/agent-web-audit": {"get": {
       "summary": "Get a decision-ready AI web-readiness verdict, remediation plan, and repair artifacts",
@@ -56,17 +57,6 @@
       "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.005, "currency": "USDC", "network": "eip155:8453"},
       "x-milliapi-idempotency": {"scope": "best-effort-warm-runtime", "ttlSeconds": 900},
       "x-milliapi-recommended-default": true
-    }},
-    "/api/agent-web-audit-batch": {"post": {
-      "summary": "Audit, rank, and generate repair artifacts for up to five websites in one purchase",
-      "description": "Designed for prospect lists, crawl queues, and portfolios. Up to five URLs for $0.02 total, with repair artifacts included per successful result.",
-      "operationId": "batchAuditWebReadiness",
-      "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
-      "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UrlList"}}}},
-      "x-payment-info": {"protocols": [{"x402": {}}], "price": {"mode": "fixed", "currency": "USD", "amount": "0.020"}},
-      "responses": {"200": {"description": "Ranked batch audit results, repair artifacts, and portable baselines"}, "402": {"$ref": "#/components/responses/PaymentRequired"}},
-      "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.02, "currency": "USDC", "network": "eip155:8453"},
-      "x-milliapi-idempotency": {"scope": "best-effort-warm-runtime", "ttlSeconds": 900}
     }},
     "/api/verify-site-repairs": {"post": {
       "summary": "Verify which previously recommended repairs actually worked",
@@ -90,10 +80,26 @@
       "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.003, "currency": "USDC", "network": "eip155:8453"},
       "x-milliapi-idempotency": {"scope": "best-effort-warm-runtime", "ttlSeconds": 900}
     }},
+    "/api/agent-web-audit-batch": {"post": {
+      "summary": "Audit, rank, and generate repair artifacts for up to five websites in one purchase",
+      "description": "Designed for prospect lists, crawl queues, and portfolios. Up to five URLs for $0.02 total, with repair artifacts included per successful result.",
+      "operationId": "batchAuditWebReadiness",
+      "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+      "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UrlList"}}}},
+      "x-payment-info": {"protocols": [{"x402": {}}], "price": {"mode": "fixed", "currency": "USD", "amount": "0.020"}},
+      "responses": {"200": {"description": "Ranked batch audit results, repair artifacts, and portable baselines"}, "402": {"$ref": "#/components/responses/PaymentRequired"}},
+      "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.02, "currency": "USDC", "network": "eip155:8453"},
+      "x-milliapi-idempotency": {"scope": "best-effort-warm-runtime", "ttlSeconds": 900}
+    }},
     "/api/ai-robots-check": {"get": {"summary": "Check robots.txt policy for AI crawlers", "operationId": "checkAiRobotsPolicy", "parameters": [{"$ref": "#/components/parameters/PublicUrl"}], "x-payment-info": {"protocols": [{"x402": {}}], "price": {"mode": "fixed", "currency": "USD", "amount": "0.001"}}, "responses": {"200": {"description": "AI crawler policy result"}, "402": {"$ref": "#/components/responses/PaymentRequired"}}, "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.001, "currency": "USDC", "network": "eip155:8453"}}},
     "/api/llms-txt-check": {"get": {"summary": "Check whether a website publishes llms.txt", "operationId": "checkLlmsTxt", "parameters": [{"$ref": "#/components/parameters/PublicUrl"}], "x-payment-info": {"protocols": [{"x402": {}}], "price": {"mode": "fixed", "currency": "USD", "amount": "0.001"}}, "responses": {"200": {"description": "llms.txt result"}, "402": {"$ref": "#/components/responses/PaymentRequired"}}, "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.001, "currency": "USDC", "network": "eip155:8453"}}},
     "/api/page-metadata": {"get": {"summary": "Extract page metadata for agent workflows", "operationId": "extractPageMetadata", "parameters": [{"$ref": "#/components/parameters/PublicUrl"}], "x-payment-info": {"protocols": [{"x402": {}}], "price": {"mode": "fixed", "currency": "USD", "amount": "0.002"}}, "responses": {"200": {"description": "Page metadata"}, "402": {"$ref": "#/components/responses/PaymentRequired"}}, "x-milliapi-pricing": {"protocol": "x402", "priceUsd": 0.002, "currency": "USDC", "network": "eip155:8453"}}},
     "/api/x402-health": {"get": {"summary": "Check public-safe x402 facilitator health", "operationId": "checkX402Health", "responses": {"200": {"description": "Healthy"}, "502": {"description": "Facilitator failed"}, "503": {"description": "Payment configuration incomplete"}}}},
     "/.well-known/x402": {"get": {"summary": "x402 discovery fan-out", "operationId": "discoverX402Resources", "responses": {"200": {"description": "List of paid resource URLs plus free preflight"}}}}
+  },
+  "x-agent-tools": {
+    "manifest": "https://milliapi.com/api/agent-tool-manifest",
+    "frameworks": ["LangChain", "LlamaIndex", "MCP wrappers", "custom agent runtimes"],
+    "nativePackageClaimed": false
   }
 }
