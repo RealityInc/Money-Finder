@@ -1,4 +1,5 @@
 import { preflightPublicUrl } from './lib/web-readiness-core.js';
+import { observeFreeRoute } from './lib/privacy-traffic-telemetry.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -6,6 +7,8 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=900');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+
+  observeFreeRoute(req,res,{route:'/api/agent-web-preflight',stage:'preflight'});
 
   const target = Array.isArray(req.query?.url) ? req.query.url[0] : req.query?.url;
   if (!target) {

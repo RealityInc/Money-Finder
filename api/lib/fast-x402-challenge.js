@@ -1,3 +1,5 @@
+import { observePaidRoute } from './privacy-traffic-telemetry.js';
+
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
 function hasPaymentHeader(req) {
@@ -23,7 +25,10 @@ export function fastUnpaidChallenge({
   mimeType = 'application/json',
 }) {
   return function fastChallengeMiddleware(req, res, next) {
-    if (req.method !== method || hasPaymentHeader(req)) return next();
+    if (req.method !== method) return next();
+
+    observePaidRoute(req, res, { route, method, amount: String(amount) });
+    if (hasPaymentHeader(req)) return next();
 
     const paymentRequired = {
       x402Version: 2,
