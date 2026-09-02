@@ -1,0 +1,32 @@
+name: Refresh dependency lock (temporary)
+
+on:
+  push:
+    branches:
+      - fix/restore-cdp-svm-lock-20260902
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lock:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/restore-cdp-svm-lock-20260902
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Refresh package-lock without install scripts
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Commit lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Restore CDP x402 SVM dependency in lockfile"
+            git push origin HEAD:fix/restore-cdp-svm-lock-20260902
+          fi
