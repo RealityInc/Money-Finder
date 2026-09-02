@@ -49,7 +49,7 @@ async function handler(req,res){
   }catch(error){return res.status(400).json({error:error?.message||'Extraction failed'});}
 }
 
-const app=express();app.disable('x-powered-by');app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
+const app=express();app.disable('x-powered-by');app.set('trust proxy',true);app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');res.setHeader('Cache-Control','private, no-store');next();});app.options(ROUTE,(_req,res)=>res.status(204).end());
 if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
   app.use(ROUTE, fastUnpaidChallenge({
     route: ROUTE,
