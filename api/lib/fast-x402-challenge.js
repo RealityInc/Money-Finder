@@ -10,6 +10,13 @@ function hasPaymentHeader(req) {
   );
 }
 
+function enrichHttpDiscovery(extensions, method) {
+  const enriched = JSON.parse(JSON.stringify(extensions || {}));
+  const input = enriched?.bazaar?.info?.input;
+  if (input?.type === 'http') input.method = String(method || 'GET').toUpperCase();
+  return enriched;
+}
+
 export function fastUnpaidChallenge({
   route,
   amount,
@@ -55,7 +62,7 @@ export function fastUnpaidChallenge({
           },
         },
       ],
-      extensions,
+      extensions: enrichHttpDiscovery(extensions, method),
     };
 
     const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
