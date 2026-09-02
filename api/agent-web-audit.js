@@ -2,13 +2,10 @@
 // Paid decision-ready AI web-readiness audit. x402 settles $0.005 USDC on Base.
 
 import express from 'express';
-import { paymentMiddleware, x402ResourceServer } from '@x402/express';
-import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
-import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
-import { registerLearningHooks } from './lib/learning-graph.js';
 import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 import { idempotencyMiddleware } from './lib/idempotency.js';
+import { lazyX402PaymentMiddleware } from './lib/lazy-x402-middleware.js';
 import { auditPublicUrl } from './lib/web-readiness-core.js';
 import { buildRepairArtifacts } from './lib/repair-artifacts.js';
 
@@ -69,12 +66,16 @@ app.use(ROUTE,idempotencyMiddleware());
 if(PAYMENT_CONFIGURED){
   const description='Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, ready-to-apply or review-required repair artifacts, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, major AI-crawler access, and a portable baseline for future change detection.';
   app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}}));
-  const facilitator=createCdpFacilitatorClient();
-  const resourceServer=registerLearningHooks(new x402ResourceServer(facilitator).register(NETWORK,new ExactEvmScheme()),{serviceId:'service:web_audit',priceUsd:0.005});
-  app.use(paymentMiddleware({[`GET ${ROUTE}`]:{
-    accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',
-    tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}
-  }},resourceServer,{appName:'MilliAPI',appLogo:`${PUBLIC_ORIGIN}/icon.svg`,testnet:false}));
+  app.use(ROUTE,lazyX402PaymentMiddleware({
+    routes:{[`GET ${ROUTE}`]:{
+      accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',
+      tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}
+    }},
+    network:NETWORK,
+    serviceId:'service:web_audit',
+    priceUsd:0.005,
+    paywallConfig:{appName:'MilliAPI',appLogo:`${PUBLIC_ORIGIN}/icon.svg`,testnet:false}
+  }));
 }else{
   app.use(ROUTE,(req,res,next)=>{
     if(req.method!=='GET') return next();
