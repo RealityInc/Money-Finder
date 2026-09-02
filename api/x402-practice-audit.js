@@ -33,7 +33,7 @@ async function fetchWithTimeout(url, timeoutMs = 12000, init = {}) {
       ...init,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'MilliAPI-Practice-Audit/2.0',
+        'User-Agent': 'MilliAPI-Practice-Audit/3.0',
         ...(init.headers || {})
       },
       signal: controller.signal
@@ -43,6 +43,28 @@ async function fetchWithTimeout(url, timeoutMs = 12000, init = {}) {
 }
 
 function check(label, ok, points, detail = null) { return { label, ok: Boolean(ok), points: ok ? points : 0, maxPoints: points, detail }; }
+
+function validateBazaarInvocation(bazaar, service) {
+  const input = bazaar?.info?.input;
+  const schemaInput = bazaar?.schema?.properties?.input;
+  const methodEnum = schemaInput?.properties?.method?.enum || [];
+  const requiredInput = schemaInput?.required || [];
+  const requiredOutput = bazaar?.schema?.properties?.output?.properties?.example?.required || [];
+  const outputExample = bazaar?.info?.output?.example;
+  const missingOutput = requiredOutput.filter(key => !outputExample || !Object.prototype.hasOwnProperty.call(outputExample, key));
+  const methodOk = input?.type === 'http' && input?.method === service.method && methodEnum.includes(service.method) && requiredInput.includes('method');
+  const payloadOk = service.method === 'POST'
+    ? input?.bodyType === 'json' && input?.body && typeof input.body === 'object' && requiredInput.includes('bodyType') && requiredInput.includes('body')
+    : Boolean(input?.queryParams && typeof input.queryParams === 'object');
+  return {
+    ok: Boolean(bazaar?.schema && methodOk && payloadOk && missingOutput.length === 0),
+    detail: {
+      method: input?.method || null,
+      bodyType: input?.bodyType || null,
+      missingOutputFields: missingOutput
+    }
+  };
+}
 
 async function auditService(service) {
   const suffix = service.queryUrl ? `?url=${encodeURIComponent('https://example.com')}` : '';
@@ -67,6 +89,7 @@ async function auditService(service) {
   const accept = paymentRequired?.accepts?.[0] || null;
   const resource = paymentRequired?.resource || {};
   const bazaar = paymentRequired?.extensions?.bazaar || null;
+  const bazaarValidation = validateBazaarInvocation(bazaar, service);
   const tags = Array.isArray(resource.tags) ? resource.tags : [];
   const checks = [
     check('HTTP 402 payment challenge', result.response.status === 402, 4, `HTTP ${result.response.status}`),
@@ -75,7 +98,7 @@ async function auditService(service) {
     check('Advertised amount matches catalog', accept?.amount === service.amount, 2, accept?.amount ?? null),
     check('Resource description + JSON mime type', typeof resource.description === 'string' && resource.description.length >= 40 && resource.mimeType === 'application/json', 2),
     check('Seller identity metadata', typeof resource.serviceName === 'string' && resource.serviceName.length > 0 && resource.serviceName.length <= 32 && tags.length > 0 && tags.length <= 5 && tags.every(tag => typeof tag === 'string' && tag.length <= 32) && /^https:\/\//.test(resource.iconUrl || ''), 3),
-    check('Bazaar discovery extension', Boolean(bazaar?.info?.input && bazaar?.schema), 3),
+    check('Valid Bazaar invocation metadata', bazaarValidation.ok, 3, bazaarValidation.detail),
     check('Fast payment challenge', result.latencyMs < 5000, 1, `${result.latencyMs} ms`)
   ];
   return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, status: result.response.status, latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };
@@ -112,5 +135,5 @@ export default async function handler(req, res) {
   for (const doc of docs) if (!doc.ok) findings.push({ severity: 'medium', service: 'discovery', issue: `${doc.path} unavailable`, detail: doc.status });
   if (!health.ok) findings.push({ severity: 'high', service: 'payment', issue: 'x402 facilitator health check failed', detail: health.status });
 
-  return res.status(200).json({ audit: 'milliapi-x402-practice-audit', version: 2, checkedAt: new Date().toISOString(), score, grade: score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : 'D', policy: { protocol: 'x402 v2', network: 'Base mainnet', paidRoutesAudited: SERVICES.length, discovery: 'Bazaar extension + catalog + OpenAPI + llms.txt', autoChangeBoundary: 'Discovery metadata, documentation, ranking and reliability improvements may be automated. Wallets, credentials, settlement semantics, new networks and material price changes require review.' }, services: serviceResults, discovery: docs, paymentHealth: health, findings, references: { x402Spec: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md', bazaarDocs: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx' } });
+  return res.status(200).json({ audit: 'milliapi-x402-practice-audit', version: 3, checkedAt: new Date().toISOString(), score, grade: score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : 'D', policy: { protocol: 'x402 v2', network: 'Base mainnet', paidRoutesAudited: SERVICES.length, discovery: 'Validated Bazaar invocation metadata + catalog + OpenAPI + llms.txt', autoChangeBoundary: 'Discovery metadata, documentation, ranking and reliability improvements may be automated. Wallets, credentials, settlement semantics, new networks and material price changes require review.' }, services: serviceResults, discovery: docs, paymentHealth: health, findings, references: { x402Spec: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md', bazaarDocs: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx' } });
 }
