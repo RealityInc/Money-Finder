@@ -7,10 +7,13 @@ const NETWORK = 'eip155:8453';
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'.toLowerCase();
 
 const SERVICES = [
-  { id: 'ai-robots-check', path: '/api/ai-robots-check', amount: '1000', priceUsd: 0.001 },
-  { id: 'llms-txt-check', path: '/api/llms-txt-check', amount: '1000', priceUsd: 0.001 },
-  { id: 'page-metadata', path: '/api/page-metadata', amount: '2000', priceUsd: 0.002 },
-  { id: 'ai-web-readiness-audit', path: '/api/agent-web-audit', amount: '5000', priceUsd: 0.005 }
+  { id: 'ai-robots-check', path: '/api/ai-robots-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001 },
+  { id: 'llms-txt-check', path: '/api/llms-txt-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001 },
+  { id: 'page-metadata', path: '/api/page-metadata', method: 'GET', queryUrl: true, amount: '2000', priceUsd: 0.002 },
+  { id: 'ai-web-readiness-audit', path: '/api/agent-web-audit', method: 'GET', queryUrl: true, amount: '5000', priceUsd: 0.005 },
+  { id: 'repair-verification', path: '/api/verify-site-repairs', method: 'POST', body: { url: 'https://example.com', baselineToken: 'seller-practice-probe' }, amount: '2000', priceUsd: 0.002 },
+  { id: 'site-readiness-change', path: '/api/site-readiness-change', method: 'POST', body: { url: 'https://example.com', baselineToken: 'seller-practice-probe' }, amount: '3000', priceUsd: 0.003 },
+  { id: 'ai-web-readiness-batch', path: '/api/agent-web-audit-batch', method: 'POST', body: { urls: ['https://example.com'] }, amount: '20000', priceUsd: 0.020 }
 ];
 
 function decodePaymentRequired(value) {
@@ -19,12 +22,22 @@ function decodePaymentRequired(value) {
   catch { return null; }
 }
 
-async function fetchWithTimeout(url, timeoutMs = 12000) {
+async function fetchWithTimeout(url, timeoutMs = 12000, init = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const started = Date.now();
   try {
-    const response = await fetch(url, { redirect: 'manual', cache: 'no-store', headers: { Accept: 'application/json', 'User-Agent': 'MilliAPI-Practice-Audit/1.0' }, signal: controller.signal });
+    const response = await fetch(url, {
+      redirect: 'manual',
+      cache: 'no-store',
+      ...init,
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'MilliAPI-Practice-Audit/2.0',
+        ...(init.headers || {})
+      },
+      signal: controller.signal
+    });
     return { response, latencyMs: Date.now() - started };
   } finally { clearTimeout(timer); }
 }
@@ -32,11 +45,17 @@ async function fetchWithTimeout(url, timeoutMs = 12000) {
 function check(label, ok, points, detail = null) { return { label, ok: Boolean(ok), points: ok ? points : 0, maxPoints: points, detail }; }
 
 async function auditService(service) {
-  const requestUrl = `${ORIGIN}${service.path}?url=${encodeURIComponent('https://example.com')}`;
+  const suffix = service.queryUrl ? `?url=${encodeURIComponent('https://example.com')}` : '';
+  const requestUrl = `${ORIGIN}${service.path}${suffix}`;
+  const init = { method: service.method || 'GET' };
+  if (service.body) {
+    init.headers = { 'Content-Type': 'application/json' };
+    init.body = JSON.stringify(service.body);
+  }
   let result; let firstError = null;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
-      result = await fetchWithTimeout(requestUrl);
+      result = await fetchWithTimeout(requestUrl, 12000, init);
       if (result.response.status === 402) break;
       if (attempt === 0 && result.response.status >= 500) continue;
       break;
@@ -59,7 +78,7 @@ async function auditService(service) {
     check('Bazaar discovery extension', Boolean(bazaar?.info?.input && bazaar?.schema), 3),
     check('Fast payment challenge', result.latencyMs < 5000, 1, `${result.latencyMs} ms`)
   ];
-  return { id: service.id, endpoint: service.path, priceUsd: service.priceUsd, status: result.response.status, latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };
+  return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, status: result.response.status, latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };
 }
 
 async function auditFreeSurface(path) {
@@ -73,7 +92,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
   const [serviceResults, docs, health] = await Promise.all([
-    Promise.all(SERVICES.map(async service => { try { return await auditService(service); } catch (error) { return { id: service.id, endpoint: service.path, priceUsd: service.priceUsd, status: null, latencyMs: null, score: 0, maxScore: 20, error: error?.name === 'AbortError' ? 'Timed out' : error?.message || 'Audit failed', checks: [] }; } })),
+    Promise.all(SERVICES.map(async service => { try { return await auditService(service); } catch (error) { return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, status: null, latencyMs: null, score: 0, maxScore: 20, error: error?.name === 'AbortError' ? 'Timed out' : error?.message || 'Audit failed', checks: [] }; } })),
     Promise.all(['/api/catalog', '/openapi.json', '/llms.txt'].map(auditFreeSurface)),
     auditFreeSurface('/api/x402-health')
   ]);
@@ -93,5 +112,5 @@ export default async function handler(req, res) {
   for (const doc of docs) if (!doc.ok) findings.push({ severity: 'medium', service: 'discovery', issue: `${doc.path} unavailable`, detail: doc.status });
   if (!health.ok) findings.push({ severity: 'high', service: 'payment', issue: 'x402 facilitator health check failed', detail: health.status });
 
-  return res.status(200).json({ audit: 'milliapi-x402-practice-audit', version: 1, checkedAt: new Date().toISOString(), score, grade: score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : 'D', policy: { protocol: 'x402 v2', network: 'Base mainnet', discovery: 'Bazaar extension + catalog + OpenAPI + llms.txt', autoChangeBoundary: 'Discovery metadata, documentation, ranking and reliability improvements may be automated. Wallets, credentials, settlement semantics, new networks and material price changes require review.' }, services: serviceResults, discovery: docs, paymentHealth: health, findings, references: { x402Spec: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md', bazaarDocs: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx' } });
+  return res.status(200).json({ audit: 'milliapi-x402-practice-audit', version: 2, checkedAt: new Date().toISOString(), score, grade: score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : 'D', policy: { protocol: 'x402 v2', network: 'Base mainnet', paidRoutesAudited: SERVICES.length, discovery: 'Bazaar extension + catalog + OpenAPI + llms.txt', autoChangeBoundary: 'Discovery metadata, documentation, ranking and reliability improvements may be automated. Wallets, credentials, settlement semantics, new networks and material price changes require review.' }, services: serviceResults, discovery: docs, paymentHealth: health, findings, references: { x402Spec: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md', bazaarDocs: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx' } });
 }
