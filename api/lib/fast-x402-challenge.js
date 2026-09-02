@@ -2,12 +2,21 @@ import { observePaidRoute } from './privacy-traffic-telemetry.js';
 
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
-function hasPaymentHeader(req) {
-  return Boolean(
-    req.get('PAYMENT-SIGNATURE') ||
-    req.get('X-PAYMENT') ||
-    req.get('X-PAYMENT-SIGNATURE')
-  );
+function paymentHeader(req) {
+  return req.get('PAYMENT-SIGNATURE') || req.get('X-PAYMENT') || req.get('X-PAYMENT-SIGNATURE') || null;
+}
+
+function normalizePaymentHeader(req) {
+  if (!req.get('PAYMENT-SIGNATURE') && !req.get('X-PAYMENT') && req.get('X-PAYMENT-SIGNATURE')) {
+    req.headers['payment-signature'] = req.get('X-PAYMENT-SIGNATURE');
+  }
+}
+
+function enrichHttpDiscovery(extensions, method) {
+  const enriched = JSON.parse(JSON.stringify(extensions || {}));
+  const input = enriched?.bazaar?.info?.input;
+  if (input?.type === 'http') input.method = String(method || 'GET').toUpperCase();
+  return enriched;
 }
 
 export function fastUnpaidChallenge({
@@ -28,7 +37,10 @@ export function fastUnpaidChallenge({
     if (req.method !== method) return next();
 
     observePaidRoute(req, res, { route, method, amount: String(amount) });
-    if (hasPaymentHeader(req)) return next();
+    if (paymentHeader(req)) {
+      normalizePaymentHeader(req);
+      return next();
+    }
 
     const paymentRequired = {
       x402Version: 2,
@@ -55,7 +67,7 @@ export function fastUnpaidChallenge({
           },
         },
       ],
-      extensions,
+      extensions: enrichHttpDiscovery(extensions, method),
     };
 
     const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');

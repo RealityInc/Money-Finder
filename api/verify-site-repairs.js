@@ -17,10 +17,12 @@ const PAY_TO=process.env.PAY_TO||'';
 const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET);
 
 const discoveryExtension=declareDiscoveryExtension({
+  method:'POST',
+  bodyType:'json',
   input:{url:'https://example.com',baselineToken:'<token returned by a prior AI Web Readiness Audit>'},
-  inputSchema:{properties:{url:{type:'string',format:'uri'},baselineToken:{type:'string',description:'Portable baseline token returned by a prior paid audit.'}},required:['url','baselineToken']},
+  inputSchema:{type:'object',properties:{url:{type:'string',format:'uri'},baselineToken:{type:'string',description:'Portable baseline token returned by a prior paid audit.'}},required:['url','baselineToken']},
   output:{
-    example:{product:'MilliAPI Repair Verification',status:'partially_verified',scoreDelta:15,resolvedRecommendationIds:['add_canonical','publish_llms_txt'],remainingRecommendationIds:['add_structured_data'],introducedRecommendationIds:[]},
+    example:{product:'MilliAPI Repair Verification',status:'partially_verified',scoreDelta:15,resolvedRecommendationIds:['add_canonical','publish_llms_txt'],remainingRecommendationIds:['add_structured_data'],introducedRecommendationIds:[],current:{score:75,verdict:'mostly_ready',summary:'Some recommended fixes are now resolved.'},nextBaselineToken:'<fresh portable baseline token>'},
     schema:{type:'object',properties:{product:{type:'string'},status:{type:'string'},scoreDelta:{type:'number'},resolvedRecommendationIds:{type:'array'},remainingRecommendationIds:{type:'array'},introducedRecommendationIds:{type:'array'},current:{type:'object'},nextBaselineToken:{type:'string'}},required:['product','status','scoreDelta','resolvedRecommendationIds','remainingRecommendationIds','introducedRecommendationIds','current','nextBaselineToken']}
   }
 });
@@ -66,7 +68,7 @@ app.use(express.json({limit:'20kb'}));
 app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, Idempotency-Key');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE, Idempotency-Key');
   res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Idempotent-Replay, X-Idempotency-Scope');
   res.setHeader('Cache-Control','private, no-store');
   next();

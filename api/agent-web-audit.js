@@ -21,6 +21,7 @@ const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env
 const RESOURCE_TAGS=['ai-agents','web-audit','ai-search','repair-artifacts','change-baseline'];
 
 const discoveryExtension=declareDiscoveryExtension({
+  method:'GET',
   input:{url:'https://example.com'},
   inputSchema:{properties:{url:{type:'string',format:'uri',description:'Public HTTPS page to audit. Private IPs, localhost, credentials, and non-standard ports are rejected.'}},required:['url']},
   output:{
@@ -57,7 +58,7 @@ app.set('trust proxy',true);
 app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, Idempotency-Key');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE, Idempotency-Key');
   res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Idempotent-Replay, X-Idempotency-Scope');
   res.setHeader('Cache-Control','private, no-store');
   next();

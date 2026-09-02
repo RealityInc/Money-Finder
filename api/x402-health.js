@@ -33,10 +33,12 @@ export default async function handler(req, res) {
 
   try {
     const facilitator = createCdpFacilitatorClient();
+    const facilitatorStarted = Date.now();
     const supported = await facilitator.getSupported();
+    const facilitatorLatencyMs = Date.now() - facilitatorStarted;
     const base = supported.kinds?.filter(kind => kind.network === NETWORK) || [];
 
-    let routeInitialization = { ok: false, message: 'Not attempted' };
+    let routeInitialization = { ok: false, message: 'Not attempted', latencyMs: null };
     try {
       const resourceServer = new x402ResourceServer(facilitator)
         .register(NETWORK, new ExactEvmScheme());
@@ -52,22 +54,27 @@ export default async function handler(req, res) {
           mimeType: 'application/json'
         }
       });
+      const initStarted = Date.now();
       await httpServer.initialize();
-      routeInitialization = { ok: true, message: 'Route initialized successfully' };
+      routeInitialization = { ok: true, message: 'Route initialized successfully', latencyMs: Date.now() - initStarted };
     } catch (routeError) {
       routeInitialization = {
         ok: false,
-        message: (routeError instanceof Error ? routeError.message : String(routeError)).slice(0, 500)
+        message: (routeError instanceof Error ? routeError.message : String(routeError)).slice(0, 500),
+        latencyMs: null
       };
       console.error('x402 route initialization failed:', routeInitialization.message);
     }
 
+    const latencyWarning = facilitatorLatencyMs > 5000 || Number(routeInitialization.latencyMs || 0) > 5000;
     return res.status(routeInitialization.ok ? 200 : 502).json({
       ok: routeInitialization.ok,
       configured: true,
       payToConfigured: Boolean(payTo),
       payToShapeValid,
       facilitatorReachable: true,
+      facilitatorLatencyMs,
+      latencyWarning,
       baseMainnetSupported: base.length > 0,
       baseKinds: base.map(kind => ({
         x402Version: kind.x402Version,
