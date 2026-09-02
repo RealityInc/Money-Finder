@@ -18,10 +18,12 @@ const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env
 const MAX_URLS=5;
 
 const discoveryExtension=declareDiscoveryExtension({
+  method:'POST',
+  bodyType:'json',
   input:{urls:['https://example.com','https://example.org']},
-  inputSchema:{properties:{urls:{type:'array',minItems:1,maxItems:MAX_URLS,items:{type:'string',format:'uri'},description:'One to five public HTTPS pages.'}},required:['urls']},
+  inputSchema:{type:'object',properties:{urls:{type:'array',minItems:1,maxItems:MAX_URLS,items:{type:'string',format:'uri'},description:'One to five public HTTPS pages.'}},required:['urls']},
   output:{
-    example:{product:'MilliAPI AI Web Readiness Batch',checkedAt:'2026-09-01T00:00:00.000Z',requested:2,succeeded:2,failed:0,results:[{target:'https://example.com/',score:80,verdict:'mostly_ready',repairArtifacts:{count:2}}]},
+    example:{product:'MilliAPI AI Web Readiness Batch',checkedAt:'2026-09-01T00:00:00.000Z',requested:2,succeeded:2,failed:0,summary:{ready:0,mostly_ready:2,needs_work:0,blocked:0,attentionFirst:[{target:'https://example.com/',verdict:'mostly_ready',score:80}]},results:[{target:'https://example.com/',score:80,verdict:'mostly_ready',repairArtifacts:{count:2}}]},
     schema:{type:'object',properties:{product:{type:'string'},checkedAt:{type:'string'},requested:{type:'integer'},succeeded:{type:'integer'},failed:{type:'integer'},summary:{type:'object'},results:{type:'array'}},required:['product','checkedAt','requested','succeeded','failed','summary','results']}
   }
 });
@@ -47,7 +49,7 @@ async function batchHandler(req,res){
 }
 
 const app=express(); app.disable('x-powered-by'); app.set('trust proxy',true); app.use(express.json({limit:'20kb'}));
-app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, Idempotency-Key');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Idempotent-Replay, X-Idempotency-Scope');res.setHeader('Cache-Control','private, no-store');next();});
+app.use((req,res,next)=>{res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE, Idempotency-Key');res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Idempotent-Replay, X-Idempotency-Scope');res.setHeader('Cache-Control','private, no-store');next();});
 app.options(ROUTE,(_req,res)=>res.status(204).end());
 app.use(ROUTE,idempotencyMiddleware());
 
