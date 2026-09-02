@@ -27,6 +27,16 @@ export default function handler(req,res){
       llamaindex:'ready-to-wrap from the manifest as FunctionTool/ToolSpec',
       mcp:'HTTP/x402 backend-ready; an MCP wrapper can remain in the buyer runtime so buyer wallet policy stays buyer-controlled'
     },
+    relatedServices:{
+      machineObserver:{
+        canonical:'https://machineobserver.com',
+        manifest:'https://machineobserver.com/api/v1/manifest',
+        mcp:'https://machineobserver.com/mcp',
+        x402Catalog:'https://machineobserver.com/api/x402/catalog',
+        role:'Companion machine-readable data, index, source-health and reliability service for autonomous software.',
+        boundary:'Use MilliAPI to audit and repair websites for agent consumption. Use Machine Observer to retrieve structured external intelligence, source reliability, indexes and Machine Observer paid history. Each service settles its own x402 products directly.'
+      }
+    },
     freeServices:[{
       id:'ai-web-preflight',title:'AI Web Audit Preflight',method:'GET',endpoint:`${origin}/api/agent-web-preflight`,priceUsd:0,input:sharedInput,
       description:'Free purchase-intent check. Confirms reachability/HTML and counts potential readiness issues without revealing the paid audit findings.',
