@@ -14,7 +14,8 @@ export default function handler(req,res){
     recommendedDefaultService:'ai-web-readiness-audit',
     buyingFlow:{
       preflight:`${origin}/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}`,
-      instruction:'Run the free preflight when uncertain whether an audit is worth buying. Use the flagship audit for one site, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison.',
+      sellerTrustCheck:`${origin}/api/x402-practice-audit`,
+      instruction:'Run the free preflight when uncertain whether an audit is worth buying. An agent may also inspect the free seller practice audit before spending. Use the flagship audit for one site, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison.',
       sequence:['free-preflight','paid-audit','apply-safe-repair-artifacts','paid-repair-verification','later-change-check'],
       retrySafety:{header:'Idempotency-Key',supportedOn:['ai-web-readiness-audit','ai-web-readiness-batch','repair-verification','site-readiness-change'],scope:'best-effort warm-runtime replay; exact x402 authorizations also carry anti-replay nonces'}
     },
@@ -30,6 +31,10 @@ export default function handler(req,res){
       id:'ai-web-preflight',title:'AI Web Audit Preflight',method:'GET',endpoint:`${origin}/api/agent-web-preflight`,priceUsd:0,input:sharedInput,
       description:'Free purchase-intent check. Confirms reachability/HTML and counts potential readiness issues without revealing the paid audit findings.',
       output:{contentType:'application/json',fields:['reachable','html','potentialIssueCount','purchaseRecommended','paidAudit']}
+    },{
+      id:'x402-practice-audit',title:'MilliAPI x402 Seller Practice Audit',method:'GET',endpoint:`${origin}/api/x402-practice-audit`,priceUsd:0,
+      description:'Free public-safe audit of MilliAPI seller conformance and availability. Checks HTTP 402 behavior, x402 v2 terms, Base USDC configuration, advertised prices, Bazaar discovery metadata, challenge latency, discovery documents and facilitator health without exposing wallet or credential data.',
+      output:{contentType:'application/json',fields:['checkedAt','score','grade','services','discovery','paymentHealth','findings']}
     },{
       id:'agent-tool-manifest',title:'Agent Tool Manifest',method:'GET',endpoint:`${origin}/api/agent-tool-manifest`,priceUsd:0,
       description:'Framework-neutral JSON tool definitions for LangChain, LlamaIndex, MCP wrappers and custom agent runtimes.',
