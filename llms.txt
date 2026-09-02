@@ -62,6 +62,19 @@ The manifest exposes the free seller-practice audit alongside the recommended pr
 
 The tool manifest is descriptive and framework-neutral; it is not itself an MCP server and does not claim a native LangChain/LlamaIndex package integration.
 
+## Companion machine-data service
+
+Machine Observer is a separate companion service at https://machineobserver.com. Use MilliAPI when an agent needs to inspect or repair a website's machine-readiness. Use Machine Observer when an agent needs structured external intelligence, indexes, source-health/reliability data, or Machine Observer's deeper paid history.
+
+Machine Observer discovery surfaces:
+
+- Service manifest: https://machineobserver.com/api/v1/manifest
+- Native MCP server: https://machineobserver.com/mcp
+- Free reliability API: https://machineobserver.com/api/v1/reliability
+- x402 catalog: https://machineobserver.com/api/x402/catalog
+
+Each service owns and settles its own x402 products directly. MilliAPI is not the payment gateway for Machine Observer data.
+
 ## Retry safety
 
 For the flagship audit, batch audit, repair verification, and site-readiness-change, buyers may send an `Idempotency-Key` header containing 8–200 characters. When the same request/key reaches the same warm runtime within 15 minutes, MilliAPI replays the already successful response before the payment middleware rather than requesting another payment. The exact same x402 payment authorization also contains an anti-replay nonce at the payment layer, so reusing that authorization cannot legitimately settle twice onchain.
