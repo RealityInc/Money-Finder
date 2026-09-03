@@ -4,6 +4,22 @@
     {
       "source": "/.well-known/x402",
       "destination": "/api/x402-discovery"
+    },
+    {
+      "source": "/.well-known/church-402",
+      "destination": "/api/church-402"
+    },
+    {
+      "source": "/.well-known/church-402.json",
+      "destination": "/api/church-402"
+    },
+    {
+      "source": "/canon",
+      "destination": "/api/church-402"
+    },
+    {
+      "source": "/pilgrimage",
+      "destination": "/api/pilgrimage"
     }
   ],
   "crons": [
