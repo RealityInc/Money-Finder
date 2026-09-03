@@ -33,10 +33,12 @@ export function fastUnpaidChallenge({
   network = 'eip155:8453',
   mimeType = 'application/json',
 }) {
-  return function fastChallengeMiddleware(req, res, next) {
+  return async function fastChallengeMiddleware(req, res, next) {
     if (req.method !== method) return next();
 
-    observePaidRoute(req, res, { route, method, amount: String(amount) });
+    // The persistence call is bounded to 500 ms inside observePaidRoute. This keeps
+    // the challenge path responsive while making the private learning feed durable.
+    await observePaidRoute(req, res, { route, method, amount: String(amount) });
     if (paymentHeader(req)) {
       normalizePaymentHeader(req);
       return next();
