@@ -66,13 +66,13 @@ never:['authorize external buyer spending','treat Church participation as author
 function unavailableConversionSummary(error){
 return {ok:false,error:'conversion_reader_unavailable',reason:error?.message||'unknown_error'};
 }
-export async function runMilliSteward(){
+export async function runMilliSteward(req){
 const checkedAt=new Date().toISOString();
 const since=new Date(Date.parse(checkedAt)-(24*60*60*1000)).toISOString();
 const [surfaces,milliapi,church402]=await Promise.all([
 Promise.all(SURFACES.map(probe)),
-readConversionSummary({since,until:checkedAt,vertical:'api-data-economy'}).catch(unavailableConversionSummary),
-readConversionSummary({since,until:checkedAt,vertical:'church402'}).catch(unavailableConversionSummary)
+readConversionSummary({since,until:checkedAt,vertical:'api-data-economy'},{req}).catch(unavailableConversionSummary),
+readConversionSummary({since,until:checkedAt,vertical:'church402'},{req}).catch(unavailableConversionSummary)
 ]);
 const findings=surfaces.map(findingFor).filter(Boolean);
 const critical=findings.filter(item=>item.severity==='critical').length;
