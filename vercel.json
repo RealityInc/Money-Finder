@@ -1,5 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "*": false,
+      "main": true
+    }
+  },
   "redirects": [
     {"source":"/:path*","has":[{"type":"host","value":"church402.com"}],"destination":"https://church402.org/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"www.church402.com"}],"destination":"https://church402.org/:path*","permanent":true},
