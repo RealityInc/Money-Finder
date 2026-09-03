@@ -3,7 +3,7 @@ import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemet
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
 const PAYMENT_HEADERS = ['PAYMENT-SIGNATURE', 'X-PAYMENT', 'X-PAYMENT-SIGNATURE'];
-const FUNNEL_VERSION = 2;
+const FUNNEL_VERSION = 3;
 
 function paymentHeader(req) {
   return req.get('PAYMENT-SIGNATURE') || req.get('X-PAYMENT') || req.get('X-PAYMENT-SIGNATURE') || null;
@@ -41,22 +41,34 @@ function discoveryDetails(enriched) {
   return { input:info.input || null, output:info.output || null };
 }
 
+function compactDiscovery(discovery, liveProof) {
+  if (!liveProof) return discovery;
+  return {
+    input:discovery?.input || null,
+    output:discovery?.output ? { type:discovery.output.type || 'json' } : null,
+  };
+}
+
 function buildOffer({req,route,amount,description,method,network,enriched,nextActions,prePurchaseActions}) {
   const priceUsd=Number(amount)/1_000_000;
   const freePreviewUrl=canonicalRequestUrl(req,route,{preview:true});
   const paidUrl=canonicalRequestUrl(req,route);
   const discovery=discoveryDetails(enriched);
+  const valueProof=req.x402ValueProof || null;
+  const purchaseRecommended=typeof req.x402PurchaseRecommended === 'boolean' ? req.x402PurchaseRecommended : null;
   const preview={
     available:true,
     url:freePreviewUrl,
-    kind:'bounded-example',
-    example:discovery?.output?.example || null,
-    paidDelta:'Paid fulfillment performs the current task and returns the full route-specific result; the inline preview is bounded and non-transactional.',
+    kind:valueProof ? 'bounded-live-proof' : 'bounded-example',
+    ...(valueProof ? { valueProof } : { example:discovery?.output?.example || null }),
+    paidDelta:'Paid fulfillment performs the current task and returns the full route-specific result; the inline proof is bounded and non-transactional.',
   };
   const buyerFlow={
     funnelVersion:FUNNEL_VERSION,
-    recommendedSequence:['inspect_inline_preview','use_free_evidence_if_needed','retry_same_request_with_x402_payment'],
-    spendControl:'Buyer or principal retains wallet authorization. No preview, free evidence, or challenge authorizes payment.',
+    recommendedSequence:valueProof
+      ? ['inspect_live_value_proof','retry_same_request_with_x402_payment']
+      : ['inspect_inline_preview','retry_same_request_with_x402_payment'],
+    spendControl:'Buyer or principal retains wallet authorization. No preview, value proof, challenge, or next action authorizes payment.',
   };
   return {
     version:1,
@@ -70,19 +82,32 @@ function buildOffer({req,route,amount,description,method,network,enriched,nextAc
     network:'Base',
     networkId:network,
     value:description,
-    discovery,
+    discovery:compactDiscovery(discovery,valueProof),
     preview,
+    valueProof,
+    purchaseRecommended,
     buyerFlow,
     prePurchaseActions:Array.isArray(prePurchaseActions) ? prePurchaseActions : [],
     purchase:{
       retrySameRequest:true,
-      instruction:'Review the inline/free evidence as needed, then retry the same request without preview=1 and attach a valid x402 payment header.',
+      retryUrl:paidUrl,
+      instruction:'If purchaseRecommended is true and expected utility exceeds price, retry purchase.retryUrl with a valid x402 payment header.',
       acceptedPaymentHeaders:PAYMENT_HEADERS,
       accountRequired:false,
       apiKeyRequired:false,
     },
     nextActions:Array.isArray(nextActions) ? nextActions : [],
   };
+}
+
+function setOfferHeaders(res, offer) {
+  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, Link';
+  res.setHeader('Access-Control-Expose-Headers',exposed);
+  res.setHeader('X-Free-Preview',offer.freePreviewUrl);
+  res.setHeader('X-Paid-URL',offer.paidUrl);
+  res.setHeader('X-Price-USD',String(offer.priceUsd));
+  if (typeof offer.purchaseRecommended === 'boolean') res.setHeader('X-Purchase-Recommended',String(offer.purchaseRecommended));
+  res.setHeader('Link',`<${offer.freePreviewUrl}>; rel="alternate"; type="application/json"; title="free-preview"`);
 }
 
 export function fastUnpaidChallenge({
@@ -108,11 +133,9 @@ export function fastUnpaidChallenge({
     const offer=buildOffer({req,route,amount,description,method,network,enriched,nextActions,prePurchaseActions});
 
     if (!paymentHeader(req) && previewRequested(req)) {
-      await observePreviewRoute(req,{route,amount:String(amount)});
+      await observePreviewRoute(req,{route,amount:String(amount),metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof)}});
       res.setHeader('Cache-Control','public, s-maxage=300');
-      res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, Link');
-      res.setHeader('X-Free-Preview',offer.freePreviewUrl);
-      res.setHeader('Link',`<${offer.freePreviewUrl}>; rel="alternate"; type="application/json"; title="free-preview"`);
+      setOfferHeaders(res,offer);
       return res.status(200).json({
         schemaVersion:1,
         funnelVersion:FUNNEL_VERSION,
@@ -125,6 +148,8 @@ export function fastUnpaidChallenge({
         currency:'USDC',
         network:'Base',
         paidUrl:offer.paidUrl,
+        purchaseRecommended:offer.purchaseRecommended,
+        valueProof:offer.valueProof,
         discovery:offer.discovery,
         preview:offer.preview,
         buyerFlow:offer.buyerFlow,
@@ -134,7 +159,7 @@ export function fastUnpaidChallenge({
       });
     }
 
-    await observePaidRoute(req, res, { route, method, amount: String(amount) });
+    await observePaidRoute(req, res, { route, method, amount: String(amount), metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof)} });
     if (paymentHeader(req)) {
       normalizePaymentHeader(req);
       return next();
@@ -143,6 +168,9 @@ export function fastUnpaidChallenge({
     const paymentRequired = {
       x402Version: 2,
       error: 'Payment required',
+      purchaseRecommended:offer.purchaseRecommended,
+      valueProof:offer.valueProof,
+      purchase:offer.purchase,
       resource: {
         url: offer.paidUrl,
         description,
@@ -172,9 +200,7 @@ export function fastUnpaidChallenge({
 
     const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
     res.setHeader('PAYMENT-REQUIRED', encoded);
-    res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, Link');
-    res.setHeader('X-Free-Preview',offer.freePreviewUrl);
-    res.setHeader('Link',`<${offer.freePreviewUrl}>; rel="alternate"; type="application/json"; title="free-preview"`);
+    setOfferHeaders(res,offer);
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(402).json(paymentRequired);
   };
