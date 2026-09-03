@@ -44,7 +44,7 @@ function discoveryDetails(enriched) {
   };
 }
 
-function buildOffer({req,route,amount,description,method,network,enriched}) {
+function buildOffer({req,route,amount,description,method,network,enriched,nextActions}) {
   const priceUsd=Number(amount)/1_000_000;
   const freePreviewUrl=canonicalRequestUrl(req,route,{preview:true});
   const paidUrl=canonicalRequestUrl(req,route);
@@ -83,6 +83,7 @@ function buildOffer({req,route,amount,description,method,network,enriched}) {
       accountRequired:false,
       apiKeyRequired:false,
     },
+    nextActions:Array.isArray(nextActions) ? nextActions : [],
   };
 }
 
@@ -96,6 +97,7 @@ export function fastUnpaidChallenge({
   tags = [],
   iconUrl = 'https://milliapi.com/icon.svg',
   extensions = {},
+  nextActions = [],
   asset = BASE_USDC,
   network = 'eip155:8453',
   mimeType = 'application/json',
@@ -104,7 +106,7 @@ export function fastUnpaidChallenge({
     if (req.method !== method) return next();
 
     const enriched=enrichHttpDiscovery(extensions,method);
-    const offer=buildOffer({req,route,amount,description,method,network,enriched});
+    const offer=buildOffer({req,route,amount,description,method,network,enriched,nextActions});
 
     if (!paymentHeader(req) && previewRequested(req)) {
       // Persist before returning because traditional response-finish callbacks can be
@@ -130,6 +132,7 @@ export function fastUnpaidChallenge({
         preview:offer.preview,
         buyerFlow:offer.buyerFlow,
         purchase:offer.purchase,
+        nextActions:offer.nextActions,
       });
     }
 
@@ -155,6 +158,7 @@ export function fastUnpaidChallenge({
       },
       preview:offer.preview,
       buyerFlow:offer.buyerFlow,
+      nextActions:offer.nextActions,
       accepts: [
         {
           scheme: 'exact',
