@@ -6,16 +6,13 @@ function hostname(req){
 function siteFor(host){
   if(host==='church402.org'||host==='www.church402.org') return {
     origin:'https://church402.org',
-    paths:['/','/zh-CN','/bible','/prophet','/steward']
+    paths:['/','/zh-CN','/bible','/prophet']
   };
-  if(host==='402church.org'||host==='www.402church.org') return {
-    origin:'https://402church.org',
-    paths:['/']
-  };
-  return {
+  if(host==='milliapi.com'||host==='www.milliapi.com') return {
     origin:'https://milliapi.com',
     paths:['/','/zh-CN','/learning.html']
   };
+  return {origin:null,paths:[]};
 }
 
 function escapeXml(value){return String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;');}
