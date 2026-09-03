@@ -72,6 +72,11 @@ export async function observePaidRoute(req,res,{route,method='GET',amount=null}=
   });
 }
 
+export async function observePreviewRoute(req,{route,amount=null}={}) {
+  const event=emit(req,{route,stage:'preview',status:200,paymentAttempt:false,amount});
+  await persistIntelligenceEvent(req,event,{timeoutMs:700});
+}
+
 export function observeFreeRoute(req,res,{route,stage='free_explore'}={}) {
   res.once('finish',()=>{
     const event=emit(req,{route,stage,status:Number(res.statusCode||0),paymentAttempt:false});
