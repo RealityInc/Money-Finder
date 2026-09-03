@@ -68,7 +68,7 @@ async function qualifyAuditRequest(req,res,next){
       return res.status(200).json({schemaVersion:1,qualified:false,purchaseRecommended:false,noCharge:true,reason:!result.reachable?'target_unreachable':'target_not_html',valueProof});
     }
     if(!result.purchaseRecommended){
-      return res.status(200).json({schemaVersion:1,qualified:true,purchaseRecommended:false,noCharge:true,reason:'preflight_found_no_actionable_readiness_issues',valueProof,optionalFullAudit:`${PUBLIC_ORIGIN}${ROUTE}?url=${encodeURIComponent(result.target)}&force=1`});
+      return res.status(200).json({schemaVersion:1,qualified:true,purchaseRecommended:false,noCharge:true,reason:'preflight_found_no_actionable_readiness_issues',valueProof});
     }
     req.x402ValueProof=valueProof;
     req.x402PurchaseRecommended=true;
