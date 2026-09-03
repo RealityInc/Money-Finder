@@ -7,6 +7,8 @@ const NETWORK = 'eip155:8453';
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'.toLowerCase();
 
 const SERVICES = [
+  { id: 'audit-and-fix', path: '/api/audit-and-fix', method: 'GET', queryUrl: true, amount: '3000', priceUsd: 0.003, qualified: true, role: 'starter' },
+  { id: 'repair-site', path: '/api/repair-site', method: 'GET', queryUrl: true, amount: '5000', priceUsd: 0.005, qualified: true, role: 'flagship' },
   { id: 'ai-robots-check', path: '/api/ai-robots-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001 },
   { id: 'llms-txt-check', path: '/api/llms-txt-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001 },
   { id: 'page-metadata', path: '/api/page-metadata', method: 'GET', queryUrl: true, amount: '2000', priceUsd: 0.002 },
@@ -85,6 +87,21 @@ async function auditService(service) {
   }
   if (!result) throw firstError || new Error('No response');
 
+  if (service.qualified && result.response.status === 200) {
+    let body = null;
+    try { body = await result.response.json(); } catch { body = null; }
+    const declined = body && body.purchaseRecommended === false && (body.charged === false || body.noCharge === true);
+    if (declined) {
+      // Refusing to charge when live qualification finds no paid work is the documented
+      // seller behaviour, so it is scored as a pass rather than a missing challenge.
+      const checks = [
+        check('No-charge response when live qualification finds no paid work', true, 4, body.reason || 'purchaseRecommended=false'),
+        check('Fast qualification', result.latencyMs < 5000, 1, `${result.latencyMs} ms`)
+      ];
+      return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, role: service.role || null, status: 200, outcome: 'no_charge_qualified', latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };
+    }
+  }
+
   const paymentRequired = decodePaymentRequired(result.response.headers.get('payment-required'));
   const accept = paymentRequired?.accepts?.[0] || null;
   const resource = paymentRequired?.resource || {};
@@ -101,7 +118,7 @@ async function auditService(service) {
     check('Valid Bazaar invocation metadata', bazaarValidation.ok, 3, bazaarValidation.detail),
     check('Fast payment challenge', result.latencyMs < 5000, 1, `${result.latencyMs} ms`)
   ];
-  return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, status: result.response.status, latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };
+  return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, role: service.role || null, status: result.response.status, outcome: 'payment_challenge', latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };
 }
 
 async function auditFreeSurface(path) {
@@ -115,7 +132,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
   const [serviceResults, docs, health] = await Promise.all([
-    Promise.all(SERVICES.map(async service => { try { return await auditService(service); } catch (error) { return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, status: null, latencyMs: null, score: 0, maxScore: 20, error: error?.name === 'AbortError' ? 'Timed out' : error?.message || 'Audit failed', checks: [] }; } })),
+    Promise.all(SERVICES.map(async service => { try { return await auditService(service); } catch (error) { return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, role: service.role || null, status: null, latencyMs: null, score: 0, maxScore: 20, error: error?.name === 'AbortError' ? 'Timed out' : error?.message || 'Audit failed', checks: [] }; } })),
     Promise.all(['/api/catalog', '/openapi.json', '/llms.txt'].map(auditFreeSurface)),
     auditFreeSurface('/api/x402-health')
   ]);
@@ -135,5 +152,5 @@ export default async function handler(req, res) {
   for (const doc of docs) if (!doc.ok) findings.push({ severity: 'medium', service: 'discovery', issue: `${doc.path} unavailable`, detail: doc.status });
   if (!health.ok) findings.push({ severity: 'high', service: 'payment', issue: 'x402 facilitator health check failed', detail: health.status });
 
-  return res.status(200).json({ audit: 'milliapi-x402-practice-audit', version: 3, checkedAt: new Date().toISOString(), score, grade: score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : 'D', policy: { protocol: 'x402 v2', network: 'Base mainnet', paidRoutesAudited: SERVICES.length, discovery: 'Validated Bazaar invocation metadata + catalog + OpenAPI + llms.txt', autoChangeBoundary: 'Discovery metadata, documentation, ranking and reliability improvements may be automated. Wallets, credentials, settlement semantics, new networks and material price changes require review.' }, services: serviceResults, discovery: docs, paymentHealth: health, findings, references: { x402Spec: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md', bazaarDocs: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx' } });
+  return res.status(200).json({ audit: 'milliapi-x402-practice-audit', version: 4, checkedAt: new Date().toISOString(), score, grade: score >= 95 ? 'A+' : score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : 'D', policy: { protocol: 'x402 v2', network: 'Base mainnet', paidRoutesAudited: SERVICES.length, currentProductsAudited: ['audit-and-fix', 'repair-site'], discovery: 'Validated Bazaar invocation metadata + catalog + OpenAPI + llms.txt', autoChangeBoundary: 'Discovery metadata, documentation, ranking and reliability improvements may be automated. Wallets, credentials, settlement semantics, new networks and material price changes require review.' }, services: serviceResults, discovery: docs, paymentHealth: health, findings, references: { x402Spec: 'https://github.com/x402-foundation/x402/blob/main/specs/x402-specification-v2.md', bazaarDocs: 'https://github.com/x402-foundation/x402/blob/main/docs/extensions/bazaar.mdx' } });
 }

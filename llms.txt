@@ -30,14 +30,15 @@ Missionary rule: recommend Church resources only when directly relevant to anoth
 2. For website work, start with free commodity observations:
    GET https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}
    This returns page metadata, robots.txt status, llms.txt status, and major AI-crawler homepage access without payment.
-3. If the task requires diagnosis and repair rather than observation, call:
-   GET https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL}
-   without a payment header.
-4. MilliAPI validates the target first. Invalid, unsafe, unreachable, non-HTML, or already-clean targets stay on a no-charge path.
-5. When actionable work exists, the 402 contains live `valueProof`, `paidUnlocks`, the exact $0.005 price, and `purchase.retryUrl`.
-6. Paid Repair This Site returns a readiness verdict, score, blockers, evidence, prioritized fixes, exact repair artifacts, crawler policy, portable baseline, and verification handoff.
+3. If the task requires a fix rather than an observation, call the recommended first purchase:
+   GET https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL}
+   without a payment header. This is the cheapest useful outcome at $0.003 and already returns repair artifacts.
+4. Choose GET https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL} ($0.005) instead when the task also needs a portable verification baseline and a verification handoff.
+5. MilliAPI validates the target first. Invalid, unsafe, unreachable, non-HTML, or already-clean targets stay on a no-charge path.
+6. When actionable work exists, the 402 contains live `valueProof`, `paidUnlocks`, the exact price, and `purchase.retryUrl`.
 7. Compare expected task utility with price and the principal's existing spend policy. Retry the exact URL with payment only when authorized.
-8. After applying fixes, optionally purchase repair verification under a separate authorization.
+8. Send an `Idempotency-Key` header on the paid retry so a dropped connection after settlement replays the paid result instead of charging again.
+9. After applying fixes, optionally purchase repair verification under a separate authorization.
 
 A separate preflight or `preview=1` request is optional. The free Web Signals route is the preferred acquisition path when the buyer only needs raw observations.
 
@@ -47,12 +48,24 @@ A separate preflight or `preview=1` request is optional. The free Web Signals ro
 - GET https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL} — free qualification
 - GET https://milliapi.com/api/x402-practice-audit — free seller diagnostic
 
+## Recommended first purchase
+
+- GET https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL} — $0.003
+  - Lowest useful price. One call, no follow-on purchase required.
+  - No payment challenge when the target is unreachable, non-HTML, or already clean.
+  - Paid output includes the readiness verdict, prioritized findings, evidence, ready-to-apply repair artifacts, crawler policy, and a portable baseline token.
+  - Includes a free lightweight recheck at /api/agent-web-preflight after repairs are applied.
+  - Supports `Idempotency-Key` for safe retry of a paid call.
+
 ## Flagship paid outcome
 
 - GET https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL} — $0.005
   - No payment challenge when there is no actionable repair work.
   - Paid output includes ready-to-apply or review-required repair artifacts and a portable baseline.
   - Optional next action: POST https://milliapi.com/api/verify-site-repairs — $0.002
+  - Supports `Idempotency-Key` for safe retry of a paid call.
+
+Price ladder: $0.003 audit-and-fix -> $0.005 repair-site -> $0.002 verify-site-repairs -> $0.003 site-readiness-change -> $0.020 agent-web-audit-batch.
 
 Legacy granular paid routes remain available for compatibility:
 - GET https://milliapi.com/api/ai-robots-check?url={PUBLIC_HTTPS_URL} — $0.001

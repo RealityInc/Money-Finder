@@ -14,5 +14,8 @@
     "@x402/extensions": "2.24.0",
     "@x402/svm": "2.24.0",
     "express": "5.2.1"
+  },
+  "scripts": {
+    "check:discovery": "node scripts/check-discovery-coverage.mjs"
   }
 }

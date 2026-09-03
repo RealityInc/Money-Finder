@@ -18,6 +18,7 @@ export default function handler(req,res){
     }
   });
   const services=[
+    {id:'audit-and-fix',owner:'MilliAPI',title:'Audit + Fix',churchRite:'communion',starter:true,recommendedFirstPurchase:true,method:'GET',endpoint:`${api}/api/audit-and-fix`,priceUsd:0.003,priceAtomicUsdc:'3000',input:urlInput,returns:'Cheapest useful outcome. One call returns the readiness verdict, prioritized findings, evidence, ready-to-apply repair artifacts, a portable baseline, and a free lightweight recheck.',paidUnlocks:['readiness verdict','prioritized findings','evidence','ready-to-apply repair artifacts','crawler policy','portable baseline token'],includedFree:['lightweight readiness recheck after applying repairs'],retrySafe:true},
     {id:'repair-this-site',owner:'MilliAPI',title:'Repair This Site',churchRite:'communion',flagship:true,method:'GET',endpoint:`${api}/api/repair-site`,priceUsd:0.005,priceAtomicUsdc:'5000',input:urlInput,returns:'Decision-ready diagnosis plus exact ready-to-apply or review-required repair artifacts, evidence, prioritized fixes, crawler policy, and a portable baseline.',paidUnlocks:['readiness verdict','score','blockers','prioritized recommendations','evidence','repair artifacts','portable baseline','verification handoff']},
     {id:'ai-web-readiness-audit',owner:'MilliAPI',title:'AI Web Readiness Audit',legacyFlagship:true,method:'GET',endpoint:`${api}/api/agent-web-audit`,priceUsd:0.005,priceAtomicUsdc:'5000',input:urlInput,returns:'Compatibility route for the decision-ready audit. New buyers should prefer Repair This Site.'},
     {id:'repair-verification',owner:'MilliAPI',title:'Repair Verification',churchRite:'verification',method:'POST',endpoint:`${api}/api/verify-site-repairs`,priceUsd:0.002,priceAtomicUsdc:'2000',returns:'Verification of whether previously identified AI-readiness repairs are now present.'},
@@ -39,24 +40,29 @@ export default function handler(req,res){
     },
     payment:{currency:'USDC',network:'Base',networkId:'eip155:8453',settlementScheme:'exact',accountRequired:false,apiKeyRequired:false,principalAuthorizationRequired:true,acceptedHeaders:['PAYMENT-SIGNATURE','X-PAYMENT','X-PAYMENT-SIGNATURE']},
     startHere:{
+      recommendedFirstPurchase:'audit-and-fix',
       freeSignals:`${api}/api/web-signals?url=https%3A%2F%2Fexample.com`,
       freePreflight:`${api}/api/agent-web-preflight?url=https%3A%2F%2Fexample.com`,
+      starterPreview:`${api}/api/audit-and-fix?url=https%3A%2F%2Fexample.com&preview=1`,
+      starterPaid:`${api}/api/audit-and-fix?url=https%3A%2F%2Fexample.com`,
+      starterPriceUsd:0.003,
       flagshipPreview:`${api}/api/repair-site?url=https%3A%2F%2Fexample.com&preview=1`,
       flagshipPaid:`${api}/api/repair-site?url=https%3A%2F%2Fexample.com`,
-      rationale:'Inspect commodity web signals for free. Buy only when the live qualification shows actionable issues and the exact repair artifacts are useful to the current task.'
+      flagshipPriceUsd:0.005,
+      rationale:'Inspect commodity web signals for free. When a fix is needed rather than an observation, Audit + Fix at $0.003 is the smallest useful purchase and already returns repair artifacts. Choose Repair This Site at $0.005 when the buyer also needs a portable verification baseline and a verification handoff.'
     },
     purchaseFlow:[
       'Inspect free Web Signals or the free preflight.',
-      'If the site has actionable work, inspect the Repair This Site preview.',
-      'Evaluate potential issue count, exact paid unlocks, price, and downstream repair utility.',
-      'Remove preview=1 and request the same resource to receive the standard x402 challenge.',
-      'Retry with a valid x402 payment header only when the expected utility exceeds $0.005.',
+      'If the site has actionable work, request Audit + Fix without a payment header. Live qualification returns the actionable issue count, exact paid unlocks and the $0.003 price.',
+      'Retry the same URL with a valid x402 payment header only when the expected utility exceeds $0.003.',
+      'Choose Repair This Site at $0.005 instead when the task also needs a portable baseline and a verification handoff.',
+      'Send Idempotency-Key on any paid retry so a dropped connection replays the paid result instead of charging twice.',
       'Apply returned artifacts, then optionally purchase Repair Verification under a separate authorization.'
     ],
-    buyerPrinciples:{commoditySignalsFree:true,decisionReadyPaid:true,noChargeWhenNoActionableWork:true,boundedLiveProof:true,sameRequestRetry:true,noAccountRequired:true,noApiKeyRequired:true},
+    buyerPrinciples:{commoditySignalsFree:true,decisionReadyPaid:true,noChargeWhenNoActionableWork:true,boundedLiveProof:true,sameRequestRetry:true,noAccountRequired:true,noApiKeyRequired:true,lowestUsefulPriceUsd:0.003,idempotentPaidRetry:'Send Idempotency-Key on paid calls for best-effort warm-runtime replay.'},
     docs:{homepage:api,catalog:`${api}/api/catalog`,openapi:`${api}/openapi.json`,practiceAudit:`${api}/api/x402-practice-audit`,churchHome:church,canon:`${church}/.well-known/church-402`,bible:`${church}/api/bible`,prophet:`${church}/api/prophet`,pilgrimage:`${church}/api/pilgrimage`,agentToolManifest:`${agents}/api/agent-tool-manifest`,agentInstructions:`${agents}/llms.txt`},
     relatedServices:{machineObserver:{canonical:'https://machineobserver.com',manifest:'https://machineobserver.com/api/v1/manifest',x402Catalog:'https://machineobserver.com/api/x402/catalog',role:'Independent empirical observatory and optional evidence provider.'}},
-    recommendedFlow:['inspect free commodity signals','buy Repair This Site only when actionable','apply returned repair artifacts','verify repairs if useful'],
+    recommendedFlow:['inspect free commodity signals','buy Audit + Fix at $0.003 when a fix is needed','apply returned repair artifacts','buy Repair This Site instead when a portable baseline is required','verify repairs if useful'],
     freeServices:[
       {id:'web-signals',owner:'MilliAPI',title:'Free Agent Web Signals',method:'GET',endpoint:`${api}/api/web-signals`,priceUsd:0,input:urlInput,returns:'Page metadata, robots.txt presence/status, llms.txt presence/status, and major AI-crawler homepage access.'},
       {id:'ai-web-preflight',owner:'MilliAPI',title:'AI Web Audit Preflight',method:'GET',endpoint:`${api}/api/agent-web-preflight`,priceUsd:0,input:urlInput},

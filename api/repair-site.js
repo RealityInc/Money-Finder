@@ -1,6 +1,7 @@
 import express from 'express';
 import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
+import { idempotencyMiddleware } from './lib/idempotency.js';
 import { lazyX402PaymentMiddleware } from './lib/lazy-x402-middleware.js';
 import { auditPublicUrl, preflightPublicUrl } from './lib/web-readiness-core.js';
 import { buildRepairArtifacts } from './lib/repair-artifacts.js';
@@ -108,13 +109,14 @@ app.set('trust proxy',true);
 app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE');
+  res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE, Idempotency-Key');
   res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, Link');
   res.setHeader('Cache-Control','private, no-store');
   next();
 });
 app.options(ROUTE,(_req,res)=>res.status(204).end());
 app.use(ROUTE,qualify);
+app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
   app.use(ROUTE,fastUnpaidChallenge({
