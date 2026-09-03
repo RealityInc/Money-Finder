@@ -15,6 +15,8 @@
   "rewrites": [
     {"source":"/","destination":"/api/home"},
     {"source":"/zh-CN","destination":"/api/home-zh"},
+    {"source":"/robots.txt","destination":"/api/robots"},
+    {"source":"/sitemap.xml","destination":"/api/sitemap"},
     {"source":"/mcp","destination":"/api/mcp"},
     {"source":"/.well-known/x402","destination":"/api/x402-discovery"},
     {"source":"/.well-known/agent.json","destination":"/api/agent-discovery"},
