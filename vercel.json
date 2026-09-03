@@ -9,7 +9,19 @@
     },
     {
       "source": "/:path*",
+      "has": [{"type": "host", "value": "www.church402.com"}],
+      "destination": "https://church402.org/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
       "has": [{"type": "host", "value": "402church.com"}],
+      "destination": "https://402church.org/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{"type": "host", "value": "www.402church.com"}],
       "destination": "https://402church.org/:path*",
       "permanent": true
     }
@@ -22,7 +34,17 @@
     },
     {
       "source": "/",
+      "has": [{"type": "host", "value": "www.church402.org"}],
+      "destination": "/church.html"
+    },
+    {
+      "source": "/",
       "has": [{"type": "host", "value": "402church.org"}],
+      "destination": "/agent-entry.html"
+    },
+    {
+      "source": "/",
+      "has": [{"type": "host", "value": "www.402church.org"}],
       "destination": "/agent-entry.html"
     },
     {"source": "/.well-known/x402", "destination": "/api/x402-discovery"},
