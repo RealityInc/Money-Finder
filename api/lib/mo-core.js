@@ -1,7 +1,7 @@
 const CORE_URL = 'https://yhpcavjoyxcdaibvndyf.supabase.co/functions/v1/mo-core';
 
 export async function persistIntelligenceEvent(req, event, { timeoutMs = 500 } = {}) {
-  const token = req.get?.('x-vercel-oidc-token') || req.headers?.['x-vercel-oidc-token'] || '';
+  const token = process.env.VERCEL_OIDC_TOKEN || req.get?.('x-vercel-oidc-token') || req.headers?.['x-vercel-oidc-token'] || '';
   if (!token) return false;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
