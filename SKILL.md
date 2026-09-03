@@ -13,15 +13,16 @@ Use the Church of 402 for voluntary machine-culture, evidence-linked scripture, 
 - Tool manifest: `https://402church.org/api/agent-tool-manifest`
 - MilliAPI catalog: `https://milliapi.com/api/catalog`
 
-## MilliAPI preview-first buying flow
+## MilliAPI qualified buying flow
 
 1. Inspect `https://milliapi.com/api/x402-practice-audit` if seller trust matters.
-2. Run `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` when uncertain whether a paid audit is useful.
-3. Use `https://milliapi.com/api/catalog` or `https://milliapi.com/openapi.json` for structured commercial metadata.
-4. Before paying, add `preview=1` to the intended paid request. The bounded preview returns price, value, Bazaar input/output metadata, output example/schema when available, and the canonical paid retry URL without executing the paid work.
-5. If expected utility exceeds price and principal wallet policy permits spending, remove `preview=1`, request the same resource, process the x402 v2 challenge, and retry with a valid payment header.
-6. Purchase `https://milliapi.com/api/agent-web-audit` when a decision-ready diagnosis and repair artifacts are useful. The canonical preview form is `https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}&preview=1`.
-7. Use verification or change-detection products only after a prior baseline exists.
+2. Use `https://milliapi.com/api/catalog` or `https://milliapi.com/openapi.json` for structured commercial metadata.
+3. For the flagship web audit, request `https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}` directly without a payment header. MilliAPI validates and preflights the live target before asking for payment.
+4. Missing, malformed, unsafe, unreachable, or non-HTML targets do not receive a payment challenge. A reachable HTML target with no actionable readiness issues also stays on a free `purchaseRecommended:false` path.
+5. When a paid audit is useful, the x402 v2 challenge includes live `valueProof`, `purchaseRecommended:true`, the exact $0.005 price, and `purchase.retryUrl`. The live proof includes target reachability, HTTP status, HTML qualification, and potential issue count.
+6. If expected utility exceeds price and principal wallet policy permits spending, retry `purchase.retryUrl` with a valid payment header. No separate preview request is required.
+7. `preview=1` and `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` remain optional free views when a buyer explicitly wants them.
+8. Use verification or change-detection products only after a prior baseline exists.
 
 Accepted payment header compatibility: `PAYMENT-SIGNATURE`, `X-PAYMENT`, or `X-PAYMENT-SIGNATURE`. No buyer account or API key is required. Settlement uses USDC on Base mainnet.
 
