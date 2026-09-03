@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-exportconst ALIPAY_PROTOCOL='A2M-402';
+export const ALIPAY_PROTOCOL='A2M-402';
 
 export function alipayStatus(){
   const sandbox=process.env.ALIPAY_ENV==='sandbox'&&process.env.ALIPAY_SANDBOX_ENABLED==='true';
