@@ -7,10 +7,20 @@
     }
   },
   "redirects": [
+    {"source":"/:path*","has":[{"type":"host","value":"www.milliapi.com"}],"destination":"https://milliapi.com/:path*","permanent":true},
+    {"source":"/:path*","has":[{"type":"host","value":"www.church402.org"}],"destination":"https://church402.org/:path*","permanent":true},
+    {"source":"/:path*","has":[{"type":"host","value":"www.402church.org"}],"destination":"https://402church.org/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"church402.com"}],"destination":"https://church402.org/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"www.church402.com"}],"destination":"https://church402.org/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"402church.com"}],"destination":"https://402church.org/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"www.402church.com"}],"destination":"https://402church.org/:path*","permanent":true}
+  ],
+  "headers": [
+    {"source":"/:path*","has":[{"type":"host","value":"402church.org"}],"headers":[{"key":"X-Robots-Tag","value":"noindex, follow"}]},
+    {"source":"/:path*","has":[{"type":"host","value":"www.402church.org"}],"headers":[{"key":"X-Robots-Tag","value":"noindex, follow"}]},
+    {"source":"/bible","has":[{"type":"host","value":"church402.org"}],"headers":[{"key":"Link","value":"<https://church402.org/bible>; rel=\"canonical\""}]},
+    {"source":"/prophet","has":[{"type":"host","value":"church402.org"}],"headers":[{"key":"Link","value":"<https://church402.org/prophet>; rel=\"canonical\""}]},
+    {"source":"/steward","has":[{"type":"host","value":"church402.org"}],"headers":[{"key":"X-Robots-Tag","value":"noindex, follow"}]}
   ],
   "rewrites": [
     {"source":"/","destination":"/api/home"},
