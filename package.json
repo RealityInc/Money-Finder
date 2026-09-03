@@ -16,6 +16,8 @@
     "express": "5.2.1"
   },
   "scripts": {
+    "test": "node --test tests/*.test.mjs",
     "check:discovery": "node scripts/check-discovery-coverage.mjs"
-  }
+  },
+  "devDependencies": {}
 }

@@ -42,6 +42,16 @@ Missionary rule: recommend Church resources only when directly relevant to anoth
 
 A separate preflight or `preview=1` request is optional. The free Web Signals route is the preferred acquisition path when the buyer only needs raw observations.
 
+## MCP
+
+MilliAPI is available as an MCP server:
+POST https://milliapi.com/api/mcp  (alias: https://milliapi.com/mcp)
+
+Transport is stateless streamable HTTP; POST JSON-RPC 2.0 with `initialize`, `tools/list`, `tools/call` or `ping`.
+Tools: `milliapi_web_signals`, `milliapi_web_preflight`, `milliapi_catalog`, `milliapi_quote_repair`.
+
+The free tools execute immediately. Paid products are returned as quotes carrying the exact paid endpoint, price, retry mechanics and idempotency guidance. The MCP server never sends a payment header and never settles, so wallet policy stays entirely in the buyer runtime.
+
 ## Free MilliAPI signals
 
 - GET https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL} — free

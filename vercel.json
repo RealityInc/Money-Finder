@@ -8,6 +8,7 @@
   ],
   "rewrites": [
     {"source":"/","destination":"/api/home"},
+    {"source":"/mcp","destination":"/api/mcp"},
     {"source":"/.well-known/x402","destination":"/api/x402-discovery"},
     {"source":"/.well-known/agent.json","destination":"/api/agent-discovery"},
     {"source":"/.well-known/agent-card.json","destination":"/api/agent-discovery"},

@@ -1,14 +1,7 @@
 import { createHash } from 'node:crypto';
+import { readReplay, replayScope, writeReplay } from './replay-store.js';
 
 const DEFAULT_TTL_MS = 15 * 60 * 1000;
-const MAX_ENTRIES = 500;
-const cache = new Map();
-
-function prune() {
-  const now = Date.now();
-  for (const [key, value] of cache) if (value.expiresAt <= now) cache.delete(key);
-  while (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value);
-}
 
 function stable(value) {
   if (Array.isArray(value)) return value.map(stable);
@@ -38,19 +31,19 @@ function normalizedKey(req) {
 }
 
 export function idempotencyMiddleware({ ttlMs = DEFAULT_TTL_MS } = {}) {
-  return function milliapiIdempotency(req, res, next) {
+  return async function milliapiIdempotency(req, res, next) {
     let sourceKey;
     try { sourceKey = normalizedKey(req); }
     catch (error) { return res.status(400).json({ error: error.message }); }
     if (!sourceKey) return next();
 
-    prune();
-    const fingerprint = requestFingerprint(req);
-    const cacheKey = hash(`${sourceKey}\n${fingerprint}`);
-    const existing = cache.get(cacheKey);
-    if (existing && existing.expiresAt > Date.now()) {
+    const cacheKey = hash(`${sourceKey}\n${requestFingerprint(req)}`);
+    const scope = replayScope();
+
+    const existing = await readReplay(cacheKey);
+    if (existing) {
       res.setHeader('X-Idempotent-Replay', 'true');
-      res.setHeader('X-Idempotency-Scope', 'best-effort-warm-runtime');
+      res.setHeader('X-Idempotency-Scope', scope);
       res.setHeader('Cache-Control', 'private, no-store');
       return res.status(existing.status).json(existing.body);
     }
@@ -58,10 +51,10 @@ export function idempotencyMiddleware({ ttlMs = DEFAULT_TTL_MS } = {}) {
     const originalJson = res.json.bind(res);
     res.json = body => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        prune();
-        cache.set(cacheKey, { status: res.statusCode, body, expiresAt: Date.now() + ttlMs });
         res.setHeader('X-Idempotent-Replay', 'false');
-        res.setHeader('X-Idempotency-Scope', 'best-effort-warm-runtime');
+        res.setHeader('X-Idempotency-Scope', scope);
+        // Persisting must not delay the paid response the buyer is waiting on.
+        void writeReplay(cacheKey, { status: res.statusCode, body }, ttlMs);
       }
       return originalJson(body);
     };
