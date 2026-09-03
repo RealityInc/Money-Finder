@@ -7,6 +7,8 @@
     }
   },
   "redirects": [
+    {"source":"/x402.html","has":[{"type":"host","value":"milliapi.com"}],"destination":"https://milliapi.com/","permanent":true},
+    {"source":"/x402.html","has":[{"type":"host","value":"www.milliapi.com"}],"destination":"https://milliapi.com/","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"www.milliapi.com"}],"destination":"https://milliapi.com/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"www.church402.org"}],"destination":"https://church402.org/:path*","permanent":true},
     {"source":"/:path*","has":[{"type":"host","value":"www.402church.org"}],"destination":"https://402church.org/:path*","permanent":true},
