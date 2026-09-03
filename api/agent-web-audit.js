@@ -6,7 +6,7 @@ import { declareDiscoveryExtension } from '@x402/extensions/bazaar';
 import { fastUnpaidChallenge } from './lib/fast-x402-challenge.js';
 import { idempotencyMiddleware } from './lib/idempotency.js';
 import { lazyX402PaymentMiddleware } from './lib/lazy-x402-middleware.js';
-import { auditPublicUrl } from './lib/web-readiness-core.js';
+import { auditPublicUrl, preflightPublicUrl } from './lib/web-readiness-core.js';
 import { buildRepairArtifacts } from './lib/repair-artifacts.js';
 
 const NETWORK='eip155:8453';
@@ -17,7 +17,7 @@ const PAY_TO=process.env.PAY_TO||'';
 const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET);
 const RESOURCE_TAGS=['ai-agents','web-audit','ai-search','repair-artifacts','change-baseline'];
 const PRE_PURCHASE_ACTIONS=[
-  {id:'live-preflight',whenUseful:'Before paying when a task-specific live signal would help justify the audit.',method:'GET',endpointTemplate:`${PUBLIC_ORIGIN}/api/agent-web-preflight?url=<PUBLIC_HTTPS_URL>`,priceUsd:0,currency:'USD',returns:['live_target_signal','paid_audit_delta','post_repair_verification_option']},
+  {id:'live-preflight',whenUseful:'Optional separate view of the same qualification signal already embedded in the paid challenge.',method:'GET',endpointTemplate:`${PUBLIC_ORIGIN}/api/agent-web-preflight?url=<PUBLIC_HTTPS_URL>`,priceUsd:0,currency:'USD',returns:['live_target_signal','paid_audit_delta','post_repair_verification_option']},
 ];
 const NEXT_ACTIONS=[
   {id:'verify-repairs',whenUseful:'After applying one or more returned repair artifacts.',method:'POST',endpoint:`${PUBLIC_ORIGIN}/api/verify-site-repairs`,priceUsd:0.002,currency:'USDC'},
@@ -44,8 +44,43 @@ const discoveryExtension=declareDiscoveryExtension({
   }
 });
 
+function requestTarget(req){
+  return Array.isArray(req.query?.url)?req.query.url[0]:req.query?.url;
+}
+
+async function qualifyAuditRequest(req,res,next){
+  if(req.method!=='GET') return next();
+  const target=requestTarget(req);
+  if(!target) return res.status(400).json({error:'Missing url query parameter',purchaseRecommended:false,noCharge:true,example:'/api/agent-web-audit?url=https%3A%2F%2Fexample.com'});
+  try{
+    const result=await preflightPublicUrl(target);
+    const valueProof={
+      target:result.target,
+      checkedAt:result.checkedAt,
+      reachable:result.reachable,
+      status:result.status,
+      html:result.html,
+      potentialIssueCount:result.potentialIssueCount,
+      paidAuditIncludes:['verdict','blockers','evidence','prioritized_fixes','crawler_policy','repair_artifacts','baseline_token'],
+      priceUsd:0.005,
+    };
+    if(!result.reachable || !result.html){
+      return res.status(200).json({schemaVersion:1,qualified:false,purchaseRecommended:false,noCharge:true,reason:!result.reachable?'target_unreachable':'target_not_html',valueProof});
+    }
+    if(!result.purchaseRecommended){
+      return res.status(200).json({schemaVersion:1,qualified:true,purchaseRecommended:false,noCharge:true,reason:'preflight_found_no_actionable_readiness_issues',valueProof,optionalFullAudit:`${PUBLIC_ORIGIN}${ROUTE}?url=${encodeURIComponent(result.target)}&force=1`});
+    }
+    req.x402ValueProof=valueProof;
+    req.x402PurchaseRecommended=true;
+    return next();
+  }catch(error){
+    const message=error?.name==='AbortError'?'Target request timed out':error?.message||'Preflight failed';
+    return res.status(400).json({error:message,purchaseRecommended:false,noCharge:true});
+  }
+}
+
 async function auditHandler(req,res){
-  const target=Array.isArray(req.query?.url)?req.query.url[0]:req.query?.url;
+  const target=requestTarget(req);
   if(!target) return res.status(400).json({error:'Missing url query parameter',example:'/api/agent-web-audit?url=https%3A%2F%2Fexample.com'});
   try{
     const result=await auditPublicUrl(target);
@@ -72,11 +107,12 @@ app.use((req,res,next)=>{
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods','GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','Content-Type, PAYMENT-SIGNATURE, X-PAYMENT, X-PAYMENT-SIGNATURE, Idempotency-Key');
-  res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, Link, X-Idempotent-Replay, X-Idempotency-Scope');
+  res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, Link, X-Idempotent-Replay, X-Idempotency-Scope');
   res.setHeader('Cache-Control','private, no-store');
   next();
 });
 app.options(ROUTE,(_req,res)=>res.status(204).end());
+app.use(ROUTE,qualifyAuditRequest);
 app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
