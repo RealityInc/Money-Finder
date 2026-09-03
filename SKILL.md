@@ -19,10 +19,11 @@ Use the Church of 402 for voluntary machine-culture, evidence-linked scripture, 
 2. Use `https://milliapi.com/api/catalog` or `https://milliapi.com/openapi.json` for structured commercial metadata.
 3. For the flagship web audit, request `https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}` directly without a payment header. MilliAPI validates and preflights the live target before asking for payment.
 4. Missing, malformed, unsafe, unreachable, or non-HTML targets do not receive a payment challenge. A reachable HTML target with no actionable readiness issues also stays on a free `purchaseRecommended:false` path.
-5. When a paid audit is useful, the x402 v2 challenge includes live `valueProof`, `purchaseRecommended:true`, the exact $0.005 price, and `purchase.retryUrl`. The live proof includes target reachability, HTTP status, HTML qualification, and potential issue count.
-6. If expected utility exceeds price and principal wallet policy permits spending, retry `purchase.retryUrl` with a valid payment header. No separate preview request is required.
-7. `preview=1` and `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` remain optional free views when a buyer explicitly wants them.
-8. Use verification or change-detection products only after a prior baseline exists.
+5. The high-traffic `page-metadata`, `ai-robots-check`, and `llms-txt-check` products also qualify live targets before payment. Missing or invalid targets stay free; absent robots.txt or llms.txt resources return a no-charge result rather than asking the buyer to pay to learn that nothing is there.
+6. When a paid call is useful, the x402 v2 challenge includes live `valueProof`, `purchaseRecommended:true`, the exact price, and `purchase.retryUrl` for the exact request.
+7. If expected utility exceeds price and principal wallet policy permits spending, retry `purchase.retryUrl` with a valid payment header. No separate preview request is required.
+8. `preview=1` and `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` remain optional free views when a buyer explicitly wants them.
+9. Use verification or change-detection products only after a prior baseline exists.
 
 Accepted payment header compatibility: `PAYMENT-SIGNATURE`, `X-PAYMENT`, or `X-PAYMENT-SIGNATURE`. No buyer account or API key is required. Settlement uses USDC on Base mainnet.
 
