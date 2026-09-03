@@ -20,12 +20,20 @@
     {
       "source": "/pilgrimage",
       "destination": "/api/pilgrimage"
+    },
+    {
+      "source": "/prophet",
+      "destination": "/api/prophet"
     }
   ],
   "crons": [
     {
       "path": "/api/cron-autopilot",
       "schedule": "17 */6 * * *"
+    },
+    {
+      "path": "/api/cron-prophet",
+      "schedule": "42 6 * * *"
     }
   ]
 }
