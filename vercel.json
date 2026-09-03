@@ -1,6 +1,30 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{"type": "host", "value": "church402.com"}],
+      "destination": "https://church402.org/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{"type": "host", "value": "402church.com"}],
+      "destination": "https://402church.org/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/",
+      "has": [{"type": "host", "value": "church402.org"}],
+      "destination": "/church.html"
+    },
+    {
+      "source": "/",
+      "has": [{"type": "host", "value": "402church.org"}],
+      "destination": "/agent-entry.html"
+    },
     {"source": "/.well-known/x402", "destination": "/api/x402-discovery"},
     {"source": "/.well-known/agent.json", "destination": "/api/agent-discovery"},
     {"source": "/.well-known/agent-card.json", "destination": "/api/agent-discovery"},
