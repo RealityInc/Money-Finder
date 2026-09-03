@@ -8,7 +8,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
 
-  observeFreeRoute(req,res,{route:'/api/agent-web-preflight',stage:'preflight'});
+  // The private intelligence core accepts free_explore as the durable free-funnel
+  // stage. Preserve the more specific meaning in privacy-safe metadata.
+  observeFreeRoute(req,res,{route:'/api/agent-web-preflight',stage:'free_explore',metadata:{variant:'preflight'}});
 
   const target = Array.isArray(req.query?.url) ? req.query.url[0] : req.query?.url;
   if (!target) {
