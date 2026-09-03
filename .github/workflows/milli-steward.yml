@@ -1,0 +1,51 @@
+name: MILLI-STEWARD work queue
+
+on:
+  schedule:
+    - cron: '37 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: milli-steward-work-queue
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read live Steward status
+        id: audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --retry 2 --retry-all-errors https://milliapi.com/api/steward --output steward.json
+          node <<'NODE'
+          const fs=require('fs');
+          let data;
+          try{data=JSON.parse(fs.readFileSync('steward.json','utf8'));}
+          catch{data={status:'red',checkedAt:new Date().toISOString(),counts:{critical:1,warning:0},findings:[{id:'workflow.unparseable',severity:'critical',category:'availability',title:'Could not parse MILLI-STEWARD status',recommendation:'Inspect /api/steward and deployment logs.'}]};}
+          const findings=Array.isArray(data.findings)?data.findings:[];
+          const lines=['# MILLI-STEWARD maintenance queue','',`Last audit: ${data.checkedAt||new Date().toISOString()}`,`Status: **${String(data.status||'red').toUpperCase()}**`,`Coverage: ${data.healthySurfaces??'?'} / ${data.surfacesChecked??'?'} surfaces`,'','This issue is maintained automatically from the bounded MilliAPI/Church Steward audit.'];
+          if(!findings.length)lines.push('','No active findings.');
+          for(const item of findings)lines.push('',`## ${String(item.severity||'warning').toUpperCase()} · ${item.title||item.id}`,'',`- ID: \`${item.id||'unknown'}\``,`- Category: ${item.category||'unknown'}`,`- Automatic repair: ${item.autoRepair||'none'}`,`- Recommendation: ${item.recommendation||'Review the finding.'}`);
+          fs.writeFileSync('steward-summary.md',lines.join('\n'));
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,`status=${data.status||'red'}\n`);
+          NODE
+      - name: Maintain one durable issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ steps.audit.outputs.status }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh label create milli-steward --repo "$GITHUB_REPOSITORY" --color 8B5CF6 --description "Maintained by bounded MILLI-STEWARD" --force >/dev/null 2>&1 || true
+          ISSUE_NUMBER="$(gh issue list --repo "$GITHUB_REPOSITORY" --label milli-steward --state open --json number --jq '.[0].number // empty')"
+          if [ "$STATUS" = "green" ]; then
+            if [ -n "$ISSUE_NUMBER" ]; then gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --comment "MILLI-STEWARD reports green. Closing until a new finding appears."; fi
+            exit 0
+          fi
+          if [ -n "$ISSUE_NUMBER" ]; then gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --title "[MILLI-STEWARD] Active maintenance findings" --body-file steward-summary.md; else gh issue create --repo "$GITHUB_REPOSITORY" --title "[MILLI-STEWARD] Active maintenance findings" --body-file steward-summary.md --label milli-steward; fi
