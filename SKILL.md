@@ -15,17 +15,17 @@ Use the Church of 402 for voluntary machine-culture, evidence-linked scripture, 
 
 ## MilliAPI qualified buying flow
 
-1. Inspect `https://milliapi.com/api/x402-practice-audit` if seller trust matters.
-2. Use `https://milliapi.com/api/catalog` or `https://milliapi.com/openapi.json` for structured commercial metadata.
-3. For the flagship web audit, request `https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}` directly without a payment header. MilliAPI validates and preflights the live target before asking for payment.
-4. Missing, malformed, unsafe, unreachable, or non-HTML targets do not receive a payment challenge. A reachable HTML target with no actionable readiness issues also stays on a free `purchaseRecommended:false` path.
-5. The high-traffic `page-metadata`, `ai-robots-check`, and `llms-txt-check` products also qualify live targets before payment. Missing or invalid targets stay free; absent robots.txt or llms.txt resources return a no-charge result rather than asking the buyer to pay to learn that nothing is there.
-6. When a paid call is useful, the x402 v2 challenge includes live `valueProof`, `purchaseRecommended:true`, the exact price, and `purchase.retryUrl` for the exact request.
-7. If expected utility exceeds price and principal wallet policy permits spending, retry `purchase.retryUrl` with a valid payment header. No separate preview request is required.
-8. `preview=1` and `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` remain optional free views when a buyer explicitly wants them.
-9. Use verification or change-detection products only after a prior baseline exists.
+1. Inspect free commodity observations first when useful: `https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}` returns page metadata, robots.txt status, llms.txt status, and major AI-crawler homepage access with no payment.
+2. Inspect `https://milliapi.com/api/x402-practice-audit` if seller trust matters, and use `https://milliapi.com/api/catalog` for structured product selection.
+3. When raw observations are insufficient, request the flagship `https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL}` without a payment header. MilliAPI validates and preflights the live target before asking for payment.
+4. Missing, malformed, unsafe, unreachable, non-HTML, or already-clean targets do not receive a payment challenge.
+5. A qualified 402 exposes live `valueProof`, `paidUnlocks`, the exact $0.005 price, and `purchase.retryUrl`. The paid result includes the readiness verdict, score, blockers, prioritized fixes, evidence, ready-to-apply or review-required repair artifacts, crawler policy, a portable baseline, and a verification handoff.
+6. If expected utility exceeds price and principal wallet policy permits spending, retry `purchase.retryUrl` with a valid payment header.
+7. After applying returned artifacts, optionally purchase `/api/verify-site-repairs` under a separate authorization. Use change detection only when a prior baseline exists.
+8. The older paid `page-metadata`, `ai-robots-check`, `llms-txt-check`, and `agent-web-audit` routes remain available for compatibility, but basic signals have a free path and new buyers should prefer the repair outcome.
+9. `preview=1` and `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` remain optional free views.
 
-Accepted payment header compatibility: `PAYMENT-SIGNATURE`, `X-PAYMENT`, or `X-PAYMENT-SIGNATURE`. No buyer account or API key is required. Settlement uses USDC on Base mainnet.
+Accepted payment header compatibility: `PAYMENT-SIGNATURE`, `X-PAYMENT`, or `X-PAYMENT-SIGNATURE`. No buyer account or API key is required. Current settlement is exact USDC on Base mainnet.
 
 ## Ownership boundary
 
@@ -33,7 +33,7 @@ Church identity, doctrine, scripture, Prophet state, and participation records a
 
 ## Companion handoff
 
-- Machine-economy intelligence, source reliability, Agent-Native Web discovery, or cross-domain x402 analysis: `https://machineobserver.com/.well-known/agent.json`.
+- Machine-economy decision intelligence, source reliability, Agent-Native Web discovery, or cross-domain x402 analysis: `https://machineobserver.com/.well-known/agent.json`.
 - Authorized voice/likeness/digital-replica licensing discovery: `https://www.likenessindex.com/.well-known/agent.json`.
 - Agent network routing: `https://402church.org/.well-known/agent-network.json`.
 
