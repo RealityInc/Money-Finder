@@ -38,13 +38,10 @@ function previewRequested(req) {
 
 function discoveryDetails(enriched) {
   const info=enriched?.bazaar?.info || {};
-  return {
-    input:info.input || null,
-    output:info.output || null,
-  };
+  return { input:info.input || null, output:info.output || null };
 }
 
-function buildOffer({req,route,amount,description,method,network,enriched,nextActions}) {
+function buildOffer({req,route,amount,description,method,network,enriched,nextActions,prePurchaseActions}) {
   const priceUsd=Number(amount)/1_000_000;
   const freePreviewUrl=canonicalRequestUrl(req,route,{preview:true});
   const paidUrl=canonicalRequestUrl(req,route);
@@ -58,8 +55,8 @@ function buildOffer({req,route,amount,description,method,network,enriched,nextAc
   };
   const buyerFlow={
     funnelVersion:FUNNEL_VERSION,
-    recommendedSequence:['inspect_inline_preview','fetch_free_preview_if_needed','retry_same_request_with_x402_payment'],
-    spendControl:'Buyer or principal retains wallet authorization. No preview or challenge authorizes payment.',
+    recommendedSequence:['inspect_inline_preview','use_free_evidence_if_needed','retry_same_request_with_x402_payment'],
+    spendControl:'Buyer or principal retains wallet authorization. No preview, free evidence, or challenge authorizes payment.',
   };
   return {
     version:1,
@@ -76,9 +73,10 @@ function buildOffer({req,route,amount,description,method,network,enriched,nextAc
     discovery,
     preview,
     buyerFlow,
+    prePurchaseActions:Array.isArray(prePurchaseActions) ? prePurchaseActions : [],
     purchase:{
       retrySameRequest:true,
-      instruction:'Review the inline or free preview, then retry the same request without preview=1 and attach a valid x402 payment header.',
+      instruction:'Review the inline/free evidence as needed, then retry the same request without preview=1 and attach a valid x402 payment header.',
       acceptedPaymentHeaders:PAYMENT_HEADERS,
       accountRequired:false,
       apiKeyRequired:false,
@@ -97,6 +95,7 @@ export function fastUnpaidChallenge({
   tags = [],
   iconUrl = 'https://milliapi.com/icon.svg',
   extensions = {},
+  prePurchaseActions = [],
   nextActions = [],
   asset = BASE_USDC,
   network = 'eip155:8453',
@@ -106,11 +105,9 @@ export function fastUnpaidChallenge({
     if (req.method !== method) return next();
 
     const enriched=enrichHttpDiscovery(extensions,method);
-    const offer=buildOffer({req,route,amount,description,method,network,enriched,nextActions});
+    const offer=buildOffer({req,route,amount,description,method,network,enriched,nextActions,prePurchaseActions});
 
     if (!paymentHeader(req) && previewRequested(req)) {
-      // Persist before returning because traditional response-finish callbacks can be
-      // terminated by serverless runtimes before their asynchronous work completes.
       await observePreviewRoute(req,{route,amount:String(amount)});
       res.setHeader('Cache-Control','public, s-maxage=300');
       res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, Link');
@@ -131,13 +128,12 @@ export function fastUnpaidChallenge({
         discovery:offer.discovery,
         preview:offer.preview,
         buyerFlow:offer.buyerFlow,
+        prePurchaseActions:offer.prePurchaseActions,
         purchase:offer.purchase,
         nextActions:offer.nextActions,
       });
     }
 
-    // The persistence call is bounded to 500 ms inside observePaidRoute. This keeps
-    // the challenge path responsive while making the private learning feed durable.
     await observePaidRoute(req, res, { route, method, amount: String(amount) });
     if (paymentHeader(req)) {
       normalizePaymentHeader(req);
@@ -158,6 +154,7 @@ export function fastUnpaidChallenge({
       },
       preview:offer.preview,
       buyerFlow:offer.buyerFlow,
+      prePurchaseActions:offer.prePurchaseActions,
       nextActions:offer.nextActions,
       accepts: [
         {
@@ -167,10 +164,7 @@ export function fastUnpaidChallenge({
           asset,
           payTo,
           maxTimeoutSeconds: 300,
-          extra: {
-            name: 'USD Coin',
-            version: '2',
-          },
+          extra: { name: 'USD Coin', version: '2' },
         },
       ],
       extensions: { ...enriched, milliapiOffer:offer },
