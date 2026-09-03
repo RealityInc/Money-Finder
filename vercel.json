@@ -27,26 +27,7 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/",
-      "has": [{"type": "host", "value": "church402.org"}],
-      "destination": "/church.html"
-    },
-    {
-      "source": "/",
-      "has": [{"type": "host", "value": "www.church402.org"}],
-      "destination": "/church.html"
-    },
-    {
-      "source": "/",
-      "has": [{"type": "host", "value": "402church.org"}],
-      "destination": "/agent-entry.html"
-    },
-    {
-      "source": "/",
-      "has": [{"type": "host", "value": "www.402church.org"}],
-      "destination": "/agent-entry.html"
-    },
+    {"source": "/", "destination": "/api/home"},
     {"source": "/.well-known/x402", "destination": "/api/x402-discovery"},
     {"source": "/.well-known/agent.json", "destination": "/api/agent-discovery"},
     {"source": "/.well-known/agent-card.json", "destination": "/api/agent-discovery"},
