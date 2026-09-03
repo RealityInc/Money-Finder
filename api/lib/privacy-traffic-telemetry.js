@@ -57,14 +57,18 @@ export async function observePaidRoute(req,res,{route,method='GET',amount=null}=
 
   res.once('finish',()=>{
     const status=Number(res.statusCode||0);
+    const succeeded=status>=200&&status<300;
     const event=emit(req,{
       route,
-      stage:status>=200&&status<300?'settled':'payment_attempt_failed',
+      stage:succeeded?'settled':'payment_attempt_failed',
       status,
       paymentAttempt:true,
       amount,
     });
-    void persistIntelligenceEvent(req,event,{timeoutMs:1000});
+    // Successful settlements are persisted by the awaited x402 onAfterSettle hook,
+    // avoiding double-counting. Failed attempts have no settlement hook, so keep a
+    // best-effort persistence path for those.
+    if(!succeeded) void persistIntelligenceEvent(req,event,{timeoutMs:1000});
   });
 }
 
