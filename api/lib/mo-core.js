@@ -66,7 +66,7 @@ export async function readConversionSummary(payload = {}, { req, timeoutMs = 800
     window: { since: payload.since || null, until: payload.until || null },
     matchedEvents,
     returnedEvents,
-    complete: !cursor,
+    complete: !cursor && returnedEvents >= matchedEvents,
     emptyReason: matchedEvents ? null : 'no_matching_events',
     stages,
     revenueUsd: Number(revenueUsd.toFixed(6)),
