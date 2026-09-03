@@ -2,7 +2,7 @@
 // Bounded, explainable optimization graph. Payment/security configuration is never mutated here.
 import { bazaarResourceServerExtension } from '@x402/extensions/bazaar';
 
-export const GRAPH_VERSION = 4;
+export const GRAPH_VERSION = 5;
 
 const NODES = [
   { id:'goal:paid_calls',type:'goal',label:'More genuine paid x402 calls' },
@@ -21,6 +21,9 @@ const NODES = [
   { id:'practice:preflight',type:'practice',label:'Free preflight before purchase' },
   { id:'practice:batch_value',type:'practice',label:'Batch multiple decisions into one purchase' },
   { id:'practice:portable_history',type:'practice',label:'Portable baseline and change detection' },
+  { id:'practice:published_everywhere',type:'practice',label:'Every SKU named by every discovery surface' },
+  { id:'practice:cheap_first_purchase',type:'practice',label:'A low-priced first purchase that is complete on its own' },
+  { id:'practice:idempotent_retry',type:'practice',label:'Idempotent paid retry after a dropped connection' },
   { id:'channel:bazaar',type:'channel',label:'x402 Bazaar discovery' },
   { id:'channel:mcp',type:'channel',label:'MCP tool discovery and clients' },
   { id:'channel:llm',type:'channel',label:'LLM / agent discovery' },
@@ -31,6 +34,8 @@ const NODES = [
   { id:'buyer:ai_search',type:'buyer',label:'AI-search / answer-engine optimizers' },
   { id:'buyer:crawler_ops',type:'buyer',label:'Crawler and indexing operators' },
   { id:'buyer:seo_tools',type:'buyer',label:'SEO and metadata automation tools' },
+  { id:'service:audit_and_fix',type:'service',label:'Audit + Fix',endpoint:'/api/audit-and-fix',priceUsd:0.003,role:'starter' },
+  { id:'service:repair_site',type:'service',label:'Repair This Site',endpoint:'/api/repair-site',priceUsd:0.005,role:'flagship' },
   { id:'service:ai_robots',type:'service',label:'AI Robots Policy Check',endpoint:'/api/ai-robots-check',priceUsd:0.001 },
   { id:'service:llms_txt',type:'service',label:'llms.txt Check',endpoint:'/api/llms-txt-check',priceUsd:0.001 },
   { id:'service:metadata',type:'service',label:'Page Metadata Extractor',endpoint:'/api/page-metadata',priceUsd:0.002 },
@@ -44,7 +49,7 @@ const EDGES = [
   {from:'practice:openapi',to:'channel:llm',relation:'improves_understanding',weight:0.84,confidence:0.82,evidence:'Machine-readable contracts are facilitator-independent and production catalog/OpenAPI surfaces receive recurring requests.'},
   {from:'practice:llms_txt',to:'channel:llm',relation:'improves_understanding',weight:0.78,confidence:0.72},
   {from:'practice:catalog',to:'channel:llm',relation:'improves_discovery',weight:0.9,confidence:0.9,evidence:'The free catalog is one of the most-requested production discovery surfaces and exposes all services even when marketplace indexing is unreliable.'},
-  {from:'practice:mcp_wrapper',to:'channel:mcp',relation:'opens_distribution',weight:0.9,confidence:0.88,evidence:'Current official x402 guidance documents paid MCP tools and Bazaar discovery for MCP resources via x402 payment wrappers.'},
+  {from:'practice:mcp_wrapper',to:'channel:mcp',relation:'opens_distribution',weight:0.9,confidence:0.88,evidence:'Official x402 guidance documents paid MCP tools and Bazaar discovery for MCP resources. MilliAPI now exposes /api/mcp; settlement deliberately stays in the buyer runtime.'},
   {from:'practice:clear_price',to:'goal:paid_calls',relation:'reduces_friction',weight:0.84,confidence:0.76,evidence:'Five settled production x402 events confirm buyers can complete the current explicit-price flow without account or API-key setup.'},
   {from:'practice:narrow_tools',to:'goal:paid_calls',relation:'improves_match',weight:0.88,confidence:0.82,evidence:'Settled production events occurred across all four core paid utilities; the combined web audit settled twice while each narrow utility settled once.'},
   {from:'practice:cold_start',to:'goal:reliability',relation:'improves_reliability',weight:0.97,confidence:0.96,evidence:'No runtime errors were observed on paid routes in the latest production window, but challenge and settlement reliability remains prerequisite infrastructure.'},
@@ -52,9 +57,15 @@ const EDGES = [
   {from:'practice:preflight',to:'goal:paid_calls',relation:'reduces_purchase_uncertainty',weight:0.76,confidence:0.7,evidence:'The free preflight is receiving production traffic and offers a low-risk way to qualify purchase intent before spend.'},
   {from:'practice:batch_value',to:'goal:paid_calls',relation:'improves_economics',weight:0.79,confidence:0.66,evidence:'One purchase replaces repeated calls for list-oriented workflows; production traffic exists but no settled batch event is yet observed.'},
   {from:'practice:portable_history',to:'goal:repeat_buyers',relation:'creates_repeat_value',weight:0.86,confidence:0.7,evidence:'Portable baselines make later change detection valuable without requiring an account; repeat-paid evidence is not yet established.'},
+  {from:'practice:published_everywhere',to:'goal:paid_calls',relation:'removes_discovery_gap',weight:0.5,confidence:0.3,evidence:'DESIGN PRIOR, NOT OBSERVED. Three starter SKUs shipped 2026-09-03 were absent from every discovery surface until 2026-09-03; a buyer following published docs could not reach them. The defect is verified; the conversion lift is not yet measured. CI now enforces coverage via scripts/check-discovery-coverage.mjs.'},
+  {from:'practice:cheap_first_purchase',to:'goal:paid_calls',relation:'reduces_first_purchase_risk',weight:0.5,confidence:0.3,evidence:'DESIGN PRIOR, NOT OBSERVED. Audit + Fix at $0.003 is now the advertised first purchase and is complete without a follow-on buy. No settled event yet distinguishes it from the $0.005 flagship.'},
+  {from:'practice:idempotent_retry',to:'goal:repeat_buyers',relation:'improves_trust',weight:0.5,confidence:0.3,evidence:'DESIGN PRIOR, NOT OBSERVED. A dropped connection after settlement previously charged the buyer with no result and no safe retry. Idempotency-Key now covers every paid route. No double-charge has been observed either way.'},
+  {from:'practice:mcp_wrapper',to:'goal:paid_calls',relation:'opens_distribution',weight:0.5,confidence:0.3,evidence:'DESIGN PRIOR, NOT OBSERVED. The MCP wrapper shipped 2026-09-03 at /api/mcp and is quote-only for paid products. No MCP-originated settlement has been observed.'},
+  {from:'service:audit_and_fix',to:'buyer:agent_developers',relation:'fits',weight:0.5,confidence:0.3,evidence:'DESIGN PRIOR, NOT OBSERVED. Newly published; no settled events attributed to it yet.'},
+  {from:'service:repair_site',to:'buyer:ai_search',relation:'fits',weight:0.5,confidence:0.3,evidence:'DESIGN PRIOR, NOT OBSERVED. Newly published to openapi.json and the tool manifest; no settled events attributed to it yet.'},
   {from:'channel:bazaar',to:'goal:paid_calls',relation:'acquires',weight:0.64,confidence:0.88},
   {from:'channel:mcp',to:'buyer:mcp_builders',relation:'reaches',weight:0.9,confidence:0.86,evidence:'Official x402 documentation provides a direct MCP integration and Bazaar-discovery path for paid tools.'},
-  {from:'channel:mcp',to:'goal:paid_calls',relation:'acquires',weight:0.82,confidence:0.74,evidence:'MCP is a protocol-native buyer surface for agent tools, but MilliAPI has not yet shipped an MCP wrapper, so this remains a product-fit hypothesis.'},
+  {from:'channel:mcp',to:'goal:paid_calls',relation:'acquires',weight:0.6,confidence:0.35,evidence:'MilliAPI shipped a quote-only MCP wrapper at /api/mcp on 2026-09-03. Product fit remains a hypothesis until an MCP-originated settlement is observed.'},
   {from:'channel:llm',to:'goal:paid_calls',relation:'acquires',weight:0.8,confidence:0.68},
   {from:'channel:search',to:'goal:paid_calls',relation:'acquires',weight:0.42,confidence:0.45},
   {from:'channel:github',to:'buyer:agent_developers',relation:'reaches',weight:0.72,confidence:0.6},
@@ -79,15 +90,24 @@ const EDGES = [
   {from:'goal:reliability',to:'goal:repeat_buyers',relation:'supports',weight:0.93,confidence:0.9}
 ];
 
+const PROVENANCE={
+  status:'hand-maintained',
+  warning:'Weights and confidences in this graph are hand-entered design priors and small-sample readings, not computed statistics. Edges whose evidence begins "DESIGN PRIOR, NOT OBSERVED" have no supporting settlement data at all. Do not present any of it as a measured conversion rate.',
+  measuredBy:null,
+  blocker:'No funnel readback exists. The x402_funnel_v1 events emitted by api/lib/privacy-traffic-telemetry.js are written to the private intelligence core and never read back, so challenge-to-settlement conversion is unmeasured in this repository.',
+  nextStep:'Add a readback that computes challenge -> settled and preview -> challenge per route, price and client family, then replace these hand-entered weights with observed values.',
+};
+
 const GUARDRAILS=[
   'Never change PAY_TO, wallet addresses, facilitator credentials, auth, settlement rules, payment networks, or payment protocol code automatically.',
   'Never fabricate buyer identity or infer sensitive attributes.',
   'Do not store raw IP addresses, payment credentials, wallet secrets, request bodies, or payer identity as learning features.',
   'Protocol changes require explicit review; discovery copy, tags and product ranking may be optimized automatically.',
-  'Price experiments require explicit approval.'
+  'Price experiments require explicit approval.',
+  'Weights in this graph are hand-entered until a funnel readback exists. Never report them as measured conversion rates.'
 ];
 
-export function getLearningGraph(){return {graph:'money-finder-learning-graph',version:GRAPH_VERSION,updatedAt:'2026-09-02T04:18:00Z',purpose:'Learn which x402 practices, products, discovery channels and buyer segments most strongly drive reliable paid usage.',guardrails:GUARDRAILS,nodes:NODES,edges:EDGES};}
+export function getLearningGraph(){return {graph:'money-finder-learning-graph',version:GRAPH_VERSION,updatedAt:'2026-09-03T00:00:00Z',purpose:'Learn which x402 practices, products, discovery channels and buyer segments most strongly drive reliable paid usage.',provenance:PROVENANCE,guardrails:GUARDRAILS,nodes:NODES,edges:EDGES};}
 function bounded(v,min=.05,max=.99){return Math.max(min,Math.min(max,v));}
 export function applyObservation(graph,observation){const next=structuredClone(graph);const {from,to,success,strength=1,note=null}=observation||{};const edge=next.edges.find(x=>x.from===from&&x.to===to);if(!edge||typeof success!=='boolean')return next;const alpha=Math.max(.01,Math.min(.12,.04*Number(strength||1)));edge.weight=Number(bounded(edge.weight+alpha*((success?1:0)-edge.weight)).toFixed(4));edge.confidence=Number(bounded(edge.confidence+.025*Number(strength||1)).toFixed(4));edge.observations=(edge.observations||0)+1;if(note)edge.lastEvidence=String(note).slice(0,240);return next;}
 export function rankRecommendations(graph=getLearningGraph()){const byId=new Map(graph.nodes.map(n=>[n.id,n]));return graph.edges.filter(e=>e.from.startsWith('practice:')).map(e=>({practiceId:e.from,practice:byId.get(e.from)?.label||e.from,targetId:e.to,target:byId.get(e.to)?.label||e.to,relation:e.relation,score:Number((e.weight*e.confidence).toFixed(4)),confidence:e.confidence,evidence:e.lastEvidence||e.evidence||null})).sort((a,b)=>b.score-a.score);}

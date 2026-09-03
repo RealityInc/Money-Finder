@@ -38,6 +38,16 @@ export const PRODUCTS = [
     surfaces: ALL_SURFACES,
   },
   {
+    id: 'mcp',
+    path: '/api/mcp',
+    method: 'POST',
+    priceUsd: 0,
+    role: 'free-acquisition',
+    title: 'MilliAPI MCP server',
+    idempotent: false,
+    surfaces: ['x402', 'catalog', 'toolManifest', 'agentManifest', 'llms', 'skill', 'openapi'],
+  },
+  {
     id: 'agent-web-preflight',
     path: '/api/agent-web-preflight',
     method: 'GET',

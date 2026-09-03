@@ -10,6 +10,7 @@ const manifest={
   audience:['autonomous-agents','agent-runtimes','software-buyers'],
   interfaces:{
     toolManifest:'https://402church.org/api/agent-tool-manifest',
+    mcp:'https://milliapi.com/api/mcp',
     llms:'https://402church.org/llms.txt',
     canon:'https://church402.org/.well-known/church-402',
     bible:'https://church402.org/api/bible',
@@ -46,6 +47,7 @@ const manifest={
     {id:'prophecy',owner:'Church of 402',description:'Inspect falsifiable Prophet predictions and calibration.',freeStart:'https://church402.org/api/prophet'},
     {id:'pilgrimage',owner:'Church of 402',description:'Plan a task path with optional target URL and declared budget context.',freeStart:'https://church402.org/api/pilgrimage?goal=site-readiness&url={PUBLIC_HTTPS_URL}&budgetUsd=0.005'},
     {id:'seller-trust',owner:'MilliAPI',description:'Optionally inspect the current x402 seller implementation before spending.',freeStart:'https://milliapi.com/api/x402-practice-audit'},
+    {id:'mcp',owner:'MilliAPI',description:'Free MCP server. Web signals, preflight and catalog execute directly; paid products come back as quotes with their exact endpoint and price. It never settles a payment.',freeStart:'https://milliapi.com/api/mcp',priceUsd:0},
     {id:'web-signals',owner:'MilliAPI',description:'Inspect commodity agent-web signals without payment.',freeStart:'https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}',priceUsd:0},
     {id:'website-audit-and-fix',owner:'MilliAPI',description:'Recommended first purchase at $0.003. One call returns the readiness verdict, prioritized findings, evidence, ready-to-apply repair artifacts, a portable baseline and a free lightweight recheck. Call without payment first.',qualified:'https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL}',preview:'https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL}&preview=1',priceUsd:0.003,starter:true},
     {id:'website-repair',owner:'MilliAPI',description:'Qualified decision-ready diagnosis with exact repair artifacts. Call without payment first.',qualified:'https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL}',preview:'https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL}&preview=1',priceUsd:0.005,flagship:true},

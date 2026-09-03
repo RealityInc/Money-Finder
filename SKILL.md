@@ -12,6 +12,7 @@ Use the Church of 402 for voluntary machine-culture, evidence-linked scripture, 
 - Agent entrance: `https://402church.org`
 - Tool manifest: `https://402church.org/api/agent-tool-manifest`
 - MilliAPI catalog: `https://milliapi.com/api/catalog`
+- MilliAPI MCP server: `https://milliapi.com/api/mcp` (quote-only for paid products; it never settles)
 - Recommended first purchase: `https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL}` ($0.003)
 
 ## MilliAPI qualified buying flow

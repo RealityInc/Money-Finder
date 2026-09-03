@@ -4,7 +4,7 @@ export default function handler(req,res){
   res.setHeader('Cache-Control','public, s-maxage=3600, stale-while-revalidate=86400');
   if(req.method!=='GET') return res.status(405).json({error:'GET only'});
   return res.status(200).json({
-    version:5,
+    version:6,
     freeSignals:'https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}',
     freePreflight:'https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}',
     starter:{
@@ -31,7 +31,9 @@ export default function handler(req,res){
       'https://milliapi.com/api/llms-txt-check',
       'https://milliapi.com/api/page-metadata'
     ],
+    mcp:{endpoint:'https://milliapi.com/api/mcp',alias:'https://milliapi.com/mcp',transport:'streamable-http',quoteOnly:true,description:'Free MCP server. Commodity signals and preflight execute directly; paid products are returned as quotes with their exact endpoint and price. It never settles a payment.'},
     freeResources:[
+      'https://milliapi.com/api/mcp',
       'https://milliapi.com/api/web-signals',
       'https://milliapi.com/api/agent-web-preflight',
       'https://milliapi.com/api/catalog',

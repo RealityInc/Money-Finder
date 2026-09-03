@@ -1,4 +1,4 @@
-name: Discovery coverage
+name: Checks
 
 on:
   push:
@@ -21,5 +21,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
       - name: Every product is reachable from the surfaces agents read
         run: node scripts/check-discovery-coverage.mjs
+      - name: Tests
+        run: npm test
