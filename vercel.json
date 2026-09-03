@@ -12,6 +12,7 @@
     {"source":"/.well-known/x402","destination":"/api/x402-discovery"},
     {"source":"/.well-known/agent.json","destination":"/api/agent-discovery"},
     {"source":"/.well-known/agent-card.json","destination":"/api/agent-discovery"},
+    {"source":"/.well-known/agent.zh-CN.json","destination":"/api/agent-discovery-zh"},
     {"source":"/.well-known/agent-network.json","destination":"/api/agent-network"},
     {"source":"/.well-known/agent-autonomy.json","destination":"/api/agent-autonomy"},
     {"source":"/.well-known/agents/milli-steward.json","destination":"/api/steward-identity"},
