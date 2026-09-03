@@ -24,6 +24,7 @@ function enrichHttpDiscovery(extensions, method) {
 function canonicalRequestUrl(req, route, { preview=false }={}) {
   const incoming=new URL(req.originalUrl || req.url || route, PUBLIC_ORIGIN);
   incoming.pathname=route;
+  incoming.searchParams.delete('_vercel_share');
   if (preview) incoming.searchParams.set('preview','1');
   else incoming.searchParams.delete('preview');
   return `${PUBLIC_ORIGIN}${incoming.pathname}${incoming.search}`;
