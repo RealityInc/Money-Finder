@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import { persistIntelligenceEvent } from './mo-core.js';
 
 function secret() {
   return process.env.TELEMETRY_SALT || process.env.CDP_API_KEY_SECRET || process.env.CDP_API_KEY_ID || 'milliapi-telemetry-fallback';
@@ -35,30 +36,41 @@ function emit(req, fields) {
     service:'MilliAPI',
     at:new Date().toISOString(),
     ...identity(req),
+    vertical:'api-data-economy',
     ...fields,
   };
   console.log(JSON.stringify(event));
+  return event;
 }
 
-export function observePaidRoute(req,res,{route,method='GET',amount=null}={}) {
+export async function observePaidRoute(req,res,{route,method='GET',amount=null}={}) {
   if(req.method!==method) return;
   const paymentAttempt=paymentPresent(req);
   if(!paymentAttempt) {
-    emit(req,{route,stage:'challenge',status:402,paymentAttempt:false,amount});
+    const event=emit(req,{route,stage:'challenge',status:402,paymentAttempt:false,amount});
+    await persistIntelligenceEvent(req,event,{timeoutMs:500});
     return;
   }
+
+  const started=emit(req,{route,stage:'payment_attempt_started',status:null,paymentAttempt:true,amount});
+  await persistIntelligenceEvent(req,started,{timeoutMs:500});
+
   res.once('finish',()=>{
     const status=Number(res.statusCode||0);
-    emit(req,{
+    const event=emit(req,{
       route,
       stage:status>=200&&status<300?'settled':'payment_attempt_failed',
       status,
       paymentAttempt:true,
       amount,
     });
+    void persistIntelligenceEvent(req,event,{timeoutMs:1000});
   });
 }
 
 export function observeFreeRoute(req,res,{route,stage='free_explore'}={}) {
-  res.once('finish',()=>emit(req,{route,stage,status:Number(res.statusCode||0),paymentAttempt:false}));
+  res.once('finish',()=>{
+    const event=emit(req,{route,stage,status:Number(res.statusCode||0),paymentAttempt:false});
+    void persistIntelligenceEvent(req,event,{timeoutMs:1000});
+  });
 }
