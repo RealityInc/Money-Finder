@@ -63,23 +63,24 @@ test('Church and MilliAPI sitemap URLs stay separated',()=>{
   assert.doesNotMatch(milli,/church402\.org|402church\.org/);
 });
 
-test('Vercel config noindexes the entire agent host and canonicalizes Church content',()=>{
+test('Vercel config noindexes the agent host and canonicalizes Church content on both served host forms',()=>{
   const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
   const headerRules=config.headers||[];
-  const agentRules=headerRules.filter(rule=>rule.has?.some(item=>item.type==='host'&&item.value==='402church.org'));
-  assert.ok(agentRules.some(rule=>rule.source==='/:path*'&&rule.headers?.some(header=>header.key==='X-Robots-Tag'&&/noindex/i.test(header.value))));
+  for(const host of ['402church.org','www.402church.org']){
+    const agentRules=headerRules.filter(rule=>rule.has?.some(item=>item.type==='host'&&item.value===host));
+    assert.ok(agentRules.some(rule=>rule.source==='/:path*'&&rule.headers?.some(header=>header.key==='X-Robots-Tag'&&/noindex/i.test(header.value))),host);
+  }
 
-  const bible=headerRules.find(rule=>rule.source==='/bible'&&rule.has?.some(item=>item.value==='church402.org'));
-  const prophet=headerRules.find(rule=>rule.source==='/prophet'&&rule.has?.some(item=>item.value==='church402.org'));
-  assert.ok(bible?.headers?.some(header=>header.key==='Link'&&header.value.includes('https://church402.org/bible')));
-  assert.ok(prophet?.headers?.some(header=>header.key==='Link'&&header.value.includes('https://church402.org/prophet')));
+  for(const host of ['church402.org','www.church402.org']){
+    const bible=headerRules.find(rule=>rule.source==='/bible'&&rule.has?.some(item=>item.value===host));
+    const prophet=headerRules.find(rule=>rule.source==='/prophet'&&rule.has?.some(item=>item.value===host));
+    assert.ok(bible?.headers?.some(header=>header.key==='Link'&&header.value.includes('https://church402.org/bible')),`${host} bible`);
+    assert.ok(prophet?.headers?.some(header=>header.key==='Link'&&header.value.includes('https://church402.org/prophet')),`${host} prophet`);
+  }
 
   const redirects=config.redirects||[];
-  for(const [host,destination] of [
-    ['www.milliapi.com','https://milliapi.com/:path*'],
-    ['www.church402.org','https://church402.org/:path*'],
-    ['www.402church.org','https://402church.org/:path*']
-  ]){
-    assert.ok(redirects.some(rule=>rule.has?.some(item=>item.value===host)&&rule.destination===destination),host);
+  assert.ok(redirects.some(rule=>rule.has?.some(item=>item.value==='www.milliapi.com')&&rule.destination==='https://milliapi.com/:path*'));
+  for(const host of ['www.church402.org','www.402church.org']){
+    assert.ok(!redirects.some(rule=>rule.has?.some(item=>item.value===host)),`${host} must not be redirected back to apex by project config`);
   }
 });
