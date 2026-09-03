@@ -3,6 +3,7 @@ import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemet
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
 const PAYMENT_HEADERS = ['PAYMENT-SIGNATURE', 'X-PAYMENT', 'X-PAYMENT-SIGNATURE'];
+const FUNNEL_VERSION = 2;
 
 function paymentHeader(req) {
   return req.get('PAYMENT-SIGNATURE') || req.get('X-PAYMENT') || req.get('X-PAYMENT-SIGNATURE') || null;
@@ -45,10 +46,26 @@ function discoveryDetails(enriched) {
 
 function buildOffer({req,route,amount,description,method,network,enriched}) {
   const priceUsd=Number(amount)/1_000_000;
+  const freePreviewUrl=canonicalRequestUrl(req,route,{preview:true});
+  const paidUrl=canonicalRequestUrl(req,route);
+  const discovery=discoveryDetails(enriched);
+  const preview={
+    available:true,
+    url:freePreviewUrl,
+    kind:'bounded-example',
+    example:discovery?.output?.example || null,
+    paidDelta:'Paid fulfillment performs the current task and returns the full route-specific result; the inline preview is bounded and non-transactional.',
+  };
+  const buyerFlow={
+    funnelVersion:FUNNEL_VERSION,
+    recommendedSequence:['inspect_inline_preview','fetch_free_preview_if_needed','retry_same_request_with_x402_payment'],
+    spendControl:'Buyer or principal retains wallet authorization. No preview or challenge authorizes payment.',
+  };
   return {
     version:1,
-    freePreviewUrl:canonicalRequestUrl(req,route,{preview:true}),
-    paidUrl:canonicalRequestUrl(req,route),
+    funnelVersion:FUNNEL_VERSION,
+    freePreviewUrl,
+    paidUrl,
     method:String(method || 'GET').toUpperCase(),
     priceUsd,
     amountAtomic:String(amount),
@@ -56,10 +73,12 @@ function buildOffer({req,route,amount,description,method,network,enriched}) {
     network:'Base',
     networkId:network,
     value:description,
-    discovery:discoveryDetails(enriched),
+    discovery,
+    preview,
+    buyerFlow,
     purchase:{
       retrySameRequest:true,
-      instruction:'Review the free preview, then retry the same request without preview=1 and attach a valid x402 payment header.',
+      instruction:'Review the inline or free preview, then retry the same request without preview=1 and attach a valid x402 payment header.',
       acceptedPaymentHeaders:PAYMENT_HEADERS,
       accountRequired:false,
       apiKeyRequired:false,
@@ -92,8 +111,12 @@ export function fastUnpaidChallenge({
       // terminated by serverless runtimes before their asynchronous work completes.
       await observePreviewRoute(req,{route,amount:String(amount)});
       res.setHeader('Cache-Control','public, s-maxage=300');
+      res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, Link');
+      res.setHeader('X-Free-Preview',offer.freePreviewUrl);
+      res.setHeader('Link',`<${offer.freePreviewUrl}>; rel="alternate"; type="application/json"; title="free-preview"`);
       return res.status(200).json({
         schemaVersion:1,
+        funnelVersion:FUNNEL_VERSION,
         freePreview:true,
         service:serviceName,
         route,
@@ -104,6 +127,8 @@ export function fastUnpaidChallenge({
         network:'Base',
         paidUrl:offer.paidUrl,
         discovery:offer.discovery,
+        preview:offer.preview,
+        buyerFlow:offer.buyerFlow,
         purchase:offer.purchase,
       });
     }
@@ -126,7 +151,10 @@ export function fastUnpaidChallenge({
         serviceName,
         tags,
         iconUrl,
+        previewUrl:offer.freePreviewUrl,
       },
+      preview:offer.preview,
+      buyerFlow:offer.buyerFlow,
       accepts: [
         {
           scheme: 'exact',
@@ -146,6 +174,9 @@ export function fastUnpaidChallenge({
 
     const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
     res.setHeader('PAYMENT-REQUIRED', encoded);
+    res.setHeader('Access-Control-Expose-Headers','PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, Link');
+    res.setHeader('X-Free-Preview',offer.freePreviewUrl);
+    res.setHeader('Link',`<${offer.freePreviewUrl}>; rel="alternate"; type="application/json"; title="free-preview"`);
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(402).json(paymentRequired);
   };
