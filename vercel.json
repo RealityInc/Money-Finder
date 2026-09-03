@@ -13,6 +13,8 @@
     {"source":"/:path*","has":[{"type":"host","value":"www.402church.com"}],"destination":"https://402church.org/:path*","permanent":true}
   ],
   "rewrites": [
+    {"source":"/robots.txt","destination":"/api/robots"},
+    {"source":"/sitemap.xml","destination":"/api/sitemap"},
     {"source":"/","destination":"/api/home"},
     {"source":"/zh-CN","destination":"/api/home-zh"},
     {"source":"/mcp","destination":"/api/mcp"},
