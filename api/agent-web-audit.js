@@ -16,6 +16,9 @@ const PUBLIC_ORIGIN='https://milliapi.com';
 const PAY_TO=process.env.PAY_TO||'';
 const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET);
 const RESOURCE_TAGS=['ai-agents','web-audit','ai-search','repair-artifacts','change-baseline'];
+const PRE_PURCHASE_ACTIONS=[
+  {id:'live-preflight',whenUseful:'Before paying when a task-specific live signal would help justify the audit.',method:'GET',endpointTemplate:`${PUBLIC_ORIGIN}/api/agent-web-preflight?url=<PUBLIC_HTTPS_URL>`,priceUsd:0,currency:'USD',returns:['live_target_signal','paid_audit_delta','post_repair_verification_option']},
+];
 const NEXT_ACTIONS=[
   {id:'verify-repairs',whenUseful:'After applying one or more returned repair artifacts.',method:'POST',endpoint:`${PUBLIC_ORIGIN}/api/verify-site-repairs`,priceUsd:0.002,currency:'USDC'},
   {id:'detect-readiness-change',whenUseful:'For a later recheck when a prior readiness baseline exists.',method:'POST',endpoint:`${PUBLIC_ORIGIN}/api/site-readiness-change`,priceUsd:0.003,currency:'USDC'},
@@ -78,7 +81,7 @@ app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
   const description='Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, ready-to-apply or review-required repair artifacts, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, major AI-crawler access, and a portable baseline for future change detection.';
-  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension},nextActions:NEXT_ACTIONS}));
+  app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension},prePurchaseActions:PRE_PURCHASE_ACTIONS,nextActions:NEXT_ACTIONS}));
   app.use(ROUTE,lazyX402PaymentMiddleware({
     routes:{[`GET ${ROUTE}`]:{
       accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',
