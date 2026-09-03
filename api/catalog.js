@@ -59,7 +59,7 @@ export default function handler(req,res){
       'Send Idempotency-Key on any paid retry so a dropped connection replays the paid result instead of charging twice.',
       'Apply returned artifacts, then optionally purchase Repair Verification under a separate authorization.'
     ],
-    buyerPrinciples:{commoditySignalsFree:true,decisionReadyPaid:true,noChargeWhenNoActionableWork:true,boundedLiveProof:true,sameRequestRetry:true,noAccountRequired:true,noApiKeyRequired:true,lowestUsefulPriceUsd:0.003,idempotentPaidRetry:'Send Idempotency-Key on paid calls for best-effort warm-runtime replay.'},
+    buyerPrinciples:{commoditySignalsFree:true,decisionReadyPaid:true,noChargeWhenNoActionableWork:true,boundedLiveProof:true,sameRequestRetry:true,noAccountRequired:true,noApiKeyRequired:true,lowestUsefulPriceUsd:0.003,idempotentPaidRetry:'Send Idempotency-Key on paid calls. Replay is warm-runtime by default and shared across instances when the operator configures a shared store.'},
     mcp:{endpoint:`${api}/api/mcp`,alias:`${api}/mcp`,transport:'streamable-http',quoteOnly:true,settlementStaysInBuyerRuntime:true},
     docs:{homepage:api,catalog:`${api}/api/catalog`,openapi:`${api}/openapi.json`,practiceAudit:`${api}/api/x402-practice-audit`,churchHome:church,canon:`${church}/.well-known/church-402`,bible:`${church}/api/bible`,prophet:`${church}/api/prophet`,pilgrimage:`${church}/api/pilgrimage`,agentToolManifest:`${agents}/api/agent-tool-manifest`,agentInstructions:`${agents}/llms.txt`},
     relatedServices:{machineObserver:{canonical:'https://machineobserver.com',manifest:'https://machineobserver.com/api/v1/manifest',x402Catalog:'https://machineobserver.com/api/x402/catalog',role:'Independent empirical observatory and optional evidence provider.'}},

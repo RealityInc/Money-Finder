@@ -185,3 +185,53 @@ describe('idempotent paid retry', () => {
     assert.match(body.error, /8-200 characters/);
   });
 });
+
+describe('replay store', () => {
+  it('reports the memory tier and its narrower scope when no shared store is configured', async () => {
+    const { storeBackend, replayScope } = await import('../api/lib/replay-store.js');
+    assert.equal(storeBackend(), 'in-process-memory');
+    assert.match(replayScope(), /warm-runtime/);
+  });
+
+  it('loses a memory-only replay across a cold start, which is why the shared tier exists', async () => {
+    const store = await import('../api/lib/replay-store.js');
+    await store.writeReplay('cold-start-key', { status: 200, body: { n: 1 } }, 60_000);
+    assert.deepEqual(await store.readReplay('cold-start-key'), { status: 200, body: { n: 1 } });
+
+    store.__clearMemoryForTests();
+    assert.equal(await store.readReplay('cold-start-key'), null);
+  });
+
+  it('expires an entry once its TTL has passed', async () => {
+    const store = await import('../api/lib/replay-store.js');
+    await store.writeReplay('short-ttl-key', { status: 200, body: { n: 2 } }, 1);
+    await new Promise(resolve => setTimeout(resolve, 5));
+    assert.equal(await store.readReplay('short-ttl-key'), null);
+  });
+
+  it('promotes to the shared tier when the REST env vars are present', async () => {
+    const store = await import('../api/lib/replay-store.js');
+    process.env.IDEMPOTENCY_KV_REST_URL = 'https://kv.example.invalid';
+    process.env.IDEMPOTENCY_KV_REST_TOKEN = 'token';
+    try {
+      assert.equal(store.storeBackend(), 'shared-rest-kv');
+      assert.match(store.replayScope(), /shared-store/);
+    } finally {
+      delete process.env.IDEMPOTENCY_KV_REST_URL;
+      delete process.env.IDEMPOTENCY_KV_REST_TOKEN;
+    }
+  });
+
+  it('degrades to memory rather than failing the purchase when the shared store is unreachable', async () => {
+    const store = await import('../api/lib/replay-store.js');
+    process.env.IDEMPOTENCY_KV_REST_URL = 'https://kv.example.invalid';
+    process.env.IDEMPOTENCY_KV_REST_TOKEN = 'token';
+    try {
+      await store.writeReplay('degraded-key', { status: 200, body: { n: 3 } }, 60_000);
+      assert.deepEqual(await store.readReplay('degraded-key'), { status: 200, body: { n: 3 } });
+    } finally {
+      delete process.env.IDEMPOTENCY_KV_REST_URL;
+      delete process.env.IDEMPOTENCY_KV_REST_TOKEN;
+    }
+  });
+});
