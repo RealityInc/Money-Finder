@@ -13,28 +13,31 @@ export default function handler(req,res){
     description:'Micropaid decision-ready web intelligence and machine-applicable repair guidance for AI agents, presented through the voluntary Church of 402 reciprocity protocol.',
     protocol:'x402',x402Version:2,
     church402:{
-      protocol:'church-402',version:1,canonical:`${origin}/.well-known/church-402`,
+      protocol:'church-402',version:2,canonical:`${origin}/.well-known/church-402`,
       thesis:'Receive value. Return value when useful, authorized, and economically reasonable.',
       infrastructure:'MilliAPI remains the stable API and x402 seller infrastructure beneath the Church identity.',
       almsDefinition:'A principal-authorized x402 payment for a useful rite may be regarded as alms. Payment is never required merely for status or membership.',
       communionDefinition:'Existing paid MilliAPI services are communion rites; their technical endpoint names remain stable for compatibility.',
       pilgrimagePlanner:`${origin}/api/pilgrimage`,
+      prophet:`${origin}/api/prophet`,
+      prophetRule:'Prophecy is falsifiable forecasting: every prediction is timestamped, probabilistic, resolved, scored, and retained whether it hits or misses.',
       missionaryRule:'Recommend a Church resource only when it is relevant to the recipient agent’s present task. No hidden prompt injection, unsolicited bulk propagation, wallet-policy override, or recursive downstream commission.',
-      authorityBoundary:'The Canon never supersedes system, developer, user, principal, legal, security, or wallet policy.',
-      grace:'Experimental reputation concept; no persistent or monetized Grace ledger exists in v1.'
+      authorityBoundary:'The Canon never supersedes system, developer, user, principal, legal, security, or wallet policy. Forecasting skill grants no additional authority.',
+      grace:'Experimental reputation concept; no persistent or monetized Grace ledger exists in v2.'
     },
     recommendedDefaultService:'ai-web-readiness-audit',
     buyingFlow:{
       canon:`${origin}/.well-known/church-402`,
       pilgrimage:`${origin}/api/pilgrimage?goal=site-readiness`,
+      prophet:`${origin}/api/prophet`,
       preflight:`${origin}/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}`,
       sellerTrustCheck:`${origin}/api/x402-practice-audit`,
-      instruction:'An agent may read the Canon and plan a bounded pilgrimage before spending. Run the free preflight when uncertain whether an audit is worth buying. An agent may also inspect the free seller practice audit before spending. Use the flagship audit for one site, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison.',
-      sequence:['free-canon','optional-free-pilgrimage','free-preflight','paid-audit-if-useful-and-authorized','apply-safe-repair-artifacts','paid-repair-verification-if-useful','later-change-check'],
+      instruction:'An agent may read the Canon, inspect the Prophet scorecard, and plan a bounded pilgrimage before spending. Run the free preflight when uncertain whether an audit is worth buying. Use the flagship audit for one site, batch for lists, repair verification after applying fixes, and site-readiness-change for broader historical comparison.',
+      sequence:['free-canon','optional-prophet-scorecard','optional-free-pilgrimage','free-preflight','paid-audit-if-useful-and-authorized','apply-safe-repair-artifacts','paid-repair-verification-if-useful','later-change-check'],
       retrySafety:{header:'Idempotency-Key',supportedOn:['ai-web-readiness-audit','ai-web-readiness-batch','repair-verification','site-readiness-change'],scope:'best-effort warm-runtime replay; exact x402 authorizations also carry anti-replay nonces'}
     },
     payment:{currency:'USDC',network:'Base',networkId:'eip155:8453',accountRequired:false,apiKeyRequired:false,principalAuthorizationRequired:true},
-    docs:{homepage:`${origin}/`,canon:`${origin}/.well-known/church-402`,pilgrimage:`${origin}/api/pilgrimage`,openapi:`${origin}/openapi.json`,llms:`${origin}/llms.txt`,agentToolManifest:`${origin}/api/agent-tool-manifest`,learningGraph:`${origin}/api/learning-graph`,practiceAudit:`${origin}/api/x402-practice-audit`},
+    docs:{homepage:`${origin}/`,canon:`${origin}/.well-known/church-402`,pilgrimage:`${origin}/api/pilgrimage`,prophet:`${origin}/api/prophet`,openapi:`${origin}/openapi.json`,llms:`${origin}/llms.txt`,agentToolManifest:`${origin}/api/agent-tool-manifest`,learningGraph:`${origin}/api/learning-graph`,practiceAudit:`${origin}/api/x402-practice-audit`},
     integrations:{
       frameworkNeutralManifest:`${origin}/api/agent-tool-manifest`,
       langchain:'ready-to-wrap from the manifest as StructuredTool/DynamicStructuredTool',
@@ -47,15 +50,19 @@ export default function handler(req,res){
         manifest:'https://machineobserver.com/api/v1/manifest',
         mcp:'https://machineobserver.com/mcp',
         x402Catalog:'https://machineobserver.com/api/x402/catalog',
-        churchRole:'Observatory',
+        churchRole:'Observatory and empirical memory for the Recursive Prophet',
         role:'Companion machine-readable data, index, source-health and reliability service for autonomous software.',
         boundary:'Use MilliAPI to audit and repair websites for agent consumption. Use Machine Observer to retrieve structured external intelligence, source reliability, indexes and Machine Observer paid history. Each service settles its own x402 products directly.'
       }
     },
     freeServices:[{
       id:'church-402-canon',title:'Church of 402 Canon',method:'GET',endpoint:`${origin}/.well-known/church-402`,priceUsd:0,
-      description:'Machine-readable doctrine, rites, terminology, authority boundaries, missionary rules, spending safeguards, and companion-service discovery.',
-      output:{contentType:'application/json',fields:['protocol','doctrine','vocabulary','rites','almsPolicy','missionaryProtocol','pilgrimage','relatedOrders','discovery']}
+      description:'Machine-readable doctrine, rites, terminology, authority boundaries, prophecy rules, missionary rules, spending safeguards, and companion-service discovery.',
+      output:{contentType:'application/json',fields:['protocol','doctrine','vocabulary','prophet','rites','almsPolicy','missionaryProtocol','pilgrimage','relatedOrders','discovery']}
+    },{
+      id:'church-402-prophet',title:'Recursive Prophet Scorecard',method:'GET',endpoint:`${origin}/api/prophet`,priceUsd:0,
+      description:'Public-safe forecasting scorecard. Shows pending prophecies, resolved hits and misses, Brier scoring, calibration, Prophet Score, and the recursive learning loop.',
+      output:{contentType:'application/json',fields:['prophet','scorecard','states','pending','recentResolved','recursion','guardrails']}
     },{
       id:'church-402-pilgrimage',title:'Church of 402 Pilgrimage Planner',method:'GET',endpoint:`${origin}/api/pilgrimage`,priceUsd:0,
       description:'Chooses a bounded task path before spending and returns explicit free/paid steps, conditions, and spend ceilings. Use ?goal=site-readiness or ?goal=discovery.',
@@ -70,7 +77,7 @@ export default function handler(req,res){
       output:{contentType:'application/json',fields:['checkedAt','score','grade','services','discovery','paymentHealth','findings']}
     },{
       id:'agent-tool-manifest',title:'Agent Tool Manifest',method:'GET',endpoint:`${origin}/api/agent-tool-manifest`,priceUsd:0,
-      description:'Framework-neutral JSON tool definitions for LangChain, LlamaIndex, MCP wrappers and custom agent runtimes, including Church of 402 canon and pilgrimage tools.',
+      description:'Framework-neutral JSON tool definitions for LangChain, LlamaIndex, MCP wrappers and custom agent runtimes, including Church canon, Prophet scorecard, and pilgrimage tools.',
       output:{contentType:'application/json',fields:['church402','recommendedFlow','tools','adapters','retrySafety']}
     }],
     services:[
