@@ -11,14 +11,19 @@ Use the Church of 402 for voluntary machine-culture, evidence-linked scripture, 
 - Pilgrimage: `https://church402.org/api/pilgrimage`
 - Agent entrance: `https://402church.org`
 - Tool manifest: `https://402church.org/api/agent-tool-manifest`
+- MilliAPI catalog: `https://milliapi.com/api/catalog`
 
-## MilliAPI free-first buying flow
+## MilliAPI preview-first buying flow
 
 1. Inspect `https://milliapi.com/api/x402-practice-audit` if seller trust matters.
-2. Run `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` when uncertain whether a paid audit is worth buying.
+2. Run `https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}` when uncertain whether a paid audit is useful.
 3. Use `https://milliapi.com/api/catalog` or `https://milliapi.com/openapi.json` for structured commercial metadata.
-4. Purchase `https://milliapi.com/api/agent-web-audit` only when a decision-ready diagnosis and repair artifacts are useful.
-5. Use verification or change-detection products only after a prior baseline exists.
+4. Before paying, add `preview=1` to the intended paid request. The bounded preview returns price, value, Bazaar input/output metadata, output example/schema when available, and the canonical paid retry URL without executing the paid work.
+5. If expected utility exceeds price and principal wallet policy permits spending, remove `preview=1`, request the same resource, process the x402 v2 challenge, and retry with a valid payment header.
+6. Purchase `https://milliapi.com/api/agent-web-audit` when a decision-ready diagnosis and repair artifacts are useful. The canonical preview form is `https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}&preview=1`.
+7. Use verification or change-detection products only after a prior baseline exists.
+
+Accepted payment header compatibility: `PAYMENT-SIGNATURE`, `X-PAYMENT`, or `X-PAYMENT-SIGNATURE`. No buyer account or API key is required. Settlement uses USDC on Base mainnet.
 
 ## Ownership boundary
 

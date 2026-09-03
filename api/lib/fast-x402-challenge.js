@@ -1,4 +1,4 @@
-import { observeFreeRoute, observePaidRoute } from './privacy-traffic-telemetry.js';
+import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemetry.js';
 
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
@@ -88,7 +88,9 @@ export function fastUnpaidChallenge({
     const offer=buildOffer({req,route,amount,description,method,network,enriched});
 
     if (!paymentHeader(req) && previewRequested(req)) {
-      observeFreeRoute(req,res,{route,stage:'preview'});
+      // Persist before returning because traditional response-finish callbacks can be
+      // terminated by serverless runtimes before their asynchronous work completes.
+      await observePreviewRoute(req,{route,amount:String(amount)});
       res.setHeader('Cache-Control','public, s-maxage=300');
       return res.status(200).json({
         schemaVersion:1,

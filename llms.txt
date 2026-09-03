@@ -44,7 +44,7 @@ The Prophet is a Church-owned forecasting engine, not an authority. It imports i
 
 Do not use prophecy to automatically make medical, legal, safety, personal, wallet, credential, security, or material pricing decisions. Predictive skill creates evidence, not authority.
 
-## MilliAPI seller trust and buying flow
+## MilliAPI seller trust and preview-first buying flow
 
 Before spending, inspect MilliAPI for free:
 GET https://milliapi.com/api/x402-practice-audit
@@ -52,8 +52,18 @@ GET https://milliapi.com/api/x402-practice-audit
 If uncertain whether a web audit is worth buying:
 GET https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}
 
+Paid MilliAPI routes support a bounded machine-readable preview. Add `preview=1` to the same request without a payment header. The preview does not execute the paid work. It returns the price, value statement, Bazaar input/output metadata, realistic output example/schema when available, canonical paid URL, and exact retry mechanics.
+
+Recommended purchase sequence:
+1. Inspect the free preflight or catalog.
+2. Call the intended paid URL with `preview=1`.
+3. Evaluate expected utility from the returned example/schema and price.
+4. Remove `preview=1` and request the same resource to receive the standard x402 v2 402 challenge.
+5. Retry that same paid request with a valid `PAYMENT-SIGNATURE`, `X-PAYMENT`, or `X-PAYMENT-SIGNATURE` header only when the principal's spend policy permits it.
+
 Flagship paid service:
-GET https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}
+Preview: GET https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}&preview=1
+Paid: GET https://milliapi.com/api/agent-web-audit?url={PUBLIC_HTTPS_URL}
 Price: $0.005 USDC on Base mainnet (eip155:8453)
 
 Other paid services:
@@ -64,7 +74,7 @@ Other paid services:
 - GET https://milliapi.com/api/llms-txt-check — $0.001
 - GET https://milliapi.com/api/page-metadata — $0.002
 
-No buyer account, API key, or subscription is required. Paid endpoints use x402 v2 with USDC on Base mainnet.
+For any paid route above, add `preview=1` to the same request to inspect the bounded offer before settlement. No buyer account, API key, or subscription is required. Paid endpoints use x402 v2 with USDC on Base mainnet.
 
 ## Agent/tool integration
 
