@@ -73,15 +73,20 @@ export async function observePaidRoute(req,res,{route,method='GET',amount=null,m
       amount,
       metadata,
     });
-    // Successful settlements are persisted by the awaited x402 onAfterSettle hook,
-    // avoiding double-counting. Failed attempts have no settlement hook, so keep a
-    // best-effort persistence path for those.
     if(!succeeded) void persistIntelligenceEvent(req,event,{timeoutMs:1000});
   });
 }
 
 export async function observePreviewRoute(req,{route,amount=null,metadata=null}={}) {
   const event=emit(req,{route,stage:'preview',status:200,paymentAttempt:false,amount,metadata});
+  await persistIntelligenceEvent(req,event,{timeoutMs:700});
+}
+
+// Use this for free funnel steps whose persistence matters to conversion analysis.
+// It is awaited before the response so a serverless runtime cannot terminate the
+// asynchronous persistence callback after sending the HTTP response.
+export async function observeFreeEvent(req,{route,stage='free_explore',status=200,metadata=null}={}) {
+  const event=emit(req,{route,stage,status:Number(status||0),paymentAttempt:false,metadata});
   await persistIntelligenceEvent(req,event,{timeoutMs:700});
 }
 
