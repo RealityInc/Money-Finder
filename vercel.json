@@ -5,6 +5,7 @@
     {"source": "/.well-known/agent.json", "destination": "/api/agent-discovery"},
     {"source": "/.well-known/agent-card.json", "destination": "/api/agent-discovery"},
     {"source": "/.well-known/agent-network.json", "destination": "/api/agent-network"},
+    {"source": "/.well-known/agent-autonomy.json", "destination": "/api/agent-autonomy"},
     {"source": "/.well-known/church-402", "destination": "/api/church-402"},
     {"source": "/.well-known/church-402.json", "destination": "/api/church-402"},
     {"source": "/canon", "destination": "/api/church-402"},
