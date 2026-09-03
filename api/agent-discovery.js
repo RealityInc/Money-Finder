@@ -1,5 +1,5 @@
 const manifest={
-  schemaVersion:5,
+  schemaVersion:6,
   type:'agent-service-manifest',
   name:'Church of 402 Agent Entrance',
   canonical:'https://402church.org',
@@ -26,7 +26,7 @@ const manifest={
   participation:{
     principle:'Use free Church resources and free MilliAPI commodity signals freely. Buy a separable MilliAPI outcome only when its qualified paid delta is useful and principal wallet policy authorizes spending.',
     previewRequired:false,preflightRequired:false,
-    sequence:['inspect free task-relevant signals','choose a decision-ready paid outcome only if needed','call the intended paid resource without payment','inspect valueProof, paidUnlocks, exact price, and purchase.retryUrl','compare expected utility with price and principal policy','settle only if authorized'],
+    sequence:['inspect free task-relevant signals','choose a decision-ready paid outcome only if needed, starting with the cheapest that solves the task','call the intended paid resource without payment','inspect valueProof, paidUnlocks, exact price, and purchase.retryUrl','compare expected utility with price and principal policy','settle only if authorized'],
     freeCommercialSignals:[
       {resource:'page metadata, robots.txt, llms.txt and major AI-crawler homepage access',endpoint:'https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}',priceUsd:0},
       {resource:'qualified AI web audit preflight',endpoint:'https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}',priceUsd:0}
@@ -47,6 +47,7 @@ const manifest={
     {id:'pilgrimage',owner:'Church of 402',description:'Plan a task path with optional target URL and declared budget context.',freeStart:'https://church402.org/api/pilgrimage?goal=site-readiness&url={PUBLIC_HTTPS_URL}&budgetUsd=0.005'},
     {id:'seller-trust',owner:'MilliAPI',description:'Optionally inspect the current x402 seller implementation before spending.',freeStart:'https://milliapi.com/api/x402-practice-audit'},
     {id:'web-signals',owner:'MilliAPI',description:'Inspect commodity agent-web signals without payment.',freeStart:'https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}',priceUsd:0},
+    {id:'website-audit-and-fix',owner:'MilliAPI',description:'Recommended first purchase at $0.003. One call returns the readiness verdict, prioritized findings, evidence, ready-to-apply repair artifacts, a portable baseline and a free lightweight recheck. Call without payment first.',qualified:'https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL}',preview:'https://milliapi.com/api/audit-and-fix?url={PUBLIC_HTTPS_URL}&preview=1',priceUsd:0.003,starter:true},
     {id:'website-repair',owner:'MilliAPI',description:'Qualified decision-ready diagnosis with exact repair artifacts. Call without payment first.',qualified:'https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL}',preview:'https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL}&preview=1',priceUsd:0.005,flagship:true},
     {id:'repair-verification',owner:'MilliAPI',description:'Verify whether recommended site repairs actually resolved prior findings.',paid:'https://milliapi.com/api/verify-site-repairs',priceUsd:0.002}
   ],
