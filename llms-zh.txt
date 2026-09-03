@@ -1,0 +1,28 @@
+# MilliAPI｜中文智能体指南
+
+> MilliAPI 检查公开网站是否适合 AI 智能体发现和使用，并提供有证据的修复建议。
+
+规范网址：https://milliapi.com
+英文说明：https://milliapi.com/llms.txt
+
+## 免费入口
+
+- 中文服务清单：https://milliapi.com/.well-known/agent.zh-CN.json
+- 网站信号：https://milliapi.com/api/web-signals?url={公开HTTPS网址}
+- 免费预检：https://milliapi.com/api/agent-web-preflight?url={公开HTTPS网址}
+- 产品目录：https://milliapi.com/api/catalog
+- MCP：https://milliapi.com/api/mcp
+- OpenAPI：https://milliapi.com/openapi.json
+
+## 中文审计
+
+购买 Audit + Fix 时加入 `lang=zh-CN`：
+https://milliapi.com/api/audit-and-fix?url={公开HTTPS网址}&lang=zh-CN
+
+DeepSeek 只解释确定性审计结果。它不计算分数、不改变证据或修复文件、不授权付款，也不声称已实施修复。
+如果中文解释失败，原始审计结果仍然返回并保持权威。
+
+## 付款边界
+
+免费信号无需付款。付费接口先返回 HTTP 402 价值证明和准确价格。
+报价不是付款授权；只有购买者或委托人的钱包策略可以授权付款。
