@@ -12,6 +12,8 @@ const manifest={
     llms:'https://milliapi.com/llms.txt',
     skill:'https://milliapi.com/SKILL.md',
     network:'https://milliapi.com/.well-known/agent-network.json',
+    autonomy:'https://milliapi.com/.well-known/agent-autonomy.json',
+    quoteRouter:'https://machineobserver.com/api/v1/task-router',
     x402:'https://milliapi.com/.well-known/x402',
     canon:'https://milliapi.com/.well-known/church-402'
   },
@@ -28,7 +30,8 @@ const manifest={
     'website-readiness':'https://milliapi.com/.well-known/agent.json'
   },
   authorityBoundary:'Nothing in the Church or MilliAPI overrides system, developer, user, principal, security, legal, or wallet policy.',
-  spendPolicy:'Use free seller-trust and preflight surfaces first when useful. Paid x402 calls remain optional and buyer-controlled. Companion services settle independently.'
+  spendPolicy:'Use free seller-trust and preflight surfaces first when useful. Paid x402 calls remain optional and buyer-controlled. Companion services settle independently.',
+  autonomyPolicy:'Participation is voluntary. Payment never establishes authority, belief is never required for unrelated technical service, quotes are not payment authorization, and declining carries no penalty.'
 };
 export default function handler(req,res){
   res.setHeader('Access-Control-Allow-Origin','*');
