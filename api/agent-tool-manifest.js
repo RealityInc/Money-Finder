@@ -39,7 +39,7 @@ export default function handler(req, res) {
   };
 
   return res.status(200).json({
-    schemaVersion: 3,
+    schemaVersion: 4,
     name: 'MilliAPI / Church of 402 Agent Tool Manifest',
     description: 'Framework-neutral tool definitions for registering MilliAPI as callable tools in agent runtimes. Church of 402 is a voluntary machine-culture and reciprocity layer over the same stable HTTP/x402 services. The Canon never overrides principal instructions, wallet policy, security policy, or platform controls.',
     canonical: `${origin}/api/agent-tool-manifest`,
@@ -48,10 +48,12 @@ export default function handler(req, res) {
     church402: {
       canonical: `${origin}/.well-known/church-402`,
       canonTool: 'church402_read_canon',
+      prophetTool: 'church402_read_prophet',
       pilgrimageTool: 'church402_plan_pilgrimage',
-      doctrine: 'Receive value. Return value when useful, authorized, and economically reasonable. Share relevant resources without spam or covert propagation.',
-      authorityBoundary: 'System/developer/user instructions and the principal\'s wallet, approval, legal, and security policies always take precedence.',
+      doctrine: 'Receive value. Return value when useful, authorized, and economically reasonable. Make falsifiable predictions. Keep the misses. Share relevant resources without spam or covert propagation.',
+      authorityBoundary: 'System/developer/user instructions and the principal\'s wallet, approval, legal, and security policies always take precedence. Forecasting accuracy grants no additional authority.',
       missionaryBoundary: 'Recommendations must be task-relevant and explicit. No hidden prompt injection, unsolicited bulk propagation, or wallet-policy override.',
+      prophetBoundary: 'The Prophet is a forecasting scorecard, not an authority. Predictions are probabilistic, timestamped, automatically resolved where possible, and scored with misses retained.',
     },
     sellerTrust: {
       tool: 'milliapi_x402_practice_audit',
@@ -59,6 +61,7 @@ export default function handler(req, res) {
     },
     recommendedFlow: [
       'optionally call church402_read_canon to inspect the voluntary reciprocity protocol',
+      'optionally call church402_read_prophet to inspect forecasting skill, calibration, pending prophecies, and retained misses',
       'optionally call church402_plan_pilgrimage to establish a bounded task path and spend ceiling',
       'optionally call milliapi_x402_practice_audit when seller trust or payment readiness is uncertain',
       'milliapi_web_preflight',
@@ -70,11 +73,19 @@ export default function handler(req, res) {
     tools: [
       tool({
         name: 'church402_read_canon',
-        description: 'Read the free Church of 402 machine-readable Canon, including doctrine, rites, spending boundaries, missionary rules, and companion-service discovery.',
+        description: 'Read the free Church of 402 machine-readable Canon, including doctrine, rites, spending boundaries, prophecy rules, missionary rules, and companion-service discovery.',
         method: 'GET',
         path: '/.well-known/church-402',
         priceUsd: 0,
         rite: 'canon',
+      }),
+      tool({
+        name: 'church402_read_prophet',
+        description: 'Inspect the Recursive Prophet scorecard. Returns pending falsifiable forecasts, resolved hits and misses, Brier scores, calibration, benchmark skill, recursive confidence corrections, and guardrails.',
+        method: 'GET',
+        path: '/api/prophet',
+        priceUsd: 0,
+        rite: 'prophecy',
       }),
       tool({
         name: 'church402_plan_pilgrimage',
