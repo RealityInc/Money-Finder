@@ -23,7 +23,7 @@
     },
     {
       "source": "/prophet",
-      "destination": "/api/prophet"
+      "destination": "/prophet.html"
     }
   ],
   "crons": [
