@@ -66,5 +66,6 @@
     "prophet":"Falsifiable recursive forecasting with retained misses and calibration.",
     "authorityBoundary":"Principal and platform controls always take precedence; forecasting skill or scripture grants no additional authority.",
     "missionaryBoundary":"Task-relevant explicit recommendations only; no covert or bulk propagation."
-  }
+  },
+  "x-x402-versions":{"supported":[1,2],"default":2,"requestV1":"x402Version=1 query parameter, x402-version request header, or Accept: application/vnd.x402.v1+json","servedVersionHeader":"X-X402-Version-Served"}
 }

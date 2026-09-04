@@ -29,7 +29,7 @@ export default function handler(req,res){
     {id:'page-metadata',owner:'MilliAPI',title:'Page Metadata Extractor',commodity:true,method:'GET',endpoint:`${api}/api/page-metadata`,priceUsd:0.002,priceAtomicUsdc:'2000',input:urlInput,returns:'Legacy granular paid route. Core page metadata is included free in Web Signals.'}
   ].map(preview);
   return res.status(200).json({
-    name:'MilliAPI',canonical:`${api}/api/catalog`,protocol:'x402',x402Version:2,
+    name:'MilliAPI',canonical:`${api}/api/catalog`,protocol:'x402',x402Version:2,x402VersionsSupported:[1,2],protocolVersionNegotiation:{default:2,requestV1:'append x402Version=1, send an x402-version: 1 request header, or Accept: application/vnd.x402.v1+json',servedVersionHeader:'X-X402-Version-Served',note:'x402 v2 renamed the fields a client needs in order to pay. MilliAPI serves a v1 challenge on request so a v1-only client can still purchase.'},
     description:'Commercial x402 infrastructure for agents. Commodity website signals are free; payment is concentrated on decision-ready repair, verification, change analysis and batch outcomes.',
     ownershipBoundary:'MilliAPI is a separable commercial service. Church of 402 identity, doctrine, scripture, prophecy state, and participation records are not MilliAPI assets merely because MilliAPI currently provides paid infrastructure.',
     church402:{

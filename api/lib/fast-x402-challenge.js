@@ -1,4 +1,5 @@
 import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemetry.js';
+import { requestedX402Version, toV1PaymentRequired, versionNegotiation } from './x402-version.js';
 
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
@@ -166,15 +167,21 @@ export function fastUnpaidChallenge({
       });
     }
 
-    await observePaidRoute(req, res, { route, method, amount: String(amount), metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof)} });
+    await observePaidRoute(req, res, { route, method, amount: String(amount), metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof),x402VersionServed:requestedX402Version(req).version,x402VersionExplicit:requestedX402Version(req).explicit} });
     if (paymentHeader(req)) {
       normalizePaymentHeader(req);
       return next();
     }
 
-    const paymentRequired = {
+    // x402 v2 renamed the fields a client needs in order to pay, so a v1-only client cannot parse a v2
+    // challenge and its only option is to leave. A v1 challenge is served on request, describing the
+    // same price, asset and destination.
+    const negotiated = requestedX402Version(req);
+    const negotiation = { ...versionNegotiation(offer.paidUrl), served:negotiated.version };
+    const v2Body = {
       x402Version: 2,
       error: 'Payment required',
+      protocolVersions: negotiation,
       purchaseRecommended:offer.purchaseRecommended,
       valueProof:offer.valueProof,
       purchase:offer.purchase,
@@ -205,8 +212,13 @@ export function fastUnpaidChallenge({
       extensions: { ...enriched, milliapiOffer:offer },
     };
 
+    const paymentRequired = negotiated.version === 1
+      ? toV1PaymentRequired(v2Body, { resourceUrl:offer.paidUrl, description, mimeType })
+      : v2Body;
+
     const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
     res.setHeader('PAYMENT-REQUIRED', encoded);
+    res.setHeader('X-X402-Version-Served', String(negotiated.version));
     setOfferHeaders(res,offer);
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(402).json(paymentRequired);

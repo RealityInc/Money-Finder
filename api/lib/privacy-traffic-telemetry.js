@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { persistIntelligenceEvent } from './mo-core.js';
+import { clientKind, uaFamily } from './client-classification.js';
 
 const FUNNEL_VERSION = 2;
 
@@ -7,25 +8,19 @@ function secret() {
   return process.env.TELEMETRY_SALT || process.env.CDP_API_KEY_SECRET || process.env.CDP_API_KEY_ID || 'milliapi-telemetry-fallback';
 }
 
-function uaFamily(ua='') {
-  const value=String(ua).toLowerCase();
-  if(value.includes('x402')) return 'x402-client';
-  if(value.includes('curl')) return 'curl';
-  if(value.includes('python')) return 'python';
-  if(value.includes('node')) return 'node';
-  if(value.includes('go-http-client')) return 'go-http-client';
-  if(value.includes('postman')) return 'postman';
-  if(value.includes('vercel')) return 'vercel';
-  return value ? 'other' : 'unknown';
-}
-
-function identity(req) {
+function identity(req, paying=false) {
   const day=new Date().toISOString().slice(0,10);
   const forwarded=String(req.get?.('x-forwarded-for')||'').split(',')[0].trim();
   const ip=String(req.ip||forwarded||req.get?.('x-real-ip')||'unknown');
   const ua=String(req.get?.('user-agent')||'');
   const id=createHmac('sha256',secret()).update(`${day}|${ip}|${ua}`).digest('hex').slice(0,24);
-  return { clientId:id, clientDay:day, uaFamily:uaFamily(ua) };
+  return {
+    clientId:id,
+    clientDay:day,
+    uaFamily:uaFamily(ua),
+    clientKind:clientKind(ua,paying),
+    x402UaMention:ua.toLowerCase().includes('x402'),
+  };
 }
 
 function paymentPresent(req) {
@@ -34,15 +29,20 @@ function paymentPresent(req) {
 
 function emit(req, fields) {
   const { metadata, ...rest } = fields || {};
+  // Only a presented payment proves a buyer. The classification and the x402 mention ride in
+  // metadata because the shared intelligence event has fixed columns.
+  const { clientKind:kind, x402UaMention, ...client } = identity(req, rest.paymentAttempt || paymentPresent(req));
   const event={
-    telemetry:'x402_funnel_v1',
+    telemetry:'x402_funnel_v2',
     service:'MilliAPI',
     at:new Date().toISOString(),
-    ...identity(req),
+    ...client,
     vertical:'api-data-economy',
     ...rest,
     metadata:{
       funnelVersion:FUNNEL_VERSION,
+      clientKind:kind,
+      x402UaMention,
       ...(metadata || {}),
     },
   };
