@@ -72,9 +72,30 @@ test('MilliAPI OpenAPI is standalone',()=>{
 test('MilliAPI host hides Church-only routes while Church hosts retain generic routing',()=>{
   const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
   const rewrites=config.rewrites||[];
-  const hidden=['/.well-known/church-402','/canon','/pilgrimage','/prophet','/bible','/api/church-402','/api/pilgrimage','/api/prophet','/api/bible'];
+  const hidden=[
+    '/.well-known/church-402','/canon','/pilgrimage','/prophet','/bible',
+    '/api/church-402','/api/pilgrimage','/api/prophet','/api/bible',
+    '/.well-known/agent-network.json','/.well-known/agent-autonomy.json',
+    '/api/agent-network','/api/agent-autonomy'
+  ];
   for(const source of hidden){
     assert.ok(rewrites.some(rule=>rule.source===source&&rule.destination==='/api/milli-not-found'&&rule.has?.some(item=>item.type==='host'&&item.value==='milliapi.com')),source);
   }
   assert.ok(rewrites.some(rule=>rule.source==='/.well-known/church-402'&&rule.destination==='/api/church-402'&&!rule.has));
+});
+
+test('MilliAPI discovery routes point to Milli-only handlers',()=>{
+  const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
+  const rewrites=config.rewrites||[];
+  const expected={
+    '/llms.txt':'/api/milli-llms',
+    '/SKILL.md':'/api/milli-skill',
+    '/.well-known/agent.json':'/api/milli-agent-discovery',
+    '/.well-known/agent-card.json':'/api/milli-agent-discovery',
+    '/api/agent-discovery':'/api/milli-agent-discovery',
+    '/api/agent-tool-manifest':'/api/milli-agent-tool-manifest'
+  };
+  for(const [source,destination] of Object.entries(expected)){
+    assert.ok(rewrites.some(rule=>rule.source===source&&rule.destination===destination&&rule.has?.some(item=>item.type==='host'&&item.value==='milliapi.com')),source);
+  }
 });
