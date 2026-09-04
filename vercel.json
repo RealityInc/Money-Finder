@@ -41,7 +41,10 @@
     {"source":"/SKILL.md","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-skill"},
     {"source":"/.well-known/agent.json","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-discovery"},
     {"source":"/.well-known/agent-card.json","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-discovery"},
+    {"source":"/api/agent-discovery","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-discovery"},
     {"source":"/api/agent-tool-manifest","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-tool-manifest"},
+    {"source":"/api/agent-network","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-not-found"},
+    {"source":"/api/agent-autonomy","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-not-found"},
 
     {"source":"/.well-known/church-402","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-not-found"},
     {"source":"/.well-known/church-402.json","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-not-found"},
