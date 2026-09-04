@@ -28,6 +28,10 @@
   "rewrites": [
     {"source":"/","destination":"/api/home"},
     {"source":"/zh-CN","destination":"/api/home-zh"},
+    {"source":"/ai-web-readiness-audit","destination":"/api/ai-web-readiness-audit"},
+    {"source":"/llms-txt-audit","destination":"/api/llms-txt-audit"},
+    {"source":"/robots-txt-ai-crawler-audit","destination":"/api/robots-txt-ai-crawler-audit"},
+    {"source":"/x402-seller-audit","destination":"/api/x402-seller-audit"},
     {"source":"/robots.txt","destination":"/api/robots"},
     {"source":"/sitemap.xml","destination":"/api/sitemap"},
     {"source":"/mcp","destination":"/api/mcp"},

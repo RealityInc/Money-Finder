@@ -58,6 +58,16 @@ export const PRODUCTS = [
     surfaces: ['x402', 'catalog', 'toolManifest', 'llms', 'openapi'],
   },
   {
+    id: 'x402-practice-audit',
+    path: '/api/x402-practice-audit',
+    method: 'GET',
+    priceUsd: 0,
+    role: 'free-acquisition',
+    title: 'x402 Seller Practice Audit',
+    idempotent: false,
+    surfaces: ['catalog', 'openapi'],
+  },
+  {
     id: 'verify-site-repairs',
     path: '/api/verify-site-repairs',
     method: 'POST',
