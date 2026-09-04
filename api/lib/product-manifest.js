@@ -107,9 +107,9 @@ export const PRODUCTS = [
     idempotent: true,
     surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'],
   },
-  { id: 'ai-robots-check', path: '/api/ai-robots-check', method: 'GET', priceUsd: 0.001, role: 'legacy', title: 'AI Robots Policy Check', idempotent: false, surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'] },
-  { id: 'llms-txt-check', path: '/api/llms-txt-check', method: 'GET', priceUsd: 0.001, role: 'legacy', title: 'llms.txt Check', idempotent: false, surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'] },
-  { id: 'page-metadata', path: '/api/page-metadata', method: 'GET', priceUsd: 0.002, role: 'legacy', title: 'Page Metadata Extractor', idempotent: false, surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'] },
+  { id: 'ai-robots-check', path: '/api/ai-robots-check', method: 'GET', priceUsd: 0.001, role: 'legacy', title: 'AI Robots Policy Check', idempotent: true, surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'] },
+  { id: 'llms-txt-check', path: '/api/llms-txt-check', method: 'GET', priceUsd: 0.001, role: 'legacy', title: 'llms.txt Check', idempotent: true, surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'] },
+  { id: 'page-metadata', path: '/api/page-metadata', method: 'GET', priceUsd: 0.002, role: 'legacy', title: 'Page Metadata Extractor', idempotent: true, surfaces: ['x402', 'catalog', 'toolManifest', 'openapi'] },
 ];
 
 export function starterProduct() {

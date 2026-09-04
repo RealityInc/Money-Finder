@@ -4,6 +4,12 @@ const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
 const PAYMENT_HEADERS = ['PAYMENT-SIGNATURE', 'X-PAYMENT', 'X-PAYMENT-SIGNATURE'];
 const FUNNEL_VERSION = 3;
+const IDEMPOTENCY = {
+  header:'Idempotency-Key',
+  supported:true,
+  scope:'best-effort response replay; shared when the configured replay store is available',
+  guidance:'Send an 8-200 character Idempotency-Key on the paid retry. Reuse the same key and exact request after a dropped connection to replay a successful result instead of paying again.',
+};
 
 function paymentHeader(req) {
   return req.get('PAYMENT-SIGNATURE') || req.get('X-PAYMENT') || req.get('X-PAYMENT-SIGNATURE') || null;
@@ -95,13 +101,14 @@ function buildOffer({req,route,amount,description,method,network,enriched,nextAc
       acceptedPaymentHeaders:PAYMENT_HEADERS,
       accountRequired:false,
       apiKeyRequired:false,
+      idempotency:IDEMPOTENCY,
     },
     nextActions:Array.isArray(nextActions) ? nextActions : [],
   };
 }
 
 function setOfferHeaders(res, offer) {
-  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, Link';
+  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, X-Idempotent-Replay, X-Idempotency-Scope, Link';
   res.setHeader('Access-Control-Expose-Headers',exposed);
   res.setHeader('X-Free-Preview',offer.freePreviewUrl);
   res.setHeader('X-Paid-URL',offer.paidUrl);
