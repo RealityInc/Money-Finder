@@ -9,16 +9,21 @@ const MAX_REDIRECTS = 4;
 function isBlockedIPv4(ip) {
   const parts = ip.split('.').map(Number);
   if (parts.length !== 4 || parts.some(Number.isNaN)) return true;
-  const [a, b] = parts;
+  const [a, b, c] = parts;
   return (
     a === 0 ||
     a === 10 ||
     a === 127 ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 0 && c === 0) ||
+    (a === 192 && b === 0 && c === 2) ||
     (a === 192 && b === 168) ||
+    (a === 192 && b === 88 && c === 99) ||
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113) ||
     a >= 224
   );
 }
@@ -28,6 +33,9 @@ function isBlockedIPv6(ip) {
   return (
     value === '::' ||
     value === '::1' ||
+    value.startsWith('::ffff:') ||
+    (value === '100::' || value.startsWith('100::')) ||
+    value.startsWith('2001:db8:') ||
     value.startsWith('fc') ||
     value.startsWith('fd') ||
     value.startsWith('fe8') ||
@@ -46,7 +54,9 @@ function isBlockedIp(ip) {
 }
 
 async function assertPublicHostname(hostname) {
-  const normalized = hostname.toLowerCase().replace(/\.$/, '');
+  // WHATWG URL keeps brackets around IPv6 hostnames; net.isIP expects the
+  // address itself. Strip only that syntactic wrapper before classification.
+  const normalized = hostname.toLowerCase().replace(/\.$/, '').replace(/^\[|\]$/g, '');
   if (
     normalized === 'localhost' ||
     normalized.endsWith('.localhost') ||
