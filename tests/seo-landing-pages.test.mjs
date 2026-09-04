@@ -44,3 +44,11 @@ test('clean landing-page routes are wired in Vercel config',()=>{
   const config=JSON.parse(readFileSync(new URL('../vercel.json',import.meta.url),'utf8'));
   for(const slug of Object.keys(handlers))assert.ok(config.rewrites.some(rule=>rule.source===`/${slug}`&&rule.destination===`/api/${slug}`));
 });
+
+test('free seller audit has one direct, payment-free call to action',async()=>{
+  const {body}=await invoke(seller);
+  assert.match(body,/free live response/);
+  assert.match(body,/href="\/api\/x402-practice-audit">Run the live audit<\/a>/);
+  assert.match(body,/does not request or authorize payment/);
+  assert.doesNotMatch(body,/x402-practice-audit\?url=|x402-practice-audit[^<]*preview=1|free per paid result/i);
+});
