@@ -9,8 +9,8 @@ const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'.toLowerCase();
 const SERVICES = [
   { id: 'audit-and-fix', path: '/api/audit-and-fix', method: 'GET', queryUrl: true, amount: '3000', priceUsd: 0.003, qualified: true, role: 'starter' },
   { id: 'repair-site', path: '/api/repair-site', method: 'GET', queryUrl: true, amount: '5000', priceUsd: 0.005, qualified: true, role: 'flagship' },
-  { id: 'ai-robots-check', path: '/api/ai-robots-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001 },
-  { id: 'llms-txt-check', path: '/api/llms-txt-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001 },
+  { id: 'ai-robots-check', path: '/api/ai-robots-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001, qualified: true },
+  { id: 'llms-txt-check', path: '/api/llms-txt-check', method: 'GET', queryUrl: true, amount: '1000', priceUsd: 0.001, qualified: true },
   { id: 'page-metadata', path: '/api/page-metadata', method: 'GET', queryUrl: true, amount: '2000', priceUsd: 0.002 },
   { id: 'ai-web-readiness-audit', path: '/api/agent-web-audit', method: 'GET', queryUrl: true, amount: '5000', priceUsd: 0.005 },
   { id: 'repair-verification', path: '/api/verify-site-repairs', method: 'POST', body: { url: 'https://example.com', baselineToken: 'seller-practice-probe' }, amount: '2000', priceUsd: 0.002 },
@@ -116,6 +116,7 @@ async function auditService(service) {
     check('Resource description + JSON mime type', typeof resource.description === 'string' && resource.description.length >= 40 && resource.mimeType === 'application/json', 2),
     check('Seller identity metadata', typeof resource.serviceName === 'string' && resource.serviceName.length > 0 && resource.serviceName.length <= 32 && tags.length > 0 && tags.length <= 5 && tags.every(tag => typeof tag === 'string' && tag.length <= 32) && /^https:\/\//.test(resource.iconUrl || ''), 3),
     check('Valid Bazaar invocation metadata', bazaarValidation.ok, 3, bazaarValidation.detail),
+    check('Idempotent paid retry advertised', Boolean(paymentRequired?.purchase?.idempotency?.supported), 1),
     check('Fast payment challenge', result.latencyMs < 5000, 1, `${result.latencyMs} ms`)
   ];
   return { id: service.id, endpoint: service.path, method: service.method || 'GET', priceUsd: service.priceUsd, role: service.role || null, status: result.response.status, outcome: 'payment_challenge', latencyMs: result.latencyMs, score: checks.reduce((sum, item) => sum + item.points, 0), maxScore: checks.reduce((sum, item) => sum + item.maxPoints, 0), checks };

@@ -93,9 +93,9 @@ const EDGES = [
 const PROVENANCE={
   status:'hand-maintained',
   warning:'Weights and confidences in this graph are hand-entered design priors and small-sample readings, not computed statistics. Edges whose evidence begins "DESIGN PRIOR, NOT OBSERVED" have no supporting settlement data at all. Do not present any of it as a measured conversion rate.',
-  measuredBy:null,
-  blocker:'No funnel readback exists. The x402_funnel_v1 events emitted by api/lib/privacy-traffic-telemetry.js are written to the private intelligence core and never read back, so challenge-to-settlement conversion is unmeasured in this repository.',
-  nextStep:'Add a readback that computes challenge -> settled and preview -> challenge per route, price and client family, then replace these hand-entered weights with observed values.',
+  measuredBy:'api/lib/steward.js via mo-core/read_conversions@1',
+  blocker:'The Steward exposes a privacy-safe 24-hour funnel summary, but this hand-maintained graph is not yet recalibrated automatically from those observations.',
+  nextStep:'Use Steward conversion summaries to replace hand-entered weights with statistically meaningful observations after enough route-level volume accumulates.',
 };
 
 const GUARDRAILS=[
@@ -104,7 +104,7 @@ const GUARDRAILS=[
   'Do not store raw IP addresses, payment credentials, wallet secrets, request bodies, or payer identity as learning features.',
   'Protocol changes require explicit review; discovery copy, tags and product ranking may be optimized automatically.',
   'Price experiments require explicit approval.',
-  'Weights in this graph are hand-entered until a funnel readback exists. Never report them as measured conversion rates.'
+  'Weights in this graph remain hand-entered even though privacy-safe funnel readback exists. Never report them as measured conversion rates.'
 ];
 
 export function getLearningGraph(){return {graph:'money-finder-learning-graph',version:GRAPH_VERSION,updatedAt:'2026-09-03T00:00:00Z',purpose:'Learn which x402 practices, products, discovery channels and buyer segments most strongly drive reliable paid usage.',provenance:PROVENANCE,guardrails:GUARDRAILS,nodes:NODES,edges:EDGES};}

@@ -13,7 +13,7 @@ const ROUTE='/api/repair-site';
 const PUBLIC_ORIGIN='https://milliapi.com';
 const PAY_TO=process.env.PAY_TO||'';
 const PAYMENT_CONFIGURED=Boolean(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET);
-const TAGS=['ai-agents','website-repair','ai-search','repair-artifacts','llms-txt','robots-txt'];
+const TAGS=['ai-agents','website-repair','ai-search','repair-artifacts','llms-robots'];
 const DESCRIPTION='Repair This Site: decision-ready AI web diagnosis plus exact repair artifacts. Returns prioritized issues, evidence, ready-to-apply or review-required fixes, crawler policy, robots.txt and llms.txt status, metadata findings, a portable baseline, and a verification handoff.';
 
 const discovery=declareDiscoveryExtension({

@@ -87,6 +87,8 @@ describe('unpaid x402 challenge', () => {
     challenge(req, res, () => {});
     const { body } = await done;
     assert.equal(body.purchase.retrySameRequest, true);
+    assert.equal(body.purchase.idempotency.supported, true);
+    assert.equal(body.purchase.idempotency.header, 'Idempotency-Key');
     assert.ok(body.purchase.retryUrl.startsWith('https://milliapi.com/api/audit-and-fix'));
     assert.equal(body.purchase.accountRequired, false);
     assert.equal(body.purchase.apiKeyRequired, false);
