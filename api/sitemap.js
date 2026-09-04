@@ -10,7 +10,7 @@ function siteFor(host){
   };
   if(host==='milliapi.com'||host==='www.milliapi.com') return {
     origin:'https://milliapi.com',
-    paths:['/','/zh-CN','/learning.html']
+    paths:['/','/zh-CN','/learning.html','/ai-web-readiness-audit','/llms-txt-audit','/robots-txt-ai-crawler-audit','/x402-seller-audit']
   };
   return {origin:null,paths:[]};
 }
