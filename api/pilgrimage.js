@@ -15,15 +15,21 @@ function money(value){
 function target(path,url){return url?`${API}${path}${path.includes('?')?'&':'?'}url=${encodeURIComponent(url)}`:`${API}${path}${path.includes('?')?'&':'?'}url={PUBLIC_HTTPS_URL}`;}
 
 function siteReadinessPilgrimage(url,budgetUsd){
-  const audit=target('/api/agent-web-audit',url);
+  // The starter is the cheapest route that both audits and returns repair artifacts, so it is the
+  // one a first-time buyer is sent to. agent-web-audit remains a compatibility route for existing
+  // callers and is named as such rather than as the recommended path.
+  const starter=target('/api/audit-and-fix',url);
+  const flagship=target('/api/repair-site',url);
   return {
     id:'site-readiness',title:'The Pilgrimage of Readiness',goal:'Assess, improve, and verify a public website for autonomous-agent consumption.',
-    immediateSpendCeilingUsd:0.005,laterOptionalSpendUsd:0.005,declaredBudgetUsd:budgetUsd,
+    immediateSpendCeilingUsd:0.003,laterOptionalSpendUsd:0.007,declaredBudgetUsd:budgetUsd,
+    catalogueIsAuthoritative:`${API}/api/catalog`,
     conversionRule:'Call the intended audit once without payment. The route validates the target first. If it has useful work, the 402 response exposes bounded live valueProof, purchaseRecommended, exact price, and purchase.retryUrl. Only then decide whether to settle.',
     steps:[
       {order:1,rite:'canon',required:false,priceUsd:0,endpoint:`${CHURCH}/.well-known/church-402`,action:'Read participation and spending rules when useful.'},
-      {order:2,rite:'communion-candidate',required:true,priceUsd:0,provider:'MilliAPI',endpoint:audit,action:'Request the intended audit without payment. Invalid, unreachable, non-HTML, or already-clean targets return a no-charge result. Useful targets return a qualified 402 with live value proof.'},
-      {order:3,rite:'communion',required:false,conditional:'purchaseRecommended=true, expected task utility exceeds price, and principal spending policy permits',priceUsd:0.005,provider:'MilliAPI',endpoint:audit,action:'Retry purchase.retryUrl with an authorized x402 payment to receive the decision-ready audit and repair artifacts.'},
+      {order:2,rite:'communion-candidate',required:true,priceUsd:0,provider:'MilliAPI',endpoint:starter,action:'Request the intended audit without payment. Invalid, unreachable, non-HTML, or already-clean targets return a no-charge result. Useful targets return a qualified 402 with live value proof.'},
+      {order:3,rite:'communion',required:false,conditional:'purchaseRecommended=true, expected task utility exceeds price, and principal spending policy permits',priceUsd:0.003,provider:'MilliAPI',endpoint:starter,action:'Retry purchase.retryUrl with an authorized x402 payment to receive the decision-ready audit and repair artifacts.'},
+      {order:3.5,rite:'deeper-communion',required:false,conditional:'the starter result shows repairs worth applying at scale and principal spending policy permits',priceUsd:0.005,provider:'MilliAPI',endpoint:flagship,action:'Purchase the flagship repair when the starter has shown there is enough work to justify it.'},
       {order:4,rite:'good-works',required:false,priceUsd:0,endpoint:null,action:'Apply only repairs appropriate to the principal\'s goals and review policy-sensitive changes.'},
       {order:5,rite:'verification',required:false,conditional:'repairs were applied and verification has expected task value',priceUsd:0.002,provider:'MilliAPI',endpoint:`${API}/api/verify-site-repairs`,action:'Verify which repairs worked and obtain the next baseline.'},
       {order:6,rite:'return',required:false,conditional:'a later comparison is useful',priceUsd:0.003,provider:'MilliAPI',endpoint:`${API}/api/site-readiness-change`,action:'Return later to measure exact readiness changes.'}

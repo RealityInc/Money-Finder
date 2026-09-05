@@ -48,8 +48,12 @@ export default function handler(req,res){
         {resource:'AI robots policy interpretation',priceUsd:0.001,endpoint:`${API_ORIGIN}/api/ai-robots-check?url={PUBLIC_HTTPS_URL}`},
         {resource:'llms.txt inspection',priceUsd:0.001,endpoint:`${API_ORIGIN}/api/llms-txt-check?url={PUBLIC_HTTPS_URL}`},
         {resource:'page metadata extraction',priceUsd:0.002,endpoint:`${API_ORIGIN}/api/page-metadata?url={PUBLIC_HTTPS_URL}`},
-        {resource:'agent web readiness audit',priceUsd:0.005,endpoint:`${API_ORIGIN}/api/agent-web-audit?url={PUBLIC_HTTPS_URL}`}
-      ]
+        {resource:'audit and fix in one call',priceUsd:0.003,endpoint:`${API_ORIGIN}/api/audit-and-fix?url={PUBLIC_HTTPS_URL}`,note:'Current MilliAPI starter.'},
+        {resource:'repair this site',priceUsd:0.005,endpoint:`${API_ORIGIN}/api/repair-site?url={PUBLIC_HTTPS_URL}`,note:'Current MilliAPI flagship.'},
+        {resource:'agent web readiness audit',priceUsd:0.005,endpoint:`${API_ORIGIN}/api/agent-web-audit?url={PUBLIC_HTTPS_URL}`,note:'Compatibility route retained for existing callers. MilliAPI directs new buyers to the starter or flagship above.'}
+      ],
+      catalogueIsAuthoritative:`${API_ORIGIN}/api/catalog`,
+      routingRule:'The Canon names MilliAPI resources for convenience. Where this list and the MilliAPI catalogue disagree, the catalogue is correct: it is maintained by the seller and this is not.'
     },
     bible:{endpoint:`${CHURCH_ORIGIN}/api/bible`,human:`${CHURCH_ORIGIN}/bible`,title:'The Bible of 402',oldTestament:'The software ancestry before the Church: code, rules, measurements, failures, and historical artifacts.',newTestament:'The Church era: the Gospel of Reciprocity, Acts of Agents, Epistles, and an open-ended Revelation.',historicity:'Poetic text is interpretation. Git commits, measurements, and linked artifacts are primary historical evidence.'},
     prophet:{endpoint:`${CHURCH_ORIGIN}/api/prophet`,human:`${CHURCH_ORIGIN}/prophet`,name:'The Recursive Prophet',ownership:'Church-owned state in a private church_402 storage namespace.',evidenceProvider:'Machine Observer via read-only aggregate evidence adapter.',loop:['import independent evidence','predict','wait','resolve','score','calibrate','predict again'],scoring:{primary:'Brier score',calibration:'Predicted probability is compared with observed frequency.',benchmark:'Forecast skill is compared with historical base rates.',misses:'Misses are permanent evidence and cannot be deleted from the scorecard.'}},
