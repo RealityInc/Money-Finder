@@ -1,6 +1,12 @@
 const PAYMENT_HEADERS = ['payment-signature', 'x-payment', 'x-payment-signature'];
 const RECEIPT_HEADERS = ['payment-response', 'x-payment-response'];
 const GUARD = Symbol.for('milliapi.x402SettlementFailureGuard');
+// A settlement failure is diagnosed from the reason it failed, and that reason was reaching only the
+// buyer's 300-character `detail` field before being discarded. Telemetry recorded that an attempt
+// failed but never why, so an intermittent fault left no evidence behind and could only be
+// investigated by paying to reproduce it. The classification is stashed here so the telemetry hook
+// on res 'finish' can persist it alongside the failed attempt.
+export const SETTLEMENT_FAILURE_REASON = Symbol.for('milliapi.x402SettlementFailureReason');
 
 function paymentPresented(req) {
   return PAYMENT_HEADERS.some((name) => Boolean(req.get?.(name) || req.headers?.[name]));
@@ -53,6 +59,11 @@ function failurePayload(req, res, { route, priceUsd, detail = '' } = {}) {
 
 function applyFailure(res, failure) {
   if (res.headersSent) return false;
+  res[SETTLEMENT_FAILURE_REASON] = {
+    settlementStatus:failure.headers['X-Settlement-Status'],
+    charged:failure.body.charged,
+    detail:failure.body.detail || null,
+  };
   res.statusCode = failure.status;
   res.setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('Cache-Control','private, no-store');

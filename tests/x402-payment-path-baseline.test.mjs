@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { encodePaymentRequiredHeader, PAYMENT_REQUIRED_HEADER_BUDGET_BYTES } from '../api/lib/x402-challenge-header.js';
-import { protectExpressSettlementResponse } from '../api/lib/x402-settlement-failure.js';
+import { protectExpressSettlementResponse, SETTLEMENT_FAILURE_REASON } from '../api/lib/x402-settlement-failure.js';
 import { requestedX402Version, toV1PaymentRequired } from '../api/lib/x402-version.js';
 import { clientKind, uaFamily } from '../api/lib/client-classification.js';
 
@@ -81,6 +81,31 @@ test('opaque post-signature failure reports unknown charge state without returni
   assert.equal(body.error,'settlement_failed');
   assert.equal(body.charged,null);
   assert.equal(body.retryable,false);
+});
+
+test('a settlement failure records why it failed, not just that it did', () => {
+  // Two intermittent settlement failures in production produced no diagnostic signal at all: the
+  // telemetry event carried route, status and amount but never the reason, and the reason reached
+  // only the buyer. An intermittent fault that leaves no evidence can be investigated only by paying
+  // to reproduce it, so the classification has to survive on the response for the telemetry hook.
+  const {req,res}=context();
+  protectExpressSettlementResponse(req,res,{route:'/api/page-metadata',priceUsd:0.002});
+  res.send('{"error":"facilitator unavailable"}');
+
+  const reason = res[SETTLEMENT_FAILURE_REASON];
+  assert.ok(reason, 'the failure classification must be readable by the telemetry hook');
+  assert.equal(reason.settlementStatus,'settlement_failed');
+  assert.equal(reason.charged,null);
+  assert.match(reason.detail,/facilitator unavailable/);
+});
+
+test('a settled-but-undelivered failure records the charged classification too', () => {
+  const {req,res}=context({receipt:'receipt-123'});
+  protectExpressSettlementResponse(req,res,{route:'/api/page-metadata',priceUsd:0.002});
+  res.send('{"error":"handler exploded after settlement"}');
+  const reason = res[SETTLEMENT_FAILURE_REASON];
+  assert.equal(reason.settlementStatus,'settled_but_undelivered');
+  assert.equal(reason.charged,true,'a charged failure must be distinguishable in the record');
 });
 
 test('receipt on a failed paid request reports settled-but-undelivered', () => {

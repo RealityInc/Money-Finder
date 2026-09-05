@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { persistIntelligenceEvent } from './mo-core.js';
 import { clientKind, uaFamily } from './client-classification.js';
+import { SETTLEMENT_FAILURE_REASON } from './x402-settlement-failure.js';
 
 const FUNNEL_VERSION = 2;
 
@@ -58,13 +59,17 @@ export async function observePaidRoute(req,res,{route,method='GET',amount=null,m
     let settled=false;
     try { settled=JSON.parse(Buffer.from(String(receipt||''),'base64').toString()).success===true; } catch {}
     const succeeded=status>=200&&status<300&&settled;
+    // Carry the failure classification into the record. It is the same bounded string already
+    // returned to the buyer, so this exposes nothing new, but it is the difference between a
+    // failure that can be diagnosed later and one that can only be reproduced by paying again.
+    const reason=!succeeded?res[SETTLEMENT_FAILURE_REASON]:null;
     const event=emit(req,{
       route,
       stage:succeeded?'settled':'payment_attempt_failed',
       status,
       paymentAttempt:true,
       amount,
-      metadata,
+      metadata:reason?{...(metadata||{}),settlementStatus:reason.settlementStatus,charged:reason.charged,failureDetail:String(reason.detail||'').slice(0,300)}:metadata,
     });
     // Successful settlements are persisted by the awaited x402 onAfterSettle hook,
     // avoiding double-counting. Failed attempts have no settlement hook, so keep a
