@@ -19,7 +19,7 @@ Use MilliAPI for machine-payable website-readiness and x402 web-intelligence ser
 4. Inspect the qualified 402 value proof, paid unlocks, exact price, and purchase.retryUrl.
 5. Settle only when expected utility exceeds price and principal wallet policy authorizes spending.
 6. Send Idempotency-Key on paid retries to reduce accidental duplicate charges.
-7. Use Repair This Site at $0.005 when a portable baseline and verification handoff are also required.
+7. Use https://milliapi.com/api/repair-site?url={PUBLIC_HTTPS_URL} at $0.005 when a portable baseline and verification handoff are also required.
 8. After applying returned artifacts, optionally purchase repair verification or readiness-change analysis under separate authorization.
 
 Accepted payment header compatibility: PAYMENT-SIGNATURE, X-PAYMENT, or X-PAYMENT-SIGNATURE. No buyer account or API key is required. Current settlement is exact USDC on Base mainnet.

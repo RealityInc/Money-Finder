@@ -24,6 +24,21 @@ function renderHandler(modulePath) {
   });
 }
 
+function renderTextHandler(modulePath) {
+  return import(resolve(root, modulePath)).then(module => {
+    let captured = null;
+    const res = {
+      setHeader() {},
+      status() { return res; },
+      send(body) { captured = String(body ?? ''); return res; },
+      end() { if (captured === null) captured = ''; return res; },
+    };
+    module.default({ method: 'GET', query: {}, headers: {} }, res);
+    if (captured === null) throw new Error(`${modulePath} produced no text body`);
+    return captured;
+  });
+}
+
 function readText(relativePath) {
   return readFileSync(resolve(root, relativePath), 'utf8');
 }
@@ -31,10 +46,10 @@ function readText(relativePath) {
 const surfaces = {
   x402: { label: '.well-known/x402 (api/x402-discovery.js)', load: () => renderHandler('api/x402-discovery.js') },
   catalog: { label: '/api/catalog', load: () => renderHandler('api/catalog.js') },
-  toolManifest: { label: '/api/agent-tool-manifest', load: () => renderHandler('api/agent-tool-manifest.js') },
-  agentManifest: { label: '/.well-known/agent.json (api/agent-discovery.js)', load: () => renderHandler('api/agent-discovery.js') },
-  llms: { label: 'llms.txt', load: async () => readText('llms.txt') },
-  skill: { label: 'SKILL.md', load: async () => readText('SKILL.md') },
+  toolManifest: { label: '/api/agent-tool-manifest (MilliAPI)', load: () => renderHandler('api/milli-agent-tool-manifest.js') },
+  agentManifest: { label: '/.well-known/agent.json (MilliAPI)', load: () => renderHandler('api/milli-agent-discovery.js') },
+  llms: { label: 'milliapi.com/llms.txt', load: () => renderTextHandler('api/milli-llms.js') },
+  skill: { label: 'milliapi.com/SKILL.md', load: () => renderTextHandler('api/milli-skill.js') },
   openapi: { label: 'openapi.json', load: async () => JSON.stringify(Object.keys(JSON.parse(readText('openapi.json')).paths)) },
 };
 
