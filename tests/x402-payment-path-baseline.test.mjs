@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { encodePaymentRequiredHeader, PAYMENT_REQUIRED_HEADER_BUDGET_BYTES } from '../api/lib/x402-challenge-header.js';
 import { protectExpressSettlementResponse } from '../api/lib/x402-settlement-failure.js';
+import { requestedX402Version, toV1PaymentRequired } from '../api/lib/x402-version.js';
+import { clientKind, uaFamily } from '../api/lib/client-classification.js';
 
 function richChallenge() {
   return {
@@ -24,6 +26,29 @@ test('PAYMENT-REQUIRED header stays bounded while retaining payable terms', () =
   assert.equal(decoded.resource.url.includes('milliapi.com'),true);
   assert.equal(decoded.extensions,undefined);
   assert.equal(decoded.preview,undefined);
+});
+
+test('explicit v1 clients receive v1-compatible payment terms', () => {
+  const req={
+    originalUrl:'/api/audit-and-fix?url=https%3A%2F%2Fexample.com&x402Version=1',
+    headers:{},
+    get(){ return null; },
+  };
+  assert.equal(requestedX402Version(req).version,1);
+  const v1=toV1PaymentRequired(richChallenge(),{
+    resourceUrl:'https://milliapi.com/api/audit-and-fix?url=https%3A%2F%2Fexample.com',
+    description:'Decision-ready audit',
+  });
+  assert.equal(v1.x402Version,1);
+  assert.equal(v1.accepts[0].network,'base');
+  assert.equal(v1.accepts[0].maxAmountRequired,'5000');
+  assert.equal(v1.accepts[0].amount,undefined);
+});
+
+test('x402 in a crawler user-agent is not buyer evidence', () => {
+  assert.equal(uaFamily('x402scan/1.0 crawler'),'x402-ua-mention');
+  assert.equal(clientKind('x402scan/1.0 crawler',false),'indexer');
+  assert.equal(clientKind('x402scan/1.0 crawler',true),'buyer');
 });
 
 function context({receipt=null}={}) {
