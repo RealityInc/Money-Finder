@@ -173,9 +173,18 @@ export async function auditPublicUrl(input,{useCache=true}={}) {
   return {...result,cache:cacheMeta(false)};
 }
 
-export async function preflightPublicUrl(input) {
+// Where a preflight tells the buyer to go if it wants the paid result. Five routes share this
+// function and they do not share a price, so the caller names its own product. Left unset it names the
+// legacy audit, which is correct only for the legacy routes: a buyer that asked $0.003 audit-and-fix
+// whether the target was worth auditing used to be answered with the $0.005 endpoint's address, which
+// sends it away from the thing it was already talking to and quotes it the wrong price.
+const LEGACY_PAID_AUDIT={endpoint:'https://milliapi.com/api/agent-web-audit',priceUsd:0.005,includes:['verdict','blockers','evidence','prioritized_fixes','crawler_policy','baseline_token']};
+
+export async function preflightPublicUrl(input,{paidAudit=LEGACY_PAID_AUDIT}={}) {
   const normalized=await normalizePublicHttpsUrl(input); const key=normalized.toString(); const cached=getCached(preflightCache,key);
-  if (cached) return {...cached.value,cache:{hit:true,ttlSeconds:PREFLIGHT_TTL_MS/1000,ageSeconds:Math.floor(cached.ageMs/1000)}};
+  // The measurement is shared across callers; the product it points at is not, so it is applied after
+  // the cache rather than baked into it.
+  if (cached) return {...cached.value,paidAudit,cache:{hit:true,ttlSeconds:PREFLIGHT_TTL_MS/1000,ageSeconds:Math.floor(cached.ageMs/1000)}};
   const origin=normalized.origin;
   const [pageResult,robotsResult,llmsResult]=await Promise.allSettled([
     safePublicFetch(key,{maxBytes:300_000}),safePublicFetch(`${origin}/robots.txt`,{maxBytes:64_000,accept:'text/plain,*/*;q=0.2'}),
@@ -193,6 +202,6 @@ export async function preflightPublicUrl(input) {
   potentialIssueCount += Number(!(llmsResult.status==='fulfilled'&&llmsResult.value.response.ok));
   const result={product:'MilliAPI AI Web Audit Preflight',target:pageFetch.finalUrl,checkedAt:new Date().toISOString(),reachable:pageFetch.response.ok,
     status:pageFetch.response.status,html,potentialIssueCount,purchaseRecommended:pageFetch.response.ok&&html&&potentialIssueCount>0,
-    paidAudit:{endpoint:'https://milliapi.com/api/agent-web-audit',priceUsd:0.005,includes:['verdict','blockers','evidence','prioritized_fixes','crawler_policy','baseline_token']}};
-  setCached(preflightCache,key,result,PREFLIGHT_TTL_MS); return {...result,cache:{hit:false,ttlSeconds:PREFLIGHT_TTL_MS/1000,ageSeconds:0}};
+    paidAudit:LEGACY_PAID_AUDIT};
+  setCached(preflightCache,key,result,PREFLIGHT_TTL_MS); return {...result,paidAudit,cache:{hit:false,ttlSeconds:PREFLIGHT_TTL_MS/1000,ageSeconds:0}};
 }

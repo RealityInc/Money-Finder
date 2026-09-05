@@ -42,7 +42,8 @@ async function qualify(req,res,next){
   const url=target(req);
   if(!url) return noCharge(res,{error:'missing_url',message:'Pass ?url=https://example.com'},400);
   try{
-    const proof=await preflightPublicUrl(url);
+    // Point the buyer at this endpoint at its real price, not at the legacy audit's.
+    const proof=await preflightPublicUrl(url,{paidAudit:{endpoint:`${ORIGIN}${ROUTE}`,priceUsd:0.003,includes:['verdict','blockers','evidence','prioritized_fixes','crawler_policy','repair_artifacts','baseline_token']}});
     if(!proof.reachable||!proof.html) return noCharge(res,{qualified:false,reason:!proof.reachable?'target_unreachable':'target_not_html',valueProof:proof});
     if(!proof.purchaseRecommended) return noCharge(res,{qualified:true,reason:'no_actionable_readiness_issues',valueProof:proof});
     const issueCount=Math.max(1,Number(proof.potentialIssueCount)||1);

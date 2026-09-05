@@ -38,7 +38,8 @@ async function qualify(req,res,next){
   const input=target(req);
   if(!input) return res.status(400).json({error:'Missing url query parameter',purchaseRecommended:false,noCharge:true,example:'/api/repair-site?url=https%3A%2F%2Fexample.com'});
   try{
-    const result=await preflightPublicUrl(input);
+    // Point the buyer at this endpoint, not at the legacy audit it is replacing.
+    const result=await preflightPublicUrl(input,{paidAudit:{endpoint:`${PUBLIC_ORIGIN}${ROUTE}`,priceUsd:0.005,includes:['verdict','blockers','evidence','prioritized_fixes','crawler_policy','ready_to_apply_repair_artifacts','portable_baseline']}});
     const valueProof={
       evidenceType:'live-site-qualification',
       target:result.target,
