@@ -17,10 +17,11 @@ function paymentHeader(req) {
   return req.get('PAYMENT-SIGNATURE') || req.get('X-PAYMENT') || req.get('X-PAYMENT-SIGNATURE') || null;
 }
 
-function normalizePaymentHeader(req) {
-  if (!req.get('PAYMENT-SIGNATURE') && !req.get('X-PAYMENT') && req.get('X-PAYMENT-SIGNATURE')) {
-    req.headers['payment-signature'] = req.get('X-PAYMENT-SIGNATURE');
-  }
+export function normalizePaymentHeader(req) {
+  if (req.get('PAYMENT-SIGNATURE')) return;
+  const payment = req.get('X-PAYMENT') || req.get('X-PAYMENT-SIGNATURE');
+  // The SDK extracts only PAYMENT-SIGNATURE; preserve the original payload bytes.
+  if (payment) req.headers['payment-signature'] = payment;
 }
 
 function enrichHttpDiscovery(extensions, method) {
