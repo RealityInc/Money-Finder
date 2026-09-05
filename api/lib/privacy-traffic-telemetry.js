@@ -1,5 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { persistIntelligenceEvent } from './mo-core.js';
+import { clientKind, uaFamily } from './client-classification.js';
 
 const FUNNEL_VERSION = 2;
 
@@ -7,16 +8,8 @@ function secret() {
   return process.env.TELEMETRY_SALT || process.env.CDP_API_KEY_SECRET || process.env.CDP_API_KEY_ID || 'milliapi-telemetry-fallback';
 }
 
-function uaFamily(ua='') {
-  const value=String(ua).toLowerCase();
-  if(value.includes('x402')) return 'x402-client';
-  if(value.includes('curl')) return 'curl';
-  if(value.includes('python')) return 'python';
-  if(value.includes('node')) return 'node';
-  if(value.includes('go-http-client')) return 'go-http-client';
-  if(value.includes('postman')) return 'postman';
-  if(value.includes('vercel')) return 'vercel';
-  return value ? 'other' : 'unknown';
+function paymentPresent(req) {
+  return Boolean(req.get?.('PAYMENT-SIGNATURE') || req.get?.('X-PAYMENT') || req.get?.('X-PAYMENT-SIGNATURE'));
 }
 
 function identity(req) {
@@ -24,12 +17,9 @@ function identity(req) {
   const forwarded=String(req.get?.('x-forwarded-for')||'').split(',')[0].trim();
   const ip=String(req.ip||forwarded||req.get?.('x-real-ip')||'unknown');
   const ua=String(req.get?.('user-agent')||'');
+  const paying=paymentPresent(req);
   const id=createHmac('sha256',secret()).update(`${day}|${ip}|${ua}`).digest('hex').slice(0,24);
-  return { clientId:id, clientDay:day, uaFamily:uaFamily(ua) };
-}
-
-function paymentPresent(req) {
-  return Boolean(req.get?.('PAYMENT-SIGNATURE') || req.get?.('X-PAYMENT') || req.get?.('X-PAYMENT-SIGNATURE'));
+  return { clientId:id, clientDay:day, uaFamily:uaFamily(ua), clientKind:clientKind(ua,paying) };
 }
 
 function emit(req, fields) {

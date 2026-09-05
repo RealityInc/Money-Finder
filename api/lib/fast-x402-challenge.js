@@ -1,4 +1,6 @@
 import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemetry.js';
+import { encodePaymentRequiredHeader } from './x402-challenge-header.js';
+import { requestedX402Version, toV1PaymentRequired } from './x402-version.js';
 
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
@@ -108,7 +110,7 @@ function buildOffer({req,route,amount,description,method,network,enriched,nextAc
 }
 
 function setOfferHeaders(res, offer) {
-  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, X-Idempotent-Replay, X-Idempotency-Scope, Link';
+  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-X402-Version-Served, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, X-Idempotent-Replay, X-Idempotency-Scope, Link';
   res.setHeader('Access-Control-Expose-Headers',exposed);
   res.setHeader('X-Free-Preview',offer.freePreviewUrl);
   res.setHeader('X-Paid-URL',offer.paidUrl);
@@ -172,7 +174,7 @@ export function fastUnpaidChallenge({
       return next();
     }
 
-    const paymentRequired = {
+    const v2PaymentRequired = {
       x402Version: 2,
       error: 'Payment required',
       purchaseRecommended:offer.purchaseRecommended,
@@ -205,8 +207,13 @@ export function fastUnpaidChallenge({
       extensions: { ...enriched, milliapiOffer:offer },
     };
 
-    const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
+    const negotiated=requestedX402Version(req);
+    const paymentRequired=negotiated.version===1
+      ? toV1PaymentRequired(v2PaymentRequired,{resourceUrl:offer.paidUrl,description,mimeType})
+      : v2PaymentRequired;
+    const encoded = encodePaymentRequiredHeader(paymentRequired);
     res.setHeader('PAYMENT-REQUIRED', encoded);
+    res.setHeader('X-X402-Version-Served', String(negotiated.version));
     setOfferHeaders(res,offer);
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(402).json(paymentRequired);
