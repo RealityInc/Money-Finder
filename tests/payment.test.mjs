@@ -51,6 +51,79 @@ const challenge = fastUnpaidChallenge({
   tags: ['ai-agents', 'web-audit'],
 });
 
+describe('x402 protocol version negotiation', () => {
+  // v2 renamed the fields a client needs in order to pay. A v1-only client that receives a v2 body
+  // cannot construct a payment and its only option is to leave, which in traffic logs looks
+  // identical to declining the offer. These tests pin the v1 challenge that keeps it able to buy.
+
+  it('serves v2 by default and says v1 is available', async () => {
+    const { req, res, done } = context();
+    challenge(req, res, () => {});
+    const { status, body, headers } = await done;
+    assert.equal(status, 402);
+    assert.equal(body.x402Version, 2);
+    assert.equal(headers['x-x402-version-served'], '2');
+    assert.deepEqual(body.protocolVersions.supported, [1, 2]);
+    assert.match(body.protocolVersions.requestV1, /x402Version=1/);
+  });
+
+  for (const [label, ctx] of [
+    ['a query parameter', { query: { x402Version: '1' }, url: '/api/audit-and-fix?url=https%3A%2F%2Fexample.com&x402Version=1' }],
+    ['an x402-version header', { headers: { 'x402-version': '1' } }],
+    ['an Accept media type', { headers: { accept: 'application/vnd.x402.v1+json' } }],
+  ]) {
+    it(`serves a v1 challenge when asked via ${label}`, async () => {
+      const { req, res, done } = context(ctx);
+      challenge(req, res, () => {});
+      const { status, body, headers } = await done;
+      assert.equal(status, 402);
+      assert.equal(body.x402Version, 1);
+      assert.equal(headers['x-x402-version-served'], '1');
+      const accept = body.accepts[0];
+      // The three fields a v1 client reads and v2 had renamed out from under it.
+      assert.equal(accept.maxAmountRequired, '3000');
+      assert.equal(accept.network, 'base');
+      assert.equal(typeof body.resource, 'string');
+      assert.equal(body.resource, 'https://milliapi.com/api/audit-and-fix?url=https%3A%2F%2Fexample.com');
+      assert.equal(accept.resource, body.resource);
+      // Same money, same destination, same asset as the v2 challenge.
+      assert.equal(accept.scheme, 'exact');
+      assert.equal(accept.asset, USDC_BASE);
+      assert.equal(accept.payTo, PAY_TO);
+      assert.equal(accept.maxTimeoutSeconds, 300);
+      assert.deepEqual(accept.extra, { name: 'USD Coin', version: '2' });
+      assert.equal(accept.amount, undefined);
+    });
+  }
+
+  it('keeps the MilliAPI offer readable on the v1 challenge', async () => {
+    const { req, res, done } = context({ headers: { 'x402-version': '1' } });
+    challenge(req, res, () => {});
+    const { body } = await done;
+    // v1 ignores fields it does not know, so a richer client still gets the preview and buyer flow.
+    assert.equal(body.preview.available, true);
+    assert.equal(body.purchase.retrySameRequest, true);
+    assert.equal(body.extensions.milliapiOffer.priceUsd, 0.003);
+    assert.deepEqual(body.x402VersionsSupported, [1, 2]);
+  });
+
+  it('encodes the negotiated body into the PAYMENT-REQUIRED header', async () => {
+    const { req, res, done } = context({ headers: { 'x402-version': '1' } });
+    challenge(req, res, () => {});
+    const { body, headers } = await done;
+    const decoded = JSON.parse(Buffer.from(headers['payment-required'], 'base64').toString('utf8'));
+    assert.deepEqual(decoded, body);
+  });
+
+  it('falls back to v2 for an unsupported requested version', async () => {
+    const { req, res, done } = context({ headers: { 'x402-version': '99' } });
+    challenge(req, res, () => {});
+    const { body, headers } = await done;
+    assert.equal(body.x402Version, 2);
+    assert.equal(headers['x-x402-version-served'], '2');
+  });
+});
+
 describe('unpaid x402 challenge', () => {
   it('returns a 402 carrying x402 v2 exact USDC terms on Base', async () => {
     const { req, res, done } = context();

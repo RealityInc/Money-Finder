@@ -1,4 +1,5 @@
 import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemetry.js';
+import { requestedX402Version, toV1PaymentRequired, versionNegotiation } from './x402-version.js';
 
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
@@ -32,6 +33,9 @@ function canonicalRequestUrl(req, route, { preview=false }={}) {
   const incoming=new URL(req.originalUrl || req.url || route, PUBLIC_ORIGIN);
   incoming.pathname=route;
   incoming.searchParams.delete('_vercel_share');
+  // Protocol negotiation must not change the identity of the resource being sold: a buyer that
+  // asked for a v1 challenge still pays for, and retries, the same canonical URL.
+  incoming.searchParams.delete('x402Version');
   if (preview) incoming.searchParams.set('preview','1');
   else incoming.searchParams.delete('preview');
   return `${PUBLIC_ORIGIN}${incoming.pathname}${incoming.search}`;
@@ -108,7 +112,7 @@ function buildOffer({req,route,amount,description,method,network,enriched,nextAc
 }
 
 function setOfferHeaders(res, offer) {
-  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, X-Idempotent-Replay, X-Idempotency-Scope, Link';
+  const exposed='PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE, X-Free-Preview, X-Paid-URL, X-Price-USD, X-Purchase-Recommended, X-Idempotent-Replay, X-Idempotency-Scope, X-X402-Version-Served, Link';
   res.setHeader('Access-Control-Expose-Headers',exposed);
   res.setHeader('X-Free-Preview',offer.freePreviewUrl);
   res.setHeader('X-Paid-URL',offer.paidUrl);
@@ -138,9 +142,13 @@ export function fastUnpaidChallenge({
 
     const enriched=enrichHttpDiscovery(extensions,method);
     const offer=buildOffer({req,route,amount,description,method,network,enriched,nextActions,prePurchaseActions});
+    const negotiated=requestedX402Version(req);
+    const protocolVersions=versionNegotiation(offer.paidUrl,negotiated.version);
+    // Recorded on every challenge so the size of the v1-only population is measured rather than assumed.
+    const versionTelemetry={x402VersionServed:negotiated.version,x402VersionRequested:negotiated.explicit?negotiated.version:null};
 
     if (!paymentHeader(req) && previewRequested(req)) {
-      await observePreviewRoute(req,{route,amount:String(amount),metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof)}});
+      await observePreviewRoute(req,{route,amount:String(amount),metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof),...versionTelemetry}});
       res.setHeader('Cache-Control','public, s-maxage=300');
       setOfferHeaders(res,offer);
       return res.status(200).json({
@@ -166,15 +174,16 @@ export function fastUnpaidChallenge({
       });
     }
 
-    await observePaidRoute(req, res, { route, method, amount: String(amount), metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof)} });
+    await observePaidRoute(req, res, { route, method, amount: String(amount), metadata:{funnelVersion:FUNNEL_VERSION,qualified:Boolean(offer.valueProof),...versionTelemetry} });
     if (paymentHeader(req)) {
       normalizePaymentHeader(req);
       return next();
     }
 
-    const paymentRequired = {
+    const v2Body = {
       x402Version: 2,
       error: 'Payment required',
+      protocolVersions,
       purchaseRecommended:offer.purchaseRecommended,
       valueProof:offer.valueProof,
       purchase:offer.purchase,
@@ -205,9 +214,17 @@ export function fastUnpaidChallenge({
       extensions: { ...enriched, milliapiOffer:offer },
     };
 
+    // A v1-only client cannot read a v2 challenge: v2 renamed maxAmountRequired to amount, turned
+    // resource into an object, and moved networks to CAIP-2. Serving v1 on request means such a
+    // client can still construct a payment for the same price, asset and destination.
+    const paymentRequired = negotiated.version === 1
+      ? toV1PaymentRequired(v2Body, { resourceUrl:offer.paidUrl, description, mimeType })
+      : v2Body;
+
     const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
     res.setHeader('PAYMENT-REQUIRED', encoded);
     setOfferHeaders(res,offer);
+    res.setHeader('X-X402-Version-Served', String(negotiated.version));
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(402).json(paymentRequired);
   };

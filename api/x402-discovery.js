@@ -4,7 +4,14 @@ export default function handler(req,res){
   res.setHeader('Cache-Control','public, s-maxage=3600, stale-while-revalidate=86400');
   if(req.method!=='GET') return res.status(405).json({error:'GET only'});
   return res.status(200).json({
-    version:6,
+    version:7,
+    x402VersionsSupported:[1,2],
+    protocolVersionNegotiation:{
+      default:2,
+      requestV1:'append x402Version=1, send an x402-version: 1 request header, or Accept: application/vnd.x402.v1+json',
+      servedVersionHeader:'X-X402-Version-Served',
+      note:'MilliAPI serves x402 v2 by default and v1 on request so v1-only clients can still pay.'
+    },
     freeSignals:'https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}',
     freePreflight:'https://milliapi.com/api/agent-web-preflight?url={PUBLIC_HTTPS_URL}',
     starter:{

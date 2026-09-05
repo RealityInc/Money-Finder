@@ -28,6 +28,13 @@ export default function handler(req,res){
   ].map(preview);
   return res.status(200).json({
     name:'MilliAPI',canonical:`${api}/api/catalog`,protocol:'x402',x402Version:2,
+    x402VersionsSupported:[1,2],
+    protocolVersionNegotiation:{
+      default:2,
+      requestV1:'append x402Version=1, send an x402-version: 1 request header, or Accept: application/vnd.x402.v1+json',
+      note:'x402 v2 renamed the fields a client needs in order to pay (amount for maxAmountRequired, an object resource, CAIP-2 networks). MilliAPI serves a v1 challenge on request so a v1-only client can still purchase. Both describe the same price, asset and destination.',
+      servedVersionHeader:'X-X402-Version-Served',
+    },
     description:'Standalone commercial x402 API infrastructure for autonomous agents. Commodity website signals are free; payment is concentrated on decision-ready repair, verification, change analysis and batch outcomes.',
     payment:{currency:'USDC',network:'Base',networkId:'eip155:8453',settlementScheme:'exact',accountRequired:false,apiKeyRequired:false,principalAuthorizationRequired:true,acceptedHeaders:['PAYMENT-SIGNATURE','X-PAYMENT','X-PAYMENT-SIGNATURE']},
     startHere:{
