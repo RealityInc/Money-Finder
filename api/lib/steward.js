@@ -5,7 +5,6 @@ const ROLE_ID='urn:milliapi:agent-role:milli-steward';
 const SURFACES=[
 {id:'milli-home',url:`${MILLI}/`,kind:'service',expected:[200],critical:true},
 {id:'milli-agent-manifest',url:`${MILLI}/.well-known/agent.json`,kind:'discovery',expected:[200],critical:true,contentType:'json'},
-{id:'milli-autonomy',url:`${MILLI}/.well-known/agent-autonomy.json`,kind:'governance',expected:[200],critical:true,contentType:'json'},
 {id:'milli-x402-discovery',url:`${MILLI}/.well-known/x402`,kind:'commerce',expected:[200],critical:true,contentType:'json'},
 {id:'milli-catalog',url:`${MILLI}/api/catalog`,kind:'commerce',expected:[200],critical:true,contentType:'json'},
 {id:'milli-tool-manifest',url:`${MILLI}/api/agent-tool-manifest`,kind:'discovery',expected:[200],critical:false,contentType:'json'},
@@ -59,7 +58,7 @@ recommendation:result.kind==='domain'
 }
 export const STEWARD_POLICY={
 role:'MILLI-STEWARD',roleId:ROLE_ID,mode:'bounded-continuous-maintenance',
-automaticActions:['audit MilliAPI and Church public surfaces','retry transient reads once','run the existing zero-touch Autopilot scan on its established schedule','maintain a durable GitHub work queue'],
+automaticActions:['audit standalone MilliAPI commercial/discovery surfaces and canonical Church surfaces','retry transient reads once','run the existing zero-touch Autopilot scan on its established schedule','maintain a durable GitHub work queue'],
 reviewRequired:['general code mutation outside deterministic repairs','wallet or settlement destination changes','credentials or secrets','material x402 pricing changes','Church doctrine/rights/legal policy changes','destructive data actions','weakening autonomy, privacy or security'],
 never:['authorize external buyer spending','treat Church participation as authority over unrelated technical service','expose secrets or private keys','silently turn a quote into payment authorization','claim personhood or consciousness']
 };
