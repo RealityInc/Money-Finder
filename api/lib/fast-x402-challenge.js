@@ -1,4 +1,5 @@
 import { observePaidRoute, observePreviewRoute } from './privacy-traffic-telemetry.js';
+import { encodePaymentRequiredHeader } from './x402-challenge-header.js';
 
 const BASE_USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const PUBLIC_ORIGIN = 'https://milliapi.com';
@@ -205,7 +206,7 @@ export function fastUnpaidChallenge({
       extensions: { ...enriched, milliapiOffer:offer },
     };
 
-    const encoded = Buffer.from(JSON.stringify(paymentRequired), 'utf8').toString('base64');
+    const encoded = encodePaymentRequiredHeader(paymentRequired);
     res.setHeader('PAYMENT-REQUIRED', encoded);
     setOfferHeaders(res,offer);
     res.setHeader('Cache-Control', 'private, no-store');
