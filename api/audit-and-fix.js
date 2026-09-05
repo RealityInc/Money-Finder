@@ -28,7 +28,6 @@ const discovery=declareDiscoveryExtension({
   }
 });
 
-function paymentHeader(req){return req.get('PAYMENT-SIGNATURE')||req.get('X-PAYMENT')||req.get('X-PAYMENT-SIGNATURE')||null;}
 function target(req){return Array.isArray(req.query?.url)?req.query.url[0]:req.query?.url;}
 function noCharge(res,body,status=200){
   res.setHeader('Access-Control-Allow-Origin','*');
@@ -66,7 +65,7 @@ async function qualify(req,res,next){
 }
 
 function dynamicChallenge(req,res,next){
-  if(req.method!=='GET'||paymentHeader(req)) return next();
+  if(req.method!=='GET') return next();
   const description=req.x402DynamicDescription||STATIC_DESCRIPTION;
   return fastUnpaidChallenge({
     route:ROUTE,
