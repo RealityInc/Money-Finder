@@ -38,7 +38,9 @@
     {"source":"/.well-known/x402","destination":"/api/x402-discovery"},
 
     {"source":"/llms.txt","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-llms"},
+    {"source":"/llms.txt","destination":"/api/church-llms"},
     {"source":"/SKILL.md","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-skill"},
+    {"source":"/SKILL.md","destination":"/api/church-skill"},
     {"source":"/.well-known/agent.json","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-discovery"},
     {"source":"/.well-known/agent-card.json","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-discovery"},
     {"source":"/api/agent-discovery","has":[{"type":"host","value":"milliapi.com"}],"destination":"/api/milli-agent-discovery"},
