@@ -29,6 +29,6 @@ const app=express();app.disable('x-powered-by');app.set('trust proxy',true);app.
 if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
   const description='Check whether a website publishes llms.txt and return its status, byte size, and a bounded preview for agent discovery workflows.'; const tags=['llms-txt','ai-discovery','ai-search','web','metadata'];
   app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:1000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery},nextActions:[AUDIT_UPGRADE]}));
-  app.use(ROUTE,lazyX402PaymentMiddleware({routes:{[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',tags,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery}}},network:NETWORK,serviceId:'service:llms_txt',priceUsd:0.001}));
+  app.use(lazyX402PaymentMiddleware({routes:{[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',tags,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery}}},network:NETWORK,serviceId:'service:llms_txt',priceUsd:0.001}));
 }else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 app.get(ROUTE,handler);export default app;

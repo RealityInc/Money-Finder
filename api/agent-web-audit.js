@@ -118,7 +118,7 @@ app.use(ROUTE,idempotencyMiddleware());
 if(PAYMENT_CONFIGURED){
   const description='Decision-ready AI web audit in one paid call. Returns a readiness verdict, blocking issues, evidence, ready-to-apply or review-required repair artifacts, prioritized fixes, 0-100 score, crawler policy, robots.txt and llms.txt status, canonical/indexability, Open Graph, JSON-LD, headings, major AI-crawler access, and a portable baseline for future change detection.';
   app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:5000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension},prePurchaseActions:PRE_PURCHASE_ACTIONS,nextActions:NEXT_ACTIONS}));
-  app.use(ROUTE,lazyX402PaymentMiddleware({
+  app.use(lazyX402PaymentMiddleware({
     routes:{[`GET ${ROUTE}`]:{
       accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',
       tags:RESOURCE_TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discoveryExtension}

@@ -54,7 +54,10 @@ export async function observePaidRoute(req,res,{route,method='GET',amount=null,m
 
   res.once('finish',()=>{
     const status=Number(res.statusCode||0);
-    const succeeded=status>=200&&status<300;
+    const receipt=res.getHeader('PAYMENT-RESPONSE')||res.getHeader('X-PAYMENT-RESPONSE');
+    let settled=false;
+    try { settled=JSON.parse(Buffer.from(String(receipt||''),'base64').toString()).success===true; } catch {}
+    const succeeded=status>=200&&status<300&&settled;
     const event=emit(req,{
       route,
       stage:succeeded?'settled':'payment_attempt_failed',

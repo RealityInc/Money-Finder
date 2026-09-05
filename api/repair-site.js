@@ -124,7 +124,7 @@ if(PAYMENT_CONFIGURED){
     prePurchaseActions:[{id:'free-signals',whenUseful:'Inspect commodity web signals before deciding whether the repair product is worth buying.',method:'GET',endpointTemplate:`${PUBLIC_ORIGIN}/api/web-signals?url=<PUBLIC_HTTPS_URL>`,priceUsd:0,currency:'USD',returns:['page_metadata','robots_txt','llms_txt','ai_crawler_access']}],
     nextActions:[{id:'verify-repairs',whenUseful:'After applying one or more returned repair artifacts.',method:'POST',endpoint:`${PUBLIC_ORIGIN}/api/verify-site-repairs`,priceUsd:0.002,currency:'USDC'}]
   }));
-  app.use(ROUTE,lazyX402PaymentMiddleware({
+  app.use(lazyX402PaymentMiddleware({
     routes:{[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description:DESCRIPTION,mimeType:'application/json',serviceName:'MilliAPI',tags:TAGS,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery}}},
     network:NETWORK,serviceId:'service:repair_site',priceUsd:0.005,paywallConfig:{appName:'MilliAPI',appLogo:`${PUBLIC_ORIGIN}/icon.svg`,testnet:false}
   }));

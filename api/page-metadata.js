@@ -36,6 +36,6 @@ const app=express();app.disable('x-powered-by');app.set('trust proxy',true);app.
 if(PAY_TO&&process.env.CDP_API_KEY_ID&&process.env.CDP_API_KEY_SECRET){
   const description='Extract title, description, canonical URL, robots meta, Open Graph, H1 count and JSON-LD count from a public HTTPS page.'; const tags=['metadata','open-graph','json-ld','seo','web'];
   app.use(ROUTE,fastUnpaidChallenge({route:ROUTE,amount:2000,payTo:PAY_TO,description,serviceName:'MilliAPI',tags,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery},nextActions:[AUDIT_UPGRADE]}));
-  app.use(ROUTE,lazyX402PaymentMiddleware({routes:{[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',tags,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery}}},network:NETWORK,serviceId:'service:metadata',priceUsd:0.002}));
+  app.use(lazyX402PaymentMiddleware({routes:{[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${PUBLIC_ORIGIN}${ROUTE}`,description,mimeType:'application/json',serviceName:'MilliAPI',tags,iconUrl:`${PUBLIC_ORIGIN}/icon.svg`,extensions:{...discovery}}},network:NETWORK,serviceId:'service:metadata',priceUsd:0.002}));
 }else app.use(ROUTE,(_req,res)=>res.status(503).json({error:'x402 payment configuration incomplete'}));
 app.get(ROUTE,handler);export default app;

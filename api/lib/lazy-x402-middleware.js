@@ -15,6 +15,9 @@ export function lazyX402PaymentMiddleware({ routes, network, serviceId, priceUsd
   const route=String(routeKey).replace(/^[A-Z]+\s+/,'');
 
   return function deferredPaymentMiddleware(req, res, next) {
+    // SDK route keys use full paths. Express path-mounted middleware strips that
+    // prefix, which would silently bypass verification. Require root mounting.
+    if (req.baseUrl) return next(new Error('x402 payment middleware must be mounted at the app root'));
     // Once a payment authorization is present, any 5xx must tell the buyer whether a settlement
     // receipt exists and must never masquerade as a fresh 402 challenge.
     protectExpressSettlementResponse(req,res,{route,priceUsd});

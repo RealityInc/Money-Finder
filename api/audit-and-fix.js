@@ -133,7 +133,7 @@ app.use(ROUTE,idempotencyMiddleware());
 
 if(PAYMENT_CONFIGURED){
   app.use(ROUTE,dynamicChallenge);
-  app.use(ROUTE,lazyX402PaymentMiddleware({
+  app.use(lazyX402PaymentMiddleware({
     routes:{[`GET ${ROUTE}`]:{accepts:[{scheme:'exact',price:PRICE,network:NETWORK,payTo:PAY_TO}],resource:`${ORIGIN}${ROUTE}`,description:STATIC_DESCRIPTION,mimeType:'application/json',serviceName:'MilliAPI',tags:TAGS,iconUrl:`${ORIGIN}/icon.svg`,extensions:{...discovery}}},
     network:NETWORK,
     serviceId:'service:audit_and_fix',
