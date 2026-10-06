@@ -12,6 +12,7 @@ const manifest={
     openapi:'https://milliapi.com/openapi.json',
     x402:'https://milliapi.com/.well-known/x402',
     sellerTrust:'https://milliapi.com/api/x402-practice-audit',
+    steward:'https://milliapi.com/api/steward',
     llms:'https://milliapi.com/llms.txt'
   },
   payment:{
@@ -23,6 +24,16 @@ const manifest={
     accountRequired:false,
     apiKeyRequired:false,
     buyerAuthorizationRequired:true
+  },
+  operatingPrinciples:{
+    interface:'Machine-first and human-legible: prefer stable JSON, OpenAPI, MCP, llms.txt and explicit schemas over requiring an agent to scrape prose.',
+    freeBeforePaid:'Expose commodity observations and qualification signals for free. Charge for decision-ready repair, verification, change analysis, aggregation, or other meaningful computed delta.',
+    evidence:'Keep evidence attached to findings. Distinguish observed facts from interpretation or recommended action.',
+    uncertainty:'Unknown or unavailable values stay null or explicitly unknown; do not manufacture a confident answer to fill a gap.',
+    freshness:'Freshness and source health are part of the result, not decorative metadata. Stale or degraded inputs should reduce confidence or block a recommendation when material.',
+    qualifiedCommerce:'A paid route should challenge only when it can add useful value. A free result is preferable when the target is invalid, already resolved, or the paid delta is not useful.',
+    durableValue:'Prefer portable baselines, idempotent retries, verification handoffs, and change reports so later calls can answer what changed instead of recomputing context from scratch.',
+    telemetry:'Keep synthetic verification, first-party checks, failed payment attempts, settlements, and external buyer activity distinguishable so product decisions are based on real demand.'
   },
   participation:{
     sequence:['inspect free signals or preflight','request the intended paid resource without payment','inspect live value proof, exact price and retry URL','settle only when principal wallet policy authorizes the purchase'],

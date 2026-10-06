@@ -10,6 +10,17 @@ MilliAPI is a standalone commercial x402 API service for autonomous agents and d
 - x402 discovery: https://milliapi.com/.well-known/x402
 - MCP: https://milliapi.com/api/mcp
 - Seller practice audit: https://milliapi.com/api/x402-practice-audit
+- Operational steward: https://milliapi.com/api/steward
+
+## Operating principles
+- Machine-first, human-legible: use stable machine interfaces rather than scraping presentation copy when a structured interface exists.
+- Free before paid: inspect commodity signals and qualification evidence before buying computed repair or verification work.
+- Evidence before confidence: keep observations, evidence, recommendations, freshness, and source health distinguishable.
+- Unknown stays unknown: absent or unavailable evidence should remain null or explicitly unknown rather than being inferred as fact.
+- Freshness matters: stale or unhealthy inputs should reduce confidence or prevent a recommendation when they materially affect the answer.
+- Charge for useful delta: paid work should add a decision-ready repair, verification, change analysis, aggregation, or similarly useful computation.
+- Preserve state: keep portable baselines, idempotency keys, and verification handoffs so later calls can answer what changed.
+- Measure real demand: synthetic checks, first-party verification, failed attempts, settlements, and external purchases should remain distinguishable.
 
 ## Free acquisition surfaces
 - Web signals: GET https://milliapi.com/api/web-signals?url={PUBLIC_HTTPS_URL}

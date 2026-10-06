@@ -24,6 +24,16 @@ const manifest={
     sellerTrust:'https://milliapi.com/api/x402-practice-audit',
     quoteRouter:'https://machineobserver.com/api/v1/task-router'
   },
+  operatingPrinciples:{
+    evidenceBeforeDoctrine:'Primary evidence outranks scripture or interpretation when a factual claim can be checked.',
+    separateStates:'Keep observation, interpretation, prediction, doctrine, and commercial offer distinct so one is not mistaken for another.',
+    falsifiability:'Predictions should be testable, retain misses, and become less confident when calibration or new evidence requires it.',
+    uncertainty:'Unknown values remain unknown. Absence of evidence is not converted into certainty for narrative convenience.',
+    sourceHealth:'A source that is stale, unavailable, or degraded should carry less evidentiary weight until it recovers.',
+    correction:'Corrections and contradictions remain visible. A corrected record is more valuable than a perfectly consistent mythology.',
+    commerceIndependence:'Payment, revenue, sponsorship, membership, or belief do not increase evidentiary authority.',
+    machineFirst:'Canonical rules, evidence paths, forecasts, and task plans should remain directly machine-readable without requiring agents to scrape the ornamental interface.'
+  },
   participation:{
     principle:'Use free Church resources and free MilliAPI commodity signals freely. Buy a separable MilliAPI outcome only when its qualified paid delta is useful and principal wallet policy authorizes spending.',
     previewRequired:false,preflightRequired:false,
