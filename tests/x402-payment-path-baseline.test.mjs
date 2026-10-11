@@ -100,7 +100,7 @@ test('a settlement failure records why it failed, not just that it did', () => {
 });
 
 test('a settled-but-undelivered failure records the charged classification too', () => {
-  const {req,res}=context({receipt:'receipt-123'});
+  const {req,res}=context({receipt:Buffer.from(JSON.stringify({success:true,transaction:'0x'+'ab'.repeat(32),network:'eip155:8453'})).toString('base64')});
   protectExpressSettlementResponse(req,res,{route:'/api/page-metadata',priceUsd:0.002});
   res.send('{"error":"handler exploded after settlement"}');
   const reason = res[SETTLEMENT_FAILURE_REASON];
@@ -109,7 +109,7 @@ test('a settled-but-undelivered failure records the charged classification too',
 });
 
 test('receipt on a failed paid request reports settled-but-undelivered', () => {
-  const {req,res}=context({receipt:'receipt-123'});
+  const {req,res}=context({receipt:Buffer.from(JSON.stringify({success:true,transaction:'0x'+'ab'.repeat(32),network:'eip155:8453'})).toString('base64')});
   protectExpressSettlementResponse(req,res,{route:'/api/audit-and-fix',priceUsd:0.005});
   res.send('{"error":"Internal Server Error"}');
   assert.equal(res.statusCode,502);
@@ -119,3 +119,9 @@ test('receipt on a failed paid request reports settled-but-undelivered', () => {
   assert.equal(body.charged,true);
   assert.match(body.buyerGuidance,/Do not pay again/i);
 });
+
+for(const receipt of ['invalid',Buffer.from(JSON.stringify({success:false})).toString('base64')]){
+ test('receipt presence without successful settlement evidence remains unknown: '+receipt,()=>{
+  const {req,res}=context({receipt});protectExpressSettlementResponse(req,res,{route:'/api/paid',priceUsd:0.001});res.send('opaque failure');assert.equal(res.statusCode,500);assert.equal(res.getHeader('X-Charged'),'null');assert.equal(res.getHeader('PAYMENT-RESPONSE'),receipt);const body=JSON.parse(res.body);assert.equal(body.noCharge,false);assert.equal(body.retryable,false);
+ });
+}
