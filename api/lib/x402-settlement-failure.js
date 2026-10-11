@@ -1,5 +1,6 @@
 const PAYMENT_HEADERS = ['payment-signature', 'x-payment', 'x-payment-signature'];
 const RECEIPT_HEADERS = ['payment-response', 'x-payment-response'];
+export const PAYMENT_PHASE = Symbol.for('milliapi.x402PaymentPhase');
 const GUARD = Symbol.for('milliapi.x402SettlementFailureGuard');
 // A settlement failure is diagnosed from the reason it failed, and that reason was reaching only the
 // buyer's 300-character `detail` field before being discarded. Telemetry recorded that an attempt
@@ -33,6 +34,16 @@ function retryUrl(req, route) {
 
 function failurePayload(req, res, { route, priceUsd, detail = '' } = {}) {
   const receipt = settlementReceipt(res);
+  if (!receipt && req[PAYMENT_PHASE] === 'initialization_failed_before_verification') {
+    return {
+      status:503,
+      headers:{'X-Settlement-Status':'settlement_unavailable','X-Charged':'false','X-Payment-Phase':'initialization_failed_before_verification'},
+      body:{error:'settlement_unavailable',settled:false,charged:false,noCharge:true,retryable:true,
+        route:route||null,priceUsd:priceUsd??null,retryUrl:retryUrl(req,route),
+        buyerGuidance:'This request stopped during initialization before verification, settlement or the paid handler. No settlement was attempted through this request. Reconcile any separate payment attempt before retrying.',
+        detail:'Payment service initialization unavailable'},
+    };
+  }
   if (receipt) {
     return {
       status:502,
@@ -62,13 +73,14 @@ function applyFailure(res, failure) {
   res[SETTLEMENT_FAILURE_REASON] = {
     settlementStatus:failure.headers['X-Settlement-Status'],
     charged:failure.body.charged,
+    paymentPhase:failure.headers['X-Payment-Phase'] || 'unknown',
     detail:failure.body.detail || null,
   };
   res.statusCode = failure.status;
   res.setHeader('Content-Type','application/json; charset=utf-8');
   res.setHeader('Cache-Control','private, no-store');
   res.setHeader('Access-Control-Allow-Origin','*');
-  res.setHeader('Access-Control-Expose-Headers','X-Settlement-Status, X-Charged, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');
+  res.setHeader('Access-Control-Expose-Headers','X-Settlement-Status, X-Charged, X-Payment-Phase, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE');
   for (const [name,value] of Object.entries(failure.headers)) res.setHeader(name,value);
   return true;
 }
@@ -76,8 +88,8 @@ function applyFailure(res, failure) {
 /**
  * Express adaptation of the Machine Observer post-signature invariant.
  *
- * MilliAPI cannot safely infer `charged:false` from facilitator capability the way the Next.js
- * baseline can, so this adapter is deliberately conservative: a 5xx with no settlement receipt is
+ * Only an observed initialization failure before the SDK request pipeline establishes no settlement
+ * through this request. Otherwise this adapter is conservative: a 5xx with no settlement receipt is
  * `charged:null`, never a free retry. A receipt proves the payment landed and becomes a 502 that tells
  * the buyer not to pay again. Crucially, neither case returns 402, which could be misread as a fresh
  * payment challenge.

@@ -1,4 +1,5 @@
-import { paymentMiddleware, x402ResourceServer } from '@x402/express';
+import { x402HTTPResourceServer, x402ResourceServer } from '@x402/express';
+import { initializedX402Middleware } from './initialized-x402-middleware.js';
 import { ExactEvmScheme } from '@x402/evm/exact/server';
 import { createCdpFacilitatorClient } from '@coinbase/cdp-sdk/x402';
 import { registerLearningHooks } from './learning-graph.js';
@@ -29,7 +30,7 @@ export function lazyX402PaymentMiddleware({ routes, network, serviceId, priceUsd
         { serviceId, priceUsd },
       );
       const resourceServer = attachPrivateSettlementFeed(baseServer,{route,serviceId,priceUsd});
-      middleware = paymentMiddleware(routes, resourceServer, paywallConfig);
+      middleware = initializedX402Middleware(new x402HTTPResourceServer(resourceServer,routes),paywallConfig,{route,priceUsd});
     }
 
     try {
