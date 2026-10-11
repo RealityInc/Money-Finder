@@ -46,7 +46,7 @@ function failurePayload(req, res, { route, priceUsd, detail = '' } = {}) {
   }
   let decoded=null;
   try{if(receipt&&receipt.length<=16384)decoded=JSON.parse(Buffer.from(receipt,'base64').toString('utf8'));}catch{}
-  const receiptSucceeded=decoded?.success===true&&/^0x[a-fA-F0-9]{64}$/.test(decoded.transaction||'')&&/^eip155:[1-9][0-9]{0,15}$/.test(decoded.network||'');
+  const receiptSucceeded=decoded?.success===true&&typeof decoded.transaction==='string'&&typeof decoded.network==='string'&&/^0x[a-fA-F0-9]{64}$/.test(decoded.transaction||'')&&/^eip155:[1-9][0-9]{0,15}$/.test(decoded.network||'');
   if (receiptSucceeded) {
     return {
       status:502,
@@ -54,7 +54,7 @@ function failurePayload(req, res, { route, priceUsd, detail = '' } = {}) {
       body:{
         error:'settled_but_undelivered', settled:true, charged:true, noCharge:false, retryable:true,
         route:route || null, priceUsd:priceUsd ?? null, retryUrl:retryUrl(req, route),
-        buyerGuidance:'The payment settled but the result could not be returned. Do not pay again. Retain the settlement receipt and request seller review. Replay recovery and refunds are not guaranteed by this response.',
+        buyerGuidance:'The payment settled but the result could not be returned. Do not pay again. Do not sign a fresh payment before reconciliation. Retain the settlement receipt and request seller review. Replay recovery and refunds are not guaranteed by this response.',
         detail:String(detail || '').slice(0,300),
       },
     };
